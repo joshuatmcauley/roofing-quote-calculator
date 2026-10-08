@@ -1294,7 +1294,7 @@ function renderJobStep() {
   if (!jobs.length) return `<p class="muted">No calculators are set up yet.</p>`;
   return `<div class="choices">${jobs.map((job) => `
     <button type="button" class="choice${quote.jobId === job.id ? " is-selected" : ""}" data-action="select-job" data-id="${esc(job.id)}">
-      ${job.id === "roof" ? "" : thumb("images/jobs/" + job.id + ".svg?v=21", job.name)}
+      ${job.id === "roof" ? "" : thumb("images/jobs/" + job.id + ".svg?v=22", job.name)}
       <strong>${esc(job.name)}</strong>
       <p>${esc(job.blurb)}</p>
     </button>`).join("")}</div>

@@ -140,7 +140,7 @@ const QUOTE_CONFIG = {
       name: "24/1000 box profile",
       coverWidthM: 1,
       cutToSize: true,
-      image: "images/profiles/box.svg?v=21",
+      image: "images/profiles/box.svg?v=22",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Black.webp?v=1769087533&width=640",
       allowsDripstop: false,
       finishes: [
@@ -164,7 +164,7 @@ const QUOTE_CONFIG = {
       name: "Tile effect",
       coverWidthM: 1,
       cutToSize: true,
-      image: "images/profiles/tile.svg?v=21",
+      image: "images/profiles/tile.svg?v=22",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/IMG_4633.jpg?v=1750953790&width=640",
       allowsDripstop: false,
       finishes: [
@@ -190,7 +190,7 @@ const QUOTE_CONFIG = {
       coverWidthM: 1,
       cutToSize: false,
       stockLengthsM: [3, 4, 5, 6, 7],
-      image: "images/profiles/sandwich.svg?v=21",
+      image: "images/profiles/sandwich.svg?v=22",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Sandwich_panel_roof.jpg?v=1754309366&width=640",
       allowsDripstop: false,
       finishes: [
@@ -210,7 +210,7 @@ const QUOTE_CONFIG = {
       coverWidthM: 0.688, // CHECK: shop lists "688 mm wide" (overall width?). Confirm the real cover width.
       cutToSize: false,
       stockLengthsM: [4, 5, 5.8],
-      image: "images/profiles/flat.svg?v=21",
+      image: "images/profiles/flat.svg?v=22",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/CLEAR_POLOY_ROOFING.jpg?v=1780391964&width=640",
       allowsDripstop: false,
       finishes: [
@@ -232,7 +232,7 @@ const QUOTE_CONFIG = {
       cutToSize: false,
       stockLengthsM: [2.8, 4, 5, 5.8],
       outOfStockLengthsM: [4, 5, 5.8], // only 2.8 m in stock on bcmckeown.net (7 Oct 2026)
-      image: "images/profiles/corrugated.svg?v=21",
+      image: "images/profiles/corrugated.svg?v=22",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/corrugated_polycaronate.png?v=1745838288&width=640",
       allowsDripstop: false,
       finishes: [
@@ -252,7 +252,7 @@ const QUOTE_CONFIG = {
       coverWidthM: 0.95,
       cutToSize: false,
       stockLengthsM: [3, 5.8],
-      image: "images/profiles/corrugated-bronze.svg?v=21",
+      image: "images/profiles/corrugated-bronze.svg?v=22",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Tinted_poycarbonate_pergola.png?v=1745838920&width=640",
       allowsDripstop: false,
       finishes: [
@@ -272,7 +272,7 @@ const QUOTE_CONFIG = {
       coverWidthM: 1,
       cutToSize: false,
       stockLengthsM: [2, 2.8, 3, 4, 5],
-      image: "images/profiles/frp.svg?v=21",
+      image: "images/profiles/frp.svg?v=22",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Clear_roofing_sheets.webp?v=1733919831&width=640",
       allowsDripstop: false,
       finishes: [
@@ -293,7 +293,7 @@ const QUOTE_CONFIG = {
       cutToSize: false,
       stockLengthsM: [4],
       outOfStock: true, // out of stock on bcmckeown.net (7 Oct 2026)
-      image: "images/profiles/clear-box.svg?v=21",
+      image: "images/profiles/clear-box.svg?v=22",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Polycarbonate.webp?v=1733919745&width=640",
       allowsDripstop: false,
       finishes: [
@@ -313,7 +313,7 @@ const QUOTE_CONFIG = {
       coverWidthM: 0.988,
       cutToSize: false,
       stockLengthsM: [5],
-      image: "images/profiles/diamond.svg?v=21",
+      image: "images/profiles/diamond.svg?v=22",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Diamond_Embossed_Corrugated_Polycarbonate_Sheet.png?v=1758625612&width=640",
       allowsDripstop: false,
       finishes: [
