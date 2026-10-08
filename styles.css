@@ -493,3 +493,12 @@ input:disabled { background: #f4f6f8; color: var(--muted); }
   font-weight: 600;
   color: #51607a;
 }
+
+.swatch .chip-sheet {
+  display: block;
+  width: 100%;
+  height: 148px;
+  background: linear-gradient(170deg, #fbfcfe 0%, #f0f3f7 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .10);
+}
+.roof-colours .swatch small { margin-top: -6px; color: #7b8697; }

@@ -1256,6 +1256,83 @@ function renderFinishStep() {
     </button>`).join("");
 }
 
+/* A live sheet swatch: the chosen profile pressed and lit, painted in one colour.
+   Same shading as the roof preview, so the colour step shows the real material
+   rather than a flat square of paint. */
+function sheetSwatchSvg(profile, colour, id) {
+  const kind = roofPatternKind(profile);
+  const surface = roofSurface(profile, colour);
+  const mat = pvMaterial(surface);
+  const base = safeHex(colour && colour.hex);
+  const cover = Number(profile && profile.coverWidthM) || 1;
+  const raw = pvProfile(kind, cover);
+  // real sheets are shallow (a 24 mm rib over a 1 m cover); lift the relief a
+  // little so the shape still reads at swatch size
+  const EX = 2.0;
+  const prof = { h: (x) => raw.h(x) * EX, d: (x) => raw.d(x) * EX, step: raw.step };
+  const wide = cover * 1.25;
+  const L = cover * 1.05;
+  const step = Math.max(prof.step, cover / 90);
+  const quads = [];
+  const pts = [];
+  for (let x = 0; x < wide - 1e-9; x += step) {
+    const xb = Math.min(x + step, wide);
+    const t = prof.d((x + xb) / 2);
+    let N = pvNorm([-t, 0, 1]);
+    if (N[2] < 0) N = [-N[0], -N[1], -N[2]];
+    const ha = prof.h(x), hb = prof.h(xb);
+    const q = [[x, 0, ha], [xb, 0, hb], [xb, L, hb], [x, L, ha]];
+    q.forEach((p) => pts.push(pvProj(p)));
+    quads.push({ q, fill: pvShade(base, N, mat) });
+  }
+  const th = cover * 0.035;
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const W = 260, H = 150, pad = 10;
+  const x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const s = Math.min((W - 2 * pad) / Math.max(x1 - x0, 0.01), (H - 2 * pad) / Math.max(y1 - y0 + th, 0.01));
+  const ox = (W - (x1 - x0) * s) / 2 - x0 * s;
+  const oy = (H - (y1 - y0) * s) / 2 - y0 * s - th * s * 0.4;
+  const F = (p) => { const q = pvProj(p); return [q[0] * s + ox, q[1] * s + oy]; };
+  const body = [];
+  for (const it of quads) {
+    const d = it.q.map((p) => { const a = F(p); return `${svgNum(a[0])},${svgNum(a[1])}`; }).join(" ");
+    body.push(`<polygon points="${d}" fill="${it.fill}"${mat.op < 1 ? ` fill-opacity="${mat.op}"` : ""} stroke="${it.fill}" stroke-width=".5"/>`);
+  }
+  // cut edge at the front, so the sheet reads as material with thickness
+  const edge = mixHex(base, "#0a0f14", 0.5);
+  const top = [], bot = [];
+  for (let x = 0; x <= wide + 1e-9; x += step) {
+    const xx = Math.min(x, wide);
+    top.push(F([xx, 0, prof.h(xx)]));
+    bot.unshift(F([xx, 0, prof.h(xx) - th]));
+  }
+  const edgePts = top.concat(bot).map((p) => `${svgNum(p[0])},${svgNum(p[1])}`).join(" ");
+  body.push(`<polygon points="${edgePts}" fill="${edge}"${mat.op < 1 ? ` fill-opacity="${mat.op}"` : ""}/>`);
+  if (kind === "tile") {
+    const courses = 3;
+    for (let k = 1; k < courses; k += 1) {
+      const y = L * k / courses;
+      const a = F([0, y, 0]), b = F([wide, y, 0]);
+      const a2 = F([0, y + cover * 0.02, 0]), b2 = F([wide, y + cover * 0.02, 0]);
+      body.push(`<line x1="${svgNum(a[0])}" y1="${svgNum(a[1])}" x2="${svgNum(b[0])}" y2="${svgNum(b[1])}" stroke="#0b1118" stroke-opacity=".34" stroke-width="1.1"/>`);
+      body.push(`<line x1="${svgNum(a2[0])}" y1="${svgNum(a2[1])}" x2="${svgNum(b2[0])}" y2="${svgNum(b2[1])}" stroke="#ffffff" stroke-opacity=".26" stroke-width="1"/>`);
+    }
+  }
+  if (kind === "diamond") {
+    const pid = `pyr-${String(id || "d").replace(/[^a-z0-9_-]/gi, "")}`;
+    const area = top.concat(bot.slice()).map((p) => `${svgNum(p[0])},${svgNum(p[1])}`).join(" ");
+    const face = quads.map((it) => it.q.map((p) => { const a = F(p); return `${svgNum(a[0])},${svgNum(a[1])}`; }).join(" "));
+    body.push(`<defs><pattern id="${pid}" width="5" height="5" patternUnits="userSpaceOnUse">
+      <polygon points="2.5,0 0,2.5 2.5,2.5" fill="#ffffff" fill-opacity=".46"/>
+      <polygon points="2.5,0 5,2.5 2.5,2.5" fill="#cfdcea" fill-opacity=".26"/>
+      <polygon points="0,2.5 2.5,5 2.5,2.5" fill="#6d82a0" fill-opacity=".24"/>
+      <polygon points="5,2.5 2.5,5 2.5,2.5" fill="#32425c" fill-opacity=".22"/></pattern></defs>`);
+    face.forEach((d) => body.push(`<polygon points="${d}" fill="url(#${pid})"/>`));
+  }
+  return `<svg class="chip chip-sheet" viewBox="0 0 ${W} ${H}" role="img" aria-hidden="true"
+    preserveAspectRatio="xMidYMid slice">${body.join("")}</svg>`;
+}
+
 function colourChip(colour) {
   const src = safeSrc(colour.image);
   if (src) return `<img class="chip" src="${esc(src)}" alt="">`;
@@ -1272,8 +1349,9 @@ function renderColourStep() {
   if (!profile.colours.length) return `<p class="muted">${esc(config.copy.emptyProducts)}</p>`;
   return `<div class="swatches roof-colours">${profile.colours.map((colour) => `
     <button type="button" class="swatch${quote.colourId === colour.id ? " is-selected" : ""}" data-action="select-colour" data-id="${esc(colour.id)}">
-      ${colourChip(colour)}
+      ${sheetSwatchSvg(profile, colour, colour.id)}
       <strong>${esc(colour.name)}</strong>
+      <small>${esc(profile.name)}</small>
     </button>`).join("")}</div>`;
 }
 
