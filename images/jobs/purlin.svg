@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img">
+<defs><radialGradient id="sh" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#0d1318" stop-opacity=".20"/><stop offset="1" stop-color="#0d1318" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="160.0" cy="146.0" rx="36.8" ry="5.5" fill="url(#sh)"/>
+<polygon points="119.97,138.04 147.99,138.04 200.03,81.47 172.01,81.47" fill="#c9cfd4" stroke="#91979c" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="119.97,143.00 147.99,143.00 147.99,138.04 119.97,138.04" fill="#a7b1b9" stroke="#798289" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="147.99,143.00 200.03,86.43 200.03,81.47 147.99,138.04" fill="#7d868d" stroke="#5b646a" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="143.03,126.19 147.99,126.19 200.03,69.62 195.07,69.62" fill="#c9cfd4" stroke="#91979c" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="143.03,138.04 147.99,138.04 147.99,126.19 143.03,126.19" fill="#a7b1b9" stroke="#798289" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="147.99,138.04 200.03,81.47 200.03,69.62 147.99,126.19" fill="#7d868d" stroke="#5b646a" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="119.97,67.57 124.93,67.57 176.97,11.00 172.01,11.00" fill="#c9cfd4" stroke="#91979c" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="119.97,143.00 124.93,143.00 124.93,67.57 119.97,67.57" fill="#a7b1b9" stroke="#798289" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="124.93,143.00 176.97,86.43 176.97,11.00 124.93,67.57" fill="#7d868d" stroke="#5b646a" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="119.97,67.57 147.99,67.57 200.03,11.00 172.01,11.00" fill="#c9cfd4" stroke="#91979c" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="119.97,72.53 147.99,72.53 147.99,67.57 119.97,67.57" fill="#a7b1b9" stroke="#798289" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="147.99,72.53 200.03,15.96 200.03,11.00 147.99,67.57" fill="#7d868d" stroke="#5b646a" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="143.03,72.53 147.99,72.53 200.03,15.96 195.07,15.96" fill="#c9cfd4" stroke="#91979c" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="143.03,84.38 147.99,84.38 147.99,72.53 143.03,72.53" fill="#a7b1b9" stroke="#798289" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="147.99,84.38 200.03,27.81 200.03,15.96 147.99,72.53" fill="#7d868d" stroke="#5b646a" stroke-width="0.55" stroke-linejoin="round"/>
+</svg>

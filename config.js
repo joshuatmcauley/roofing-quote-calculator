@@ -14,6 +14,10 @@
 const QUOTE_CONFIG = {
   version: 2,
   meta: { sample: false },
+  // How the sheet pictures look on the "Choose Your Sheet" step.
+  //   "illustration" = the drawings in images/profiles (default)
+  //   "photo"        = the product photos from bcmckeown.net (the "photo" lines below)
+  imageMode: "illustration",
   theme: {
     accent: "#222222",
     ink: "#333333",
@@ -136,7 +140,8 @@ const QUOTE_CONFIG = {
       name: "24/1000 box profile",
       coverWidthM: 1,
       cutToSize: true,
-      image: "images/profiles/box.svg?v=3",
+      image: "images/profiles/box.svg?v=10",
+      photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Black.webp?v=1769087533&width=640",
       allowsDripstop: false,
       finishes: [
         { id: "box-05", name: "0.5mm", pricePerMetre: 7.1, allowsDripstop: false },
@@ -159,7 +164,8 @@ const QUOTE_CONFIG = {
       name: "Tile effect",
       coverWidthM: 1,
       cutToSize: true,
-      image: "images/profiles/tile.svg?v=5",
+      image: "images/profiles/tile.svg?v=10",
+      photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/IMG_4633.jpg?v=1750953790&width=640",
       allowsDripstop: false,
       finishes: [
         { id: "tile-05", name: "0.5mm", pricePerMetre: 12.5, allowsDripstop: false },
@@ -184,7 +190,8 @@ const QUOTE_CONFIG = {
       coverWidthM: 1,
       cutToSize: false,
       stockLengthsM: [3, 4, 5, 6, 7],
-      image: "images/profiles/sandwich.svg?v=3",
+      image: "images/profiles/sandwich.svg?v=10",
+      photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Sandwich_panel_roof.jpg?v=1754309366&width=640",
       allowsDripstop: false,
       finishes: [
         { id: "sandwich-50", name: "50mm", pricePerMetre: 25, allowsDripstop: false },
@@ -203,7 +210,8 @@ const QUOTE_CONFIG = {
       coverWidthM: 0.688, // CHECK: shop lists "688 mm wide" (overall width?). Confirm the real cover width.
       cutToSize: false,
       stockLengthsM: [4, 5, 5.8],
-      image: "images/profiles/flat.svg?v=3",
+      image: "images/profiles/flat.svg?v=10",
+      photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/CLEAR_POLOY_ROOFING.jpg?v=1780391964&width=640",
       allowsDripstop: false,
       finishes: [
         { id: "poly-3", name: "3mm", pricePerMetre: 16, allowsDripstop: false },
@@ -224,7 +232,8 @@ const QUOTE_CONFIG = {
       cutToSize: false,
       stockLengthsM: [2.8, 4, 5, 5.8],
       outOfStockLengthsM: [4, 5, 5.8], // only 2.8 m in stock on bcmckeown.net (7 Oct 2026)
-      image: "images/profiles/corrugated.svg?v=3",
+      image: "images/profiles/corrugated.svg?v=10",
+      photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/corrugated_polycaronate.png?v=1745838288&width=640",
       allowsDripstop: false,
       finishes: [
         { id: "corr-clear", name: "1.2mm", pricePerMetre: 10.416667, allowsDripstop: false },
@@ -243,7 +252,8 @@ const QUOTE_CONFIG = {
       coverWidthM: 0.95,
       cutToSize: false,
       stockLengthsM: [3, 5.8],
-      image: "images/profiles/corrugated-bronze.svg?v=3",
+      image: "images/profiles/corrugated-bronze.svg?v=10",
+      photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Tinted_poycarbonate_pergola.png?v=1745838920&width=640",
       allowsDripstop: false,
       finishes: [
         { id: "corr-bronze", name: "1.2mm", pricePerMetre: 10.416667, allowsDripstop: false },
@@ -262,7 +272,8 @@ const QUOTE_CONFIG = {
       coverWidthM: 1,
       cutToSize: false,
       stockLengthsM: [2, 2.8, 3, 4, 5],
-      image: "images/profiles/frp.svg?v=3",
+      image: "images/profiles/frp.svg?v=10",
+      photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Clear_roofing_sheets.webp?v=1733919831&width=640",
       allowsDripstop: false,
       finishes: [
         { id: "frp-m", name: "Per metre", pricePerMetre: 8.333333, allowsDripstop: false },
@@ -282,7 +293,8 @@ const QUOTE_CONFIG = {
       cutToSize: false,
       stockLengthsM: [4],
       outOfStock: true, // out of stock on bcmckeown.net (7 Oct 2026)
-      image: "images/profiles/clear-box.svg?v=3",
+      image: "images/profiles/clear-box.svg?v=10",
+      photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Polycarbonate.webp?v=1733919745&width=640",
       allowsDripstop: false,
       finishes: [
         { id: "clear-box-4", name: "1.5mm, 4m sheets", pricePerMetre: 14.583333, allowsDripstop: false },
@@ -301,7 +313,8 @@ const QUOTE_CONFIG = {
       coverWidthM: 0.988,
       cutToSize: false,
       stockLengthsM: [5],
-      image: "images/profiles/diamond.svg?v=4",
+      image: "images/profiles/diamond.svg?v=10",
+      photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Diamond_Embossed_Corrugated_Polycarbonate_Sheet.png?v=1758625612&width=640",
       allowsDripstop: false,
       finishes: [
         { id: "diamond-5", name: "2.8mm, 5m sheets", pricePerMetre: 25, allowsDripstop: false },

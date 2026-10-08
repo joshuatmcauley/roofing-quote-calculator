@@ -485,15 +485,45 @@ function thumb(src, label) {
 }
 
 function apexArt() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" class="diagram" viewBox="-53.1 -144.6 303.4 176.6" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><ellipse cx="98.6" cy="10.0" rx="109.5" ry="6.2" fill="#1b2430" opacity="0.13"/><polygon points="0.0,0.0 217.6,0.0 217.6,-36.0 108.8,-86.0 0.0,-36.0" fill="#ffffff"/><path d="M 0.0 0.0 L 217.6 0.0 L 217.6 -36.0 L 108.8 -86.0 L 0.0 -36.0 Z" fill="none" stroke="#1c2126" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><polygon points="-18.7,-36.0 108.8,-86.0 88.4,-125.4 -39.1,-75.4" fill="#f7f8f9"/><polygon points="108.8,-86.0 236.3,-36.0 215.9,-75.4 88.4,-125.4" fill="#8b949c"/><line x1="12.9" y1="-52.7" x2="91.3" y2="-88.7" stroke="#c0c8ce" stroke-width="1.5" stroke-linecap="round"/><line x1="195.7" y1="-52.7" x2="117.4" y2="-88.7" stroke="#646d74" stroke-width="1.5" stroke-linecap="round"/><line x1="8.8" y1="-60.6" x2="87.2" y2="-96.6" stroke="#c0c8ce" stroke-width="1.5" stroke-linecap="round"/><line x1="191.6" y1="-60.6" x2="113.3" y2="-96.6" stroke="#646d74" stroke-width="1.5" stroke-linecap="round"/><line x1="4.8" y1="-68.5" x2="83.1" y2="-104.5" stroke="#c0c8ce" stroke-width="1.5" stroke-linecap="round"/><line x1="187.5" y1="-68.5" x2="109.2" y2="-104.5" stroke="#646d74" stroke-width="1.5" stroke-linecap="round"/><line x1="0.7" y1="-76.3" x2="79.0" y2="-112.3" stroke="#c0c8ce" stroke-width="1.5" stroke-linecap="round"/><line x1="183.5" y1="-76.3" x2="105.1" y2="-112.3" stroke="#646d74" stroke-width="1.5" stroke-linecap="round"/><polygon points="-18.7,-36.0 108.8,-86.0 108.8,-78.0 -18.7,-28.0" fill="#4c555d"/><polygon points="108.8,-86.0 236.3,-36.0 236.3,-28.0 108.8,-78.0" fill="#323940"/><polygon points="-18.7,-36.0 -39.1,-75.4 -39.1,-69.7 -18.7,-30.2" fill="#4c555d"/><polygon points="236.3,-36.0 215.9,-75.4 215.9,-69.7 236.3,-30.2" fill="#323940"/><polygon points="99.9,-85.4 109.1,-90.0 88.1,-130.6 78.9,-126.0" fill="#ffffff"/><polygon points="109.1,-90.0 118.3,-85.4 97.3,-126.0 88.1,-130.6" fill="#c5ced4"/><path d="M -18.7 -36.0 L 108.8 -86.0 L 88.4 -125.4 L -39.1 -75.4 Z" fill="none" stroke="#1c2126" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M 108.8 -86.0 L 236.3 -36.0 L 215.9 -75.4 L 88.4 -125.4 Z" fill="none" stroke="#1c2126" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M 99.9 -85.4 L 109.1 -90.0 L 88.1 -130.6 L 78.9 -126.0 Z" fill="none" stroke="#1c2126" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/><path d="M 109.1 -90.0 L 118.3 -85.4 L 97.3 -126.0 L 88.1 -130.6 Z" fill="none" stroke="#1c2126" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/><line x1="-18.7" y1="-28.0" x2="108.8" y2="-78.0" stroke="#1c2126" stroke-width="1.2" stroke-linecap="round"/><line x1="108.8" y1="-78.0" x2="236.3" y2="-28.0" stroke="#1c2126" stroke-width="1.2" stroke-linecap="round"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img" class="diagram" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+<defs><radialGradient id="shRoofApex" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#0d1318" stop-opacity=".20"/><stop offset="1" stop-color="#0d1318" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="160.0" cy="146.0" rx="72.3" ry="5.5" fill="url(#shRoofApex)"/>
+<polygon points="89.94,102.62 177.62,102.62 230.06,45.63 142.38,45.63" fill="#eef0f1" stroke="#aaaeb0" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="89.94,142.96 177.62,142.96 177.62,102.62 89.94,102.62" fill="#e1e4e6" stroke="#a1a5a8" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="177.62,142.96 230.06,85.97 230.06,45.63 177.62,102.62" fill="#a7abae" stroke="#797d81" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="89.94,102.62 177.62,102.62 133.78,72.81" fill="#e1e4e6" stroke="#a1a5a8" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="124.98,143.00 142.51,143.00 142.51,118.45 124.98,118.45" fill="#45515b" stroke="#343e47" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="131.36,75.44 81.39,109.43 138.66,47.18 188.64,13.19" fill="#a2a9af" stroke="#757c82" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="131.36,75.44 181.34,109.43 238.61,47.18 188.64,13.19" fill="#65717a" stroke="#4b555d" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="181.34,109.43 238.61,47.18 238.61,49.81 181.34,112.06" fill="#252f36" stroke="#1e272d" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="131.36,75.44 81.39,109.43 81.39,112.06 131.36,78.07" fill="#2f3941" stroke="#252e35" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="131.36,75.44 181.34,109.43 181.34,112.06 131.36,78.07" fill="#2f3941" stroke="#252e35" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="127.86,73.25 134.87,73.25 192.14,11.00 185.13,11.00" fill="#b7bec4" stroke="#848b90" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="127.86,75.88 134.87,75.88 134.87,73.25 127.86,73.25" fill="#8a959e" stroke="#646e76" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="134.87,75.88 192.14,13.63 192.14,11.00 134.87,73.25" fill="#687279" stroke="#4d565c" stroke-width="0.55" stroke-linejoin="round"/>
+</svg>`;
 }
 
 function monoArt() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" class="diagram" viewBox="-53.1 -158.9 303.4 190.9" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><ellipse cx="98.6" cy="10.0" rx="109.5" ry="6.2" fill="#1b2430" opacity="0.13"/><polygon points="0.0,0.0 217.6,0.0 217.6,-98.0 0.0,-36.0" fill="#ffffff"/><path d="M 0.0 0.0 L 217.6 0.0 L 217.6 -98.0 L 0.0 -36.0 Z" fill="none" stroke="#1c2126" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><polygon points="-18.7,-36.0 236.3,-98.0 215.9,-137.4 -39.1,-75.4" fill="#d4dbe1"/><line x1="17.3" y1="-50.9" x2="187.0" y2="-99.2" stroke="#8b969e" stroke-width="1.55" stroke-linecap="round"/><line x1="13.2" y1="-58.8" x2="182.9" y2="-107.1" stroke="#8b969e" stroke-width="1.55" stroke-linecap="round"/><line x1="9.1" y1="-66.7" x2="178.8" y2="-115.0" stroke="#8b969e" stroke-width="1.55" stroke-linecap="round"/><line x1="5.0" y1="-74.5" x2="174.8" y2="-122.9" stroke="#8b969e" stroke-width="1.55" stroke-linecap="round"/><polygon points="-18.7,-36.0 236.3,-98.0 236.3,-90.0 -18.7,-28.0" fill="#4c555d"/><polygon points="-18.7,-36.0 -39.1,-75.4 -39.1,-69.7 -18.7,-30.2" fill="#4c555d"/><polygon points="236.3,-98.0 215.9,-137.4 215.9,-129.4 236.3,-90.0" fill="#323940"/><polygon points="236.3,-98.0 215.9,-137.4 215.9,-144.9 236.3,-105.5" fill="#555e66"/><path d="M -18.7 -36.0 L 236.3 -98.0 L 215.9 -137.4 L -39.1 -75.4 Z" fill="none" stroke="#1c2126" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><line x1="-18.7" y1="-28.0" x2="236.3" y2="-90.0" stroke="#1c2126" stroke-width="1.2" stroke-linecap="round"/><path d="M 236.3 -105.5 L 215.9 -144.9 L 215.9 -137.4 L 236.3 -98.0 Z" fill="none" stroke="#1c2126" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img" class="diagram" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+<defs><radialGradient id="shRoofMono" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#0d1318" stop-opacity=".20"/><stop offset="1" stop-color="#0d1318" stop-opacity="0"/></radialGradient></defs>
+<ellipse cx="160.0" cy="146.0" rx="76.5" ry="5.5" fill="url(#shRoofMono)"/>
+<polygon points="85.92,102.16 178.64,102.16 234.08,41.89 141.36,41.89" fill="#eef0f1" stroke="#aaaeb0" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="85.92,142.95 178.64,142.95 178.64,102.16 85.92,102.16" fill="#e1e4e6" stroke="#a1a5a8" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="178.64,142.95 234.08,82.69 234.08,41.89 178.64,102.16" fill="#a7abae" stroke="#797d81" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="85.92,102.16 178.64,102.16 85.92,78.05" fill="#e1e4e6" stroke="#a1a5a8" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="139.65,143.00 156.34,143.00 156.34,117.04 139.65,117.04" fill="#45515b" stroke="#343e47" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="76.87,79.15 182.57,106.63 243.13,40.80 137.43,13.32" fill="#889198" stroke="#636b72" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="182.57,106.63 243.13,40.80 243.13,43.58 182.57,109.41" fill="#252f36" stroke="#1e272d" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="76.87,79.15 182.57,106.63 182.57,109.41 76.87,81.93" fill="#2f3941" stroke="#252e35" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="76.87,76.83 82.43,76.83 143.00,11.00 137.43,11.00" fill="#b7bec4" stroke="#848b90" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="76.87,79.61 82.43,79.61 82.43,76.83 76.87,76.83" fill="#8a959e" stroke="#646e76" stroke-width="0.55" stroke-linejoin="round"/>
+<polygon points="82.43,79.61 143.00,13.78 143.00,11.00 82.43,76.83" fill="#687279" stroke="#4d565c" stroke-width="0.55" stroke-linejoin="round"/>
+</svg>`;
 }
 
 function bothArt() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" class="diagram" viewBox="-51.1 -156.9 616.8 186.9" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><ellipse cx="98.6" cy="10.0" rx="109.5" ry="6.2" fill="#1b2430" opacity="0.13"/><polygon points="0.0,0.0 217.6,0.0 217.6,-36.0 108.8,-86.0 0.0,-36.0" fill="#ffffff"/><path d="M 0.0 0.0 L 217.6 0.0 L 217.6 -36.0 L 108.8 -86.0 L 0.0 -36.0 Z" fill="none" stroke="#1c2126" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><polygon points="-18.7,-36.0 108.8,-86.0 88.4,-125.4 -39.1,-75.4" fill="#f7f8f9"/><polygon points="108.8,-86.0 236.3,-36.0 215.9,-75.4 88.4,-125.4" fill="#8b949c"/><line x1="12.9" y1="-52.7" x2="91.3" y2="-88.7" stroke="#c0c8ce" stroke-width="1.5" stroke-linecap="round"/><line x1="195.7" y1="-52.7" x2="117.4" y2="-88.7" stroke="#646d74" stroke-width="1.5" stroke-linecap="round"/><line x1="8.8" y1="-60.6" x2="87.2" y2="-96.6" stroke="#c0c8ce" stroke-width="1.5" stroke-linecap="round"/><line x1="191.6" y1="-60.6" x2="113.3" y2="-96.6" stroke="#646d74" stroke-width="1.5" stroke-linecap="round"/><line x1="4.8" y1="-68.5" x2="83.1" y2="-104.5" stroke="#c0c8ce" stroke-width="1.5" stroke-linecap="round"/><line x1="187.5" y1="-68.5" x2="109.2" y2="-104.5" stroke="#646d74" stroke-width="1.5" stroke-linecap="round"/><line x1="0.7" y1="-76.3" x2="79.0" y2="-112.3" stroke="#c0c8ce" stroke-width="1.5" stroke-linecap="round"/><line x1="183.5" y1="-76.3" x2="105.1" y2="-112.3" stroke="#646d74" stroke-width="1.5" stroke-linecap="round"/><polygon points="-18.7,-36.0 108.8,-86.0 108.8,-78.0 -18.7,-28.0" fill="#4c555d"/><polygon points="108.8,-86.0 236.3,-36.0 236.3,-28.0 108.8,-78.0" fill="#323940"/><polygon points="-18.7,-36.0 -39.1,-75.4 -39.1,-69.7 -18.7,-30.2" fill="#4c555d"/><polygon points="236.3,-36.0 215.9,-75.4 215.9,-69.7 236.3,-30.2" fill="#323940"/><polygon points="99.9,-85.4 109.1,-90.0 88.1,-130.6 78.9,-126.0" fill="#ffffff"/><polygon points="109.1,-90.0 118.3,-85.4 97.3,-126.0 88.1,-130.6" fill="#c5ced4"/><path d="M -18.7 -36.0 L 108.8 -86.0 L 88.4 -125.4 L -39.1 -75.4 Z" fill="none" stroke="#1c2126" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M 108.8 -86.0 L 236.3 -36.0 L 215.9 -75.4 L 88.4 -125.4 Z" fill="none" stroke="#1c2126" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><path d="M 99.9 -85.4 L 109.1 -90.0 L 88.1 -130.6 L 78.9 -126.0 Z" fill="none" stroke="#1c2126" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/><path d="M 109.1 -90.0 L 118.3 -85.4 L 97.3 -126.0 L 88.1 -130.6 Z" fill="none" stroke="#1c2126" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/><line x1="-18.7" y1="-28.0" x2="108.8" y2="-78.0" stroke="#1c2126" stroke-width="1.2" stroke-linecap="round"/><line x1="108.8" y1="-78.0" x2="236.3" y2="-28.0" stroke="#1c2126" stroke-width="1.2" stroke-linecap="round"/><g transform="translate(0 0.0)"><ellipse cx="416.0" cy="10.0" rx="109.5" ry="6.2" fill="#1b2430" opacity="0.13"/><polygon points="317.4,0.0 535.0,0.0 535.0,-98.0 317.4,-36.0" fill="#ffffff"/><path d="M 317.4 0.0 L 535.0 0.0 L 535.0 -98.0 L 317.4 -36.0 Z" fill="none" stroke="#1c2126" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><polygon points="298.7,-36.0 553.7,-98.0 533.3,-137.4 278.3,-75.4" fill="#d4dbe1"/><line x1="334.7" y1="-50.9" x2="504.4" y2="-99.2" stroke="#8b969e" stroke-width="1.55" stroke-linecap="round"/><line x1="330.6" y1="-58.8" x2="500.3" y2="-107.1" stroke="#8b969e" stroke-width="1.55" stroke-linecap="round"/><line x1="326.5" y1="-66.7" x2="496.2" y2="-115.0" stroke="#8b969e" stroke-width="1.55" stroke-linecap="round"/><line x1="322.4" y1="-74.5" x2="492.2" y2="-122.9" stroke="#8b969e" stroke-width="1.55" stroke-linecap="round"/><polygon points="298.7,-36.0 553.7,-98.0 553.7,-90.0 298.7,-28.0" fill="#4c555d"/><polygon points="298.7,-36.0 278.3,-75.4 278.3,-69.7 298.7,-30.2" fill="#4c555d"/><polygon points="553.7,-98.0 533.3,-137.4 533.3,-129.4 553.7,-90.0" fill="#323940"/><polygon points="553.7,-98.0 533.3,-137.4 533.3,-144.9 553.7,-105.5" fill="#555e66"/><path d="M 298.7 -36.0 L 553.7 -98.0 L 533.3 -137.4 L 278.3 -75.4 Z" fill="none" stroke="#1c2126" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><line x1="298.7" y1="-28.0" x2="553.7" y2="-90.0" stroke="#1c2126" stroke-width="1.2" stroke-linecap="round"/><path d="M 553.7 -105.5 L 533.3 -144.9 L 533.3 -137.4 L 553.7 -98.0 Z" fill="none" stroke="#1c2126" stroke-width="1.35" stroke-linejoin="round" stroke-linecap="round"/></g></svg>`;
+  return apexArt();
 }
 
 function roofArt(type) {
@@ -502,7 +532,7 @@ function roofArt(type) {
   let drawing = apexArt();
   if (type.includeApex && type.includeMono) drawing = bothArt();
   else if (type.includeMono) drawing = monoArt();
-  return `<div class="media">${drawing}</div>`;
+  return `<div class="media pattern">${drawing}</div>`;
 }
 
 function renderMeasureInput(key) {
@@ -865,6 +895,15 @@ function renderMeasureStep() {
   return html;
 }
 
+// Sheet picture: a drawing by default, or the shop's own product photo when config.js says imageMode: "photo".
+function profileImage(profile) {
+  if (originalConfig && originalConfig.imageMode === "photo") {
+    const fresh = (originalConfig.profiles || []).find((item) => item.id === profile.id);
+    if (fresh && fresh.photo) return fresh.photo;
+  }
+  return profile.image;
+}
+
 function profileGroup(profile) {
   const id = profile && profile.id;
   if (id === "profile-box" || id === "profile-tile" || id === "profile-sandwich") return "Metal roofing";
@@ -884,7 +923,7 @@ function renderProfileStep() {
     if (!profiles.length) return "";
     return `<h3>${esc(name)}</h3><div class="choices">${profiles.map((profile) => `
     <button type="button" class="choice${quote.profileId === profile.id ? " is-selected" : ""}" data-action="select-profile" data-id="${esc(profile.id)}">
-      ${thumb(profile.image, profile.name)}
+      ${thumb(profileImage(profile), profile.name)}
       <strong>${esc(profile.name)}</strong>
       <p>From ${esc(incMoney(profileFromPrice(profile)))}&nbsp;/&nbsp;m · cover&nbsp;${trimNum(profile.coverWidthM)}&nbsp;m${profile.outOfStock ? " · <strong>Out of stock</strong>" : (Array.isArray(profile.outOfStockLengthsM) && profile.outOfStockLengthsM.length ? ` · ${esc(profile.outOfStockLengthsM.map(trimNum).join(", "))}&nbsp;m out of stock` : "")}</p>
     </button>`).join("")}</div>`;
@@ -1285,6 +1324,7 @@ function renderJobStep() {
   if (!jobs.length) return `<p class="muted">No calculators are set up yet.</p>`;
   return `<div class="choices">${jobs.map((job) => `
     <button type="button" class="choice${quote.jobId === job.id ? " is-selected" : ""}" data-action="select-job" data-id="${esc(job.id)}">
+      ${job.id === "roof" ? "" : thumb("images/jobs/" + job.id + ".svg?v=1", job.name)}
       <strong>${esc(job.name)}</strong>
       <p>${esc(job.blurb)}</p>
     </button>`).join("")}</div>
