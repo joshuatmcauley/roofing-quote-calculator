@@ -1,10 +1,10 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160" role="img">
-<defs><radialGradient id="sh" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#0d1318" stop-opacity=".20"/><stop offset="1" stop-color="#0d1318" stop-opacity="0"/></radialGradient></defs>
-<ellipse cx="160.0" cy="115.5" rx="138.0" ry="5.5" fill="url(#sh)"/>
-<polygon points="18.82,45.36 306.47,45.36 310.00,41.52 22.35,41.52" fill="#7f8286" stroke="#5d6165" stroke-width="0.55" stroke-linejoin="round"/>
-<polygon points="18.82,102.89 306.47,102.89 306.47,45.36 18.82,45.36" fill="#32383d" stroke="#272d32" stroke-width="0.55" stroke-linejoin="round"/>
-<polygon points="306.47,102.89 310.00,99.05 310.00,41.52 306.47,45.36" fill="#282d32" stroke="#20252a" stroke-width="0.55" stroke-linejoin="round"/>
-<polygon points="10.00,104.81 297.65,104.81 310.00,91.38 22.35,91.38" fill="#7f8286" stroke="#5d6165" stroke-width="0.55" stroke-linejoin="round"/>
-<polygon points="10.00,112.48 297.65,112.48 297.65,104.81 10.00,104.81" fill="#32383d" stroke="#272d32" stroke-width="0.55" stroke-linejoin="round"/>
-<polygon points="297.65,112.48 310.00,99.05 310.00,91.38 297.65,104.81" fill="#282d32" stroke="#20252a" stroke-width="0.55" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 170" role="img">
+<defs><filter id="ashf" x="-30%" y="-60%" width="160%" height="260%"><feGaussianBlur stdDeviation="3.2"/></filter></defs>
+<ellipse cx="170.0" cy="122.9" rx="139.0" ry="4.6" fill="#0b1118" fill-opacity=".22" filter="url(#ashf)"/>
+<path d="M 21.29,108.77 L 324.28,108.77 L 324.28,48.17 L 21.29,48.17 Z" fill="#212529" stroke="#212529" stroke-width=".35"/>
+<path d="M 324.28,108.77 L 328.00,104.73 L 328.00,44.13 L 324.28,48.17 Z" fill="#1c1f23" stroke="#1c1f23" stroke-width=".35"/>
+<path d="M 21.29,48.17 L 324.28,48.17 L 328.00,44.13 L 25.01,44.13 Z" fill="#2b2f34" stroke="#2b2f34" stroke-width=".35"/>
+<path d="M 12.00,118.87 L 314.99,118.87 L 314.99,110.79 L 12.00,110.79 Z" fill="#282d32" stroke="#282d32" stroke-width=".35"/>
+<path d="M 314.99,118.87 L 328.00,104.73 L 328.00,96.65 L 314.99,110.79 Z" fill="#22262a" stroke="#22262a" stroke-width=".35"/>
+<path d="M 12.00,110.79 L 314.99,110.79 L 328.00,96.65 L 25.01,96.65 Z" fill="#353a40" stroke="#353a40" stroke-width=".35"/>
 </svg>
