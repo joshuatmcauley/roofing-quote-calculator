@@ -28,6 +28,7 @@ const ui = {
   catalogueQuery: "",
   cladPhase: "shape",
   cladError: "",
+  focusField: null,
 };
 
 function clone(value) {
@@ -1330,6 +1331,19 @@ function renderRoofDiagram(mode) {
   const svg = diaFrame(fullW, bodyH, parts.join(""), caption, key);
   const preview = renderRoofPreview(mode);
   return `${preview}<div class="scale-diagram"><h3>Plan, to scale</h3>${svg}<p class="scale-caption">${esc(caption)}</p></div>`;
+}
+
+function refreshRoofPreview() {
+  const host = document.querySelector(".roof-preview");
+  const type = currentType();
+  if (!type) return;
+  const mode = type.includeApex ? "apex" : "mono";
+  const html = renderRoofPreview(mode);
+  if (!html) {
+    if (host) host.remove();
+    return;
+  }
+  if (host) host.outerHTML = html;
 }
 /* Work out the sheet length (C) from the span and the height difference.
    Pythagoras: the slope is the hypotenuse over the span and the rise. */
@@ -4229,20 +4243,25 @@ function init() {
   if (quote.jobId && !(config.jobs || []).some((item) => item.id === quote.jobId)) quote.jobId = null;
   applySavedFromHash();
   const app = document.getElementById("app");
-  // highlight the matching letter on the 3D preview while a measurement is focused
+  // Highlight the matching letter on the 3D preview while a measurement is
+  // focused. Do not rebuild the page here — that destroyed the input and
+  // made the fields impossible to click into.
   app.addEventListener("focusin", (event) => {
     const el = event.target.closest('[data-action="measure"]');
     const field = el ? el.dataset.field : null;
     if (ui.focusField === field) return;
     ui.focusField = field;
-    if (field || ui.focusField === null) render();
+    refreshRoofPreview();
   });
   app.addEventListener("focusout", (event) => {
     const el = event.target.closest('[data-action="measure"]');
     if (!el) return;
     window.setTimeout(() => {
       const still = document.activeElement && document.activeElement.closest('[data-action="measure"]');
-      if (!still && ui.focusField) { ui.focusField = null; render(); }
+      if (!still && ui.focusField) {
+        ui.focusField = null;
+        refreshRoofPreview();
+      }
     }, 0);
   });
   app.addEventListener("click", onClick);
