@@ -192,6 +192,7 @@ function normalizeQuote() {
   quote.customNotes = { ...(quote.customNotes || {}) };
   if (typeof quote.apexSame !== "boolean") quote.apexSame = true;
   if (quote.units !== "ft") quote.units = "m";
+  if (!quote.slopeRise || typeof quote.slopeRise !== "object") quote.slopeRise = {};
   if (quote.roofTypeId === "roof-apex-mono") quote.roofTypeId = null;
   if (!Array.isArray(quote.walls)) quote.walls = [];
   if (!quote.wallDraft || typeof quote.wallDraft !== "object") quote.wallDraft = blankWall();
@@ -463,8 +464,8 @@ function stepMsg(step) {
 }
 
 function fieldMsg(field) {
-  if (!ui.showErrors) return "";
-  const hit = lastCalc.errors.find((error) => error.field === field);
+  // "always" errors are impossible measurements, not blanks: show them at once
+  const hit = lastCalc.errors.find((error) => error.field === field && (ui.showErrors || error.always));
   return hit ? `<p class="err">${esc(hit.message)}</p>` : "";
 }
 
@@ -1275,6 +1276,38 @@ function renderRoofDiagram(mode) {
   const preview = renderRoofPreview(mode);
   return `${preview}<div class="scale-diagram"><h3>Plan, to scale</h3>${svg}<p class="scale-caption">${esc(caption)}</p></div>`;
 }
+/* Work out the sheet length (C) from the span and the height difference.
+   Pythagoras: the slope is the hypotenuse over the span and the rise. */
+function slopeHelper(mode) {
+  const apex = mode === "apex";
+  const spanField = apex ? "apexB" : "monoB";
+  const slopeField = apex ? "apexC" : "monoC";
+  const open = ui.slopeHelp === mode;
+  const span = val(metricQuote()[spanField]);
+  const run = apex ? span / 2 : span;
+  const riseRaw = (quote.slopeRise || {})[mode] || "";
+  const rise = useFeet() ? metresFromFeet(Number(riseRaw)) : Number(riseRaw);
+  let answer = "";
+  if (open && run > 0 && Number.isFinite(rise) && rise > 0) {
+    const c = Math.sqrt(run * run + rise * rise);
+    answer = `<p class="ok">That makes <strong>${fmtLen(c)}</strong> from eave to ridge.
+      <button type="button" class="text-btn" data-action="use-slope" data-mode="${esc(mode)}" data-value="${svgNum(fromMetres(c))}">Use this for C</button></p>`;
+  } else if (open && !(run > 0)) {
+    answer = `<p class="muted">Fill in the span (B) first.</p>`;
+  }
+  return `<div class="slope-help">
+    <button type="button" class="text-btn" data-action="slope-help" data-mode="${esc(mode)}">
+      ${open ? "Hide" : "Not sure what C is? Work it out"}
+    </button>
+    ${open ? `<div class="slope-help-body">
+      <p class="muted">Measure the span (B) flat on the ground, then how much higher the top edge sits than the bottom.</p>
+      <label class="field" for="rise_${esc(mode)}"><span>Height difference, bottom edge to top (${unitShort()})</span>
+        <input id="rise_${esc(mode)}" data-action="slope-rise" data-mode="${esc(mode)}" value="${esc(riseRaw)}" inputmode="decimal" autocomplete="off"></label>
+      ${answer}
+    </div>` : ""}
+  </div>`;
+}
+
 function renderMeasureStep() {
   const type = currentType();
   if (!type) return `<p class="muted">${esc(config.copy.needType)}</p>`;
@@ -1287,14 +1320,14 @@ function renderMeasureStep() {
       <div>${renderMeasureInput("apexD")}
         <label class="check" for="apex_same"><input id="apex_same" type="checkbox" data-action="apex-same" ${quote.apexSame ? "checked" : ""}><span>${esc(config.copy.sameSide)}</span></label>
       </div>
-    </div>${renderRoofDiagram("apex")}`;
+    </div>${slopeHelper("apex")}${renderRoofDiagram("apex")}`;
   }
   if (type.includeMono) {
     html += `<h3>Single Slope Measurements</h3><div class="step-grid">
       ${renderMeasureInput("monoA")}
       ${renderMeasureInput("monoB")}
       ${renderMeasureInput("monoC")}
-    </div>${renderRoofDiagram("mono")}`;
+    </div>${slopeHelper("mono")}${renderRoofDiagram("mono")}`;
   }
   if (lastCalc.slopes.length) {
     html += `<ul class="preview">${lastCalc.slopes.map((slope) => {
@@ -2573,13 +2606,18 @@ function renderStepNav() {
   </nav>`;
 }
 
+let lastStepShown = null;
+let animateStep = null;
+
 function renderSteps() {
   const steps = visibleSteps();
   const current = currentNavStep(steps);
+  animateStep = current !== lastStepShown ? current : null;
+  lastStepShown = current;
   return `<div class="steps">${steps.map((step, index) => {
     const shown = displayStep(step);
     return `
-    <section class="step${step.id === current ? " is-current" : ""}" data-step-anchor="${esc(step.id)}">
+    <section class="step${step.id === current ? " is-current" : ""}${step.id === animateStep ? " step-enter" : ""}" data-step-anchor="${esc(step.id)}">
       <div class="step-head">
         <span class="num">${index + 1}</span>
         <h2>${esc(shown.title)}</h2>
@@ -3468,6 +3506,19 @@ function onClick(event) {
     window.scrollTo(0, 0);
     return;
   }
+  if (action === "slope-help") {
+    ui.slopeHelp = ui.slopeHelp === el.dataset.mode ? null : el.dataset.mode;
+    render();
+    return;
+  }
+  if (action === "use-slope") {
+    const mode = el.dataset.mode;
+    quote[mode === "apex" ? "apexC" : "monoC"] = el.dataset.value;
+    ui.slopeHelp = null;
+    ui.added = false;
+    render();
+    return;
+  }
   if (action === "units") {
     setUnits(el.dataset.unit);
     ui.added = false;
@@ -3875,6 +3926,12 @@ function handleField(el) {
   if (action === "job-variant") {
     quote.jobVariantId = el.value;
     ui.added = false;
+    render();
+    return;
+  }
+  if (action === "slope-rise") {
+    rememberFocus(el);
+    quote.slopeRise = { ...(quote.slopeRise || {}), [el.dataset.mode]: el.value };
     render();
     return;
   }

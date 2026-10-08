@@ -530,3 +530,105 @@ input:disabled { background: #f4f6f8; color: var(--muted); }
 }
 
 .unit-note { margin-top: -4px; }
+
+.slope-help { margin: 2px 0 14px; }
+.slope-help-body {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border: 1px solid #e3e7ee;
+  border-radius: 10px;
+  background: #fbfcfe;
+}
+.slope-help-body .field { margin: 8px 0 0; max-width: 340px; }
+.slope-help-body p { margin: 0; }
+
+/* ---- Motion and polish ---------------------------------------------------
+   The page re-renders wholesale on every keystroke, so nothing here animates
+   on mount except .step-enter, which app.js adds only when the step changes.
+   Everything else is state-driven, so it cannot flicker while typing.      */
+:root {
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --quick: 140ms;
+  --calm: 260ms;
+}
+
+.choice, .swatch, .pick, .editor-card {
+  transition: border-color var(--quick) var(--ease),
+              background-color var(--quick) var(--ease),
+              box-shadow var(--quick) var(--ease),
+              transform var(--quick) var(--ease);
+}
+.choice:hover, .swatch:hover, .pick:hover, .editor-card:hover {
+  border-color: #b9b9b9;
+  box-shadow: 0 2px 10px rgba(16, 24, 40, 0.07);
+  transform: translateY(-2px);
+}
+.choice:active, .swatch:active, .pick:active { transform: translateY(0); }
+.choice.is-selected, .swatch.is-selected, .pick.is-on {
+  box-shadow: 0 2px 10px rgba(16, 24, 40, 0.09);
+}
+.choice.is-selected:hover, .swatch.is-selected:hover { transform: translateY(-2px); }
+
+button, .text-btn, .primary, .unit-btn {
+  transition: background-color var(--quick) var(--ease),
+              border-color var(--quick) var(--ease),
+              color var(--quick) var(--ease),
+              transform var(--quick) var(--ease),
+              box-shadow var(--quick) var(--ease);
+}
+.primary:hover { background: #151515; box-shadow: 0 3px 12px rgba(16, 24, 40, 0.18); }
+.primary:active, .unit-btn:active { transform: translateY(1px) scale(0.995); }
+.text-btn:hover { color: #1b1b1b; }
+
+input, select, textarea {
+  transition: border-color var(--quick) var(--ease), box-shadow var(--quick) var(--ease);
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #6f7c92;
+  box-shadow: 0 0 0 3px rgba(47, 80, 128, 0.14);
+}
+:focus-visible {
+  outline: 2px solid #2f5080;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.step { transition: border-color var(--calm) var(--ease), box-shadow var(--calm) var(--ease); }
+.step.is-current { border-color: #d8dde5; box-shadow: 0 1px 14px rgba(16, 24, 40, 0.05); }
+.step .num { transition: background-color var(--calm) var(--ease), color var(--calm) var(--ease); }
+
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes itemIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.step-enter .step-body { animation: stepIn var(--calm) var(--ease) both; }
+.step-enter .choices > *, .step-enter .swatches > * {
+  animation: itemIn 300ms var(--ease) both;
+}
+.step-enter .choices > *:nth-child(1), .step-enter .swatches > *:nth-child(1) { animation-delay: 20ms; }
+.step-enter .choices > *:nth-child(2), .step-enter .swatches > *:nth-child(2) { animation-delay: 55ms; }
+.step-enter .choices > *:nth-child(3), .step-enter .swatches > *:nth-child(3) { animation-delay: 90ms; }
+.step-enter .choices > *:nth-child(4), .step-enter .swatches > *:nth-child(4) { animation-delay: 125ms; }
+.step-enter .choices > *:nth-child(5), .step-enter .swatches > *:nth-child(5) { animation-delay: 160ms; }
+.step-enter .choices > *:nth-child(n+6), .step-enter .swatches > *:nth-child(n+6) { animation-delay: 190ms; }
+
+.roof-preview, .scale-diagram { transition: box-shadow var(--calm) var(--ease); }
+.roof-preview:hover { box-shadow: 0 3px 16px rgba(16, 30, 54, 0.09); }
+
+.err, .ok, .note { transition: opacity var(--quick) var(--ease); }
+.swatch .chip-sheet, .choice .media { transition: filter var(--quick) var(--ease); }
+.swatch:hover .chip-sheet, .choice:hover .media { filter: saturate(1.06); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .choice:hover, .swatch:hover, .pick:hover, .editor-card:hover { transform: none; }
+}

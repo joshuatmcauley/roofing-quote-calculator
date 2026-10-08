@@ -70,32 +70,32 @@ const QUOTE_CONFIG = {
   ],
   measureFields: {
     apexA: {
-      label: "A — Length Side 1 (metres)",
+      label: "A — Eaves length, side 1 (metres)",
       help: "Eaves length of the first slope. Sheets are counted along this side.",
     },
     apexB: {
-      label: "B — Span / Width (metres)",
-      help: "Overall width of this part of the roof. Kept on the quote for reference. Sheet quantity uses the eaves length and the cover width.",
+      label: "B — Span, the flat width (metres)",
+      help: "Width across the whole roof, measured flat on the ground. Used to check your sheet length makes sense. It does not set the price on its own.",
     },
     apexC: {
-      label: "C — Eave to Ridge (metres)",
-      help: "Sloping length from the eaves up to the ridge. Cut-to-size sheets use this length. Sandwich panels and polycarbonate round up to the next stock length.",
+      label: "C — Sheet length, eave to ridge (metres)",
+      help: "How far a sheet travels up the slope, from the bottom edge to the top. This is the length of sheet you buy, so it sets the price. Always longer than half the span. Cut-to-size sheets use it as is; sandwich panels and polycarbonate round up to the next stock length.",
     },
     apexD: {
-      label: "D — Length Side 2 (metres)",
+      label: "D — Eaves length, side 2 (metres)",
       help: "Eaves length of the second slope. On a rectangular roof this is the same as side 1.",
     },
     monoA: {
-      label: "A — Length (metres)",
+      label: "A — Eaves length (metres)",
       help: "Eaves length of the single slope. Sheets are counted along this side.",
     },
     monoB: {
-      label: "B — Span / Width (metres)",
-      help: "Horizontal width of the single slope, kept on the quote for reference.",
+      label: "B — Span, the flat width (metres)",
+      help: "Width of the slope measured flat on the ground, not up the slope. Used to check your sheet length makes sense. It does not set the price on its own.",
     },
     monoC: {
-      label: "C — Eave to Ridge (metres)",
-      help: "Sloping sheet length. Cut-to-size sheets use this length. Sandwich panels and polycarbonate round up to the next stock length.",
+      label: "C — Sheet length, eave to ridge (metres)",
+      help: "How far a sheet travels up the slope, from the bottom edge to the top. This is the length of sheet you buy, so it sets the price. Always longer than the span. Cut-to-size sheets use it as is; sandwich panels and polycarbonate round up to the next stock length.",
     },
   },
   rules: {

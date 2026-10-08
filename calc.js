@@ -465,6 +465,23 @@ function calculate(quote, config) {
     }
   }
 
+  // A roof slope is the hypotenuse over its span, so it can never be shorter
+  // than the span it covers. Catching this stops a badly under-ordered quote.
+  function checkSlopeAgainstSpan(spanField, slopeField, label, halves) {
+    const span = val(q[spanField]);
+    const slope = val(q[slopeField]);
+    if (!(span > 0) || !(slope > 0)) return;
+    const needed = halves ? span / 2 : span;
+    if (slope + 1e-6 < needed) {
+      errors.push({
+        step: "measure",
+        field: slopeField,
+        always: true,
+        message: `${label}: the eave-to-ridge length (${trimNum(slope)} m) cannot be shorter than ${halves ? "half the span" : "the span"} (${trimNum(needed)} m). On a roof the sheet runs up a slope, so it is always the longer of the two. Measure along the slope, or enter the span and the rise and work it out.`,
+      });
+    }
+  }
+
   function requireField(field) {
     if (String(q[field] ?? "").trim() === "" || !(val(q[field]) > 0)) {
       errors.push({ step: "measure", field, message: "Please enter a value greater than 0." });
@@ -506,6 +523,14 @@ function calculate(quote, config) {
   }
 
   const slopes = [];
+  let geometryBad = false;
+  if (type) {
+    const before = errors.length;
+    if (type.includeApex) checkSlopeAgainstSpan("apexB", "apexC", "Apex roof", true);
+    if (type.includeMono) checkSlopeAgainstSpan("monoB", "monoC", "Single slope");
+    geometryBad = errors.length > before;
+  }
+
   function addSlope(id, label, eavesRaw, slopeRaw) {
     const eaves = val(eavesRaw);
     const slope = val(slopeRaw);
@@ -754,6 +779,7 @@ function calculate(quote, config) {
     finishOk,
     colourOk,
     quoteReady: (!typeFlags.enabled || !typeFlags.required || typeOk)
+      && !geometryBad
       && (!measureFlags.enabled || !measureFlags.required || measurementsOk)
       && (!profileFlags.enabled || !profileFlags.required || profileOk)
       && (!finishFlags.enabled || !finishFlags.required || finishOk)
