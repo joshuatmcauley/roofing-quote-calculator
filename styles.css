@@ -433,8 +433,8 @@ input:disabled { background: #f4f6f8; color: var(--muted); }
   .step-head h2 { font-size: 28px; }
   .calc-intro h1 { font-size: 28px; }
   .summary { position: static; max-height: none; }
-  .mobile-total { display: flex; }
-  body.is-quote { padding-bottom: 4px; }
+  .mobile-total { display: none; }
+  body.is-quote { padding-bottom: 12px; }
   .site-head { flex-wrap: wrap; gap: 6px 12px; padding: 6px 12px; min-height: 0; }
   .site-logo img { height: 24px; max-width: 100%; }
   .site-nav { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; gap: 14px; padding: 0; scrollbar-width: none; }
