@@ -600,15 +600,6 @@ function roofMaterialCaption(look) {
   return text;
 }
 
-function roofBackedText(x, y, text, anchor, size) {
-  const label = String(text);
-  const font = size || 13;
-  const textW = Math.max(28, label.length * font * 0.56);
-  const ax = anchor === "middle" ? x - textW / 2 : anchor === "end" ? x - textW : x;
-  return `<rect x="${svgNum(ax - 3)}" y="${svgNum(y - font)}" width="${svgNum(textW + 6)}" height="${svgNum(font + 5)}" fill="#ffffff" fill-opacity="0.92"/>
-    <text x="${svgNum(x)}" y="${svgNum(y)}" text-anchor="${anchor || "start"}" font-size="${font}" font-family="Lato, sans-serif" fill="#1e428b">${esc(label)}</text>`;
-}
-
 function roofShadeStops(look) {
   const hex = look.hex;
   if (look.surface === "clear") {
@@ -752,6 +743,337 @@ function roofSheetDefs(key, look) {
   </defs>`;
 }
 
+/* ---- Scale drawings -------------------------------------------------------
+   Every diagram shares one canvas width and one set of drawing conventions, so
+   text size, line weight and colour stay identical whichever one is on screen.
+   The drawing is scaled to fit the content box and centred inside it.        */
+const DIA = {
+  W: 680, padL: 76, padR: 48, padT: 40, padB: 30, maxH: 232,
+  rule: "#2f5080", soft: "#8aa0bd", ink: "#334155", paper: "#ffffff",
+  grid: "#e8eef6", waste: "#c8822b", wasteBg: "#fdf4e6",
+};
+
+function diaScale(worldW, worldH, maxH) {
+  const boxW = DIA.W - DIA.padL - DIA.padR;
+  const h = Math.max(worldH, 0.01);
+  return Math.min(boxW / Math.max(worldW, 0.01), (maxH || DIA.maxH) / h);
+}
+
+function diaFrame(drawW, drawH, body, label, key) {
+  const id = key || "main";
+  const H = DIA.padT + drawH + DIA.padB;
+  return `<svg class="diagram" viewBox="0 0 ${svgNum(DIA.W)} ${svgNum(H)}" role="img" aria-label="${esc(label)}">
+    <defs>
+      <marker id="da-${id}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5.2" markerHeight="5.2" orient="auto-start-reverse">
+        <path d="M0.5 1.6 L9.4 5 L0.5 8.4 Z" fill="${DIA.rule}"></path>
+      </marker>
+      <pattern id="waste-${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="7" height="7" fill="${DIA.wasteBg}"></rect>
+        <line x1="0" y1="0" x2="0" y2="7" stroke="${DIA.waste}" stroke-width="1.6" stroke-opacity=".55"></line>
+      </pattern>
+      <filter id="halo-${id}" x="-12%" y="-28%" width="124%" height="156%">
+        <feFlood flood-color="#ffffff" flood-opacity="0.92"></feFlood>
+        <feComposite in2="SourceAlpha" operator="in"></feComposite>
+        <feGaussianBlur stdDeviation="1.6"></feGaussianBlur>
+        <feComponentTransfer><feFuncA type="linear" slope="6"></feFuncA></feComponentTransfer>
+        <feComposite in="SourceGraphic"></feComposite>
+      </filter>
+    </defs>
+    ${body}
+  </svg>`;
+}
+
+function diaX0(drawW) {
+  const boxW = DIA.W - DIA.padL - DIA.padR;
+  return DIA.padL + Math.max(0, (boxW - drawW) / 2);
+}
+
+function diaText(x, y, text, anchor, size, colour, weight) {
+  return `<text x="${svgNum(x)}" y="${svgNum(y)}" text-anchor="${anchor || "start"}" font-size="${size || 12}"
+    font-family="Outfit, Lato, system-ui, sans-serif" font-weight="${weight || 500}" fill="${colour || DIA.ink}">${esc(String(text))}</text>`;
+}
+
+function diaChip(x, y, text, anchor, key, size) {
+  const id = key || "main";
+  return `<g filter="url(#halo-${id})">${diaText(x, y, text, anchor, size || 12.5, DIA.ink, 600)}</g>`;
+}
+
+/* horizontal dimension with witness ticks */
+function dimAcross(x1, x2, y, label, key) {
+  const id = key || "main";
+  const mid = (x1 + x2) / 2;
+  return `<g>
+    <line x1="${svgNum(x1)}" y1="${svgNum(y - 7)}" x2="${svgNum(x1)}" y2="${svgNum(y + 5)}" stroke="${DIA.soft}" stroke-width="1"/>
+    <line x1="${svgNum(x2)}" y1="${svgNum(y - 7)}" x2="${svgNum(x2)}" y2="${svgNum(y + 5)}" stroke="${DIA.soft}" stroke-width="1"/>
+    <line x1="${svgNum(x1)}" y1="${svgNum(y)}" x2="${svgNum(x2)}" y2="${svgNum(y)}" stroke="${DIA.rule}" stroke-width="1.1"
+      marker-start="url(#da-${id})" marker-end="url(#da-${id})"/>
+    ${diaChip(mid, y + 4.5, label, "middle", id)}
+  </g>`;
+}
+
+/* vertical dimension, label rotated to sit beside the line */
+function dimDown(x, y1, y2, label, key) {
+  const id = key || "main";
+  const mid = (y1 + y2) / 2;
+  return `<g>
+    <line x1="${svgNum(x - 5)}" y1="${svgNum(y1)}" x2="${svgNum(x + 7)}" y2="${svgNum(y1)}" stroke="${DIA.soft}" stroke-width="1"/>
+    <line x1="${svgNum(x - 5)}" y1="${svgNum(y2)}" x2="${svgNum(x + 7)}" y2="${svgNum(y2)}" stroke="${DIA.soft}" stroke-width="1"/>
+    <line x1="${svgNum(x)}" y1="${svgNum(y1)}" x2="${svgNum(x)}" y2="${svgNum(y2)}" stroke="${DIA.rule}" stroke-width="1.1"
+      marker-start="url(#da-${id})" marker-end="url(#da-${id})"/>
+    <g transform="translate(${svgNum(x - 7)} ${svgNum(mid)}) rotate(-90)">${diaChip(0, 0, label, "middle", id)}</g>
+  </g>`;
+}
+
+function diaTitle(x, y, text, key) {
+  return diaText(x, y, text, "start", 12, DIA.soft, 600);
+}
+
+function diaLegend(x, y, swatch, text, hatch, key) {
+  const id = key || "main";
+  const fill = hatch ? `url(#waste-${id})` : swatch;
+  return `<g><rect x="${svgNum(x)}" y="${svgNum(y - 8)}" width="13" height="10" rx="1.5" fill="${fill}"
+    fill-opacity="${hatch ? 1 : 0.44}" stroke="${hatch ? DIA.waste : DIA.soft}" stroke-width=".9" stroke-opacity=".8"/>
+    ${diaText(x + 18, y, text, "start", 11.5, DIA.soft, 500)}</g>`;
+}
+
+/* ---- Realistic roof preview ----------------------------------------------
+   Draws the building in 3D with the chosen sheet pressed into the roof: the
+   real profile shape, the real colour, and the real number of covers along the
+   eaves. Shading is Blinn-Phong per rib facet, so curves read as metal or
+   polycarbonate rather than as flat vector fill.                            */
+const PV = { KX: 0.52, KY: 0.40, W: 680, H: 330 };
+
+function pvProj(p) { return [p[0] + PV.KX * p[1], -(p[2] + PV.KY * p[1])]; }
+function pvNorm(v) {
+  const l = Math.hypot(v[0], v[1], v[2]) || 1;
+  return [v[0] / l, v[1] / l, v[2] / l];
+}
+const PV_LIGHT = pvNorm([-0.42, -0.34, 0.84]);
+const PV_VIEW = pvNorm([PV.KX, -1, PV.KY]);
+const PV_HALF = pvNorm([PV_LIGHT[0] + PV_VIEW[0], PV_LIGHT[1] + PV_VIEW[1], PV_LIGHT[2] + PV_VIEW[2]]);
+
+function pvShade(base, N, mat) {
+  const nl = N[0] * PV_LIGHT[0] + N[1] * PV_LIGHT[1] + N[2] * PV_LIGHT[2];
+  const nh = N[0] * PV_HALF[0] + N[1] * PV_HALF[1] + N[2] * PV_HALF[2];
+  const nv = Math.abs(N[0] * PV_VIEW[0] + N[1] * PV_VIEW[1] + N[2] * PV_VIEW[2]);
+  const dif = Math.max(0, nl);
+  const spec = Math.pow(Math.max(0, nh), mat.shin) * mat.spec;
+  const trans = mat.trans * Math.pow(Math.max(0, -nl), 0.7);
+  const i = mat.amb + mat.dif * dif + trans;
+  let col = base;
+  if (i < 1) col = mixHex(mat.cool, col, Math.min(1, 0.3 + 0.7 * i));
+  else col = mixHex(col, "#ffffff", Math.min(0.5, (i - 1) * 0.8));
+  if (spec > 0) col = mixHex(col, "#ffffff", Math.min(0.9, spec));
+  if (mat.rim) col = mixHex(col, "#ffffff", mat.rim * Math.pow(1 - nv, 2.2));
+  return col;
+}
+
+function pvMaterial(surface) {
+  if (surface === "clear") return { amb: 0.52, dif: 0.44, spec: 0.74, shin: 44, trans: 0.40, rim: 0.26, cool: "#2d4c5e", op: 0.88 };
+  if (surface === "bronze") return { amb: 0.42, dif: 0.58, spec: 0.76, shin: 40, trans: 0.30, rim: 0.22, cool: "#3a2208", op: 0.95 };
+  return { amb: 0.33, dif: 0.70, spec: 0.40, shin: 30, trans: 0, rim: 0, cool: "#0a1016", op: 1 };
+}
+
+/* profile height (metres) across the sheet, and its slope dh/dx */
+function pvProfile(kind, cover) {
+  const c = cover > 0 ? cover : 1;
+  if (kind === "corr" || kind === "diamond") {
+    const pitch = c / 10, amp = 0.018;
+    return { h: (x) => amp / 2 - amp / 2 * Math.cos(2 * Math.PI * x / pitch),
+             d: (x) => Math.PI * amp / pitch * Math.sin(2 * Math.PI * x / pitch), step: pitch / 14 };
+  }
+  if (kind === "tile") {
+    const pitch = c / 6, amp = 0.022;
+    return { h: (x) => { const u = (x % pitch) / pitch; if (u < 0.6) return 0; const t = (u - 0.6) / 0.4; return amp * Math.pow(Math.sin(Math.PI * t), 1.25); },
+             d: (x) => { const u = (x % pitch) / pitch; if (u < 0.6) return 0; const t = (u - 0.6) / 0.4;
+               return amp * 1.25 * Math.pow(Math.sin(Math.PI * t), 0.25) * Math.cos(Math.PI * t) * Math.PI / (0.4 * pitch); }, step: pitch / 16 };
+  }
+  if (kind === "flat") {
+    const amp = 0.03;
+    return { h: (x) => { const u = (x % c) / c; return (u < 0.06 || u > 0.94) ? amp : 0; },
+             d: () => 0, step: c / 40 };
+  }
+  // box / sandwich: wide flat pans, narrow upstand ribs
+  const pitch = c / 5, rib = pitch * 0.22, flank = pitch * 0.09, amp = kind === "plain" ? 0.012 : 0.024;
+  return {
+    h: (x) => { const u = x % pitch; if (u < pitch - rib - flank) return 0;
+      if (u < pitch - rib) return amp * (u - (pitch - rib - flank)) / flank;
+      if (u < pitch - flank) return amp;
+      return amp * (1 - (u - (pitch - flank)) / flank); },
+    d: (x) => { const u = x % pitch; if (u < pitch - rib - flank) return 0;
+      if (u < pitch - rib) return amp / flank;
+      if (u < pitch - flank) return 0;
+      return -amp / flank; },
+    step: pitch / 18,
+  };
+}
+
+function renderRoofPreview(mode) {
+  const apex = mode === "apex";
+  const A = val(apex ? quote.apexA : quote.monoA);     // along the eaves
+  const B = val(apex ? quote.apexB : quote.monoB);     // span across
+  const C = val(apex ? quote.apexC : quote.monoC);     // eave to ridge
+  if (!(A > 0) || !(B > 0)) return "";
+  const look = roofLook();
+  const base = look.hex || "#9bb0c4";
+  const mat = pvMaterial(look.surface);
+  const cover = look.profile ? Number(look.profile.coverWidthM) || 0 : 0;
+  const sheets = cover > 0 ? sheetCount(A, cover) : 0;
+  const prof = pvProfile(look.kind, cover || 1);
+  const run = apex ? B / 2 : B;                         // horizontal run of one slope
+  const rise = C > run ? Math.sqrt(Math.max(C * C - run * run, 0)) : run * 0.28;
+  const wall = Math.max(Math.min(A, B) * 0.30, 0.9);
+  const over = Math.min(0.25, Math.min(A, B) * 0.05);   // eaves overhang
+  const parts = [];
+  const pts = [];
+  const add = (p) => { pts.push(pvProj(p)); return p; };
+
+  // ---- walls
+  const wallMat = { amb: 0.46, dif: 0.56, spec: 0.08, shin: 8, trans: 0, rim: 0, cool: "#1b222b", op: 1 };
+  function quad(p, N, fill, op, zFix) {
+    p.forEach(add);
+    const d = p.map((q) => { const s = pvProj(q); return `${s[0]},${s[1]}`; });
+    const z = zFix != null ? zFix : p.reduce((a, q) => a + PV.KX * q[0] - q[1] + PV.KY * q[2], 0) / p.length;
+    return { d, fill, op: op == null ? 1 : op, z };
+  }
+  const faces = [];
+  const wallCol = "#e8ebee";
+  faces.push(quad([[0, 0, 0], [A, 0, 0], [A, 0, wall], [0, 0, wall]], [0, -1, 0], pvShade(wallCol, [0, -1, 0], wallMat), 1, -1e6));
+  faces.push(quad([[A, 0, 0], [A, B, 0], [A, B, wall], [A, 0, wall]], [1, 0, 0], pvShade(wallCol, [1, 0, 0], wallMat), 1, -1.01e6));
+  // gable above the wall
+  if (apex) {
+    const g = [[A, 0, wall], [A, B, wall], [A, B / 2, wall + rise]];
+    faces.push(quad(g, [1, 0, 0], pvShade(wallCol, [1, 0, 0], wallMat), 1, -1.005e6));
+  } else {
+    const g = [[A, 0, wall], [A, B, wall + rise], [A, B, wall], [A, 0, wall]];
+    faces.push(quad(g, [1, 0, 0], pvShade(wallCol, [1, 0, 0], wallMat), 1, -1.005e6));
+  }
+  // door
+  const dw = Math.min(A * 0.18, 1.1), dh = Math.min(wall * 0.72, 2.1);
+  faces.push(quad([[A / 2 - dw / 2, -0.01, 0], [A / 2 + dw / 2, -0.01, 0], [A / 2 + dw / 2, -0.01, dh], [A / 2 - dw / 2, -0.01, dh]],
+    [0, -1, 0], "#55606b", 1, -0.99e6));
+
+  // ---- roof planes, pressed with the chosen profile
+  function slope(y0, z0, y1, z1, flip, zBias) {
+    const dy = y1 - y0, dz = z1 - z0;
+    const len = Math.hypot(dy, dz) || 1;
+    const v = [0, dy / len, dz / len];                      // up the slope
+    const n = pvNorm([0, -v[2], v[1]]);                     // plane normal
+    const step = Math.max(prof.step, cover / 60 || 0.02);
+    const x1 = A;
+    for (let x = 0; x < x1 - 1e-9; x += step) {
+      const xb = Math.min(x + step, x1);
+      const xm = (x + xb) / 2;
+      const t = prof.d(Math.max(0, xm));
+      const N = pvNorm([flip ? t : -t, -v[2] * (flip ? -1 : 1), v[1]]);
+      const Nn = N[2] < 0 ? [-N[0], -N[1], -N[2]] : N;
+      const col = pvShade(base, Nn, mat);
+      const ha = prof.h(Math.max(0, x)), hb = prof.h(Math.max(0, xb));
+      const P = (xx, hh, s) => [xx, y0 + dy * s + n[1] * hh, z0 + dz * s + n[2] * hh];
+      const q = quad([P(x, ha, 0), P(xb, hb, 0), P(xb, hb, 1), P(x, ha, 1)], Nn, col, mat.op);
+      q.z += (zBias || 0);
+      faces.push(q);
+    }
+    // sheet seams along the slope
+    if (sheets > 0 && cover > 0) {
+      for (let k = 1; k < sheets; k += 1) {
+        const x = k * cover;
+        if (x >= A) break;
+        const hh = prof.h(x);
+        const a = pvProj([x, y0 + n[1] * hh, z0 + n[2] * hh]);
+        const b = pvProj([x, y0 + dy + n[1] * hh, z0 + dz + n[2] * hh]);
+        faces.push({ line: [a, b], z: (zBias || 0) + 1000 });
+      }
+    }
+    // tile courses run across the slope
+    if (look.kind === "tile") {
+      const courses = Math.max(2, Math.round(len / 0.35));
+      for (let k = 1; k < courses; k += 1) {
+        const s = k / courses;
+        const a = pvProj([0, y0 + dy * s, z0 + dz * s]);
+        const b = pvProj([A, y0 + dy * s, z0 + dz * s]);
+        faces.push({ line: [a, b], z: (zBias || 0) + 900, soft: true });
+        const a2 = pvProj([0, y0 + dy * s + 0.012, z0 + dz * s + 0.012]);
+        const b2 = pvProj([A, y0 + dy * s + 0.012, z0 + dz * s + 0.012]);
+        faces.push({ line: [a2, b2], z: (zBias || 0) + 890, lip: true });
+      }
+    }
+  }
+  if (apex) {
+    slope(B + over, wall - over * (rise / Math.max(run, 0.01)), B / 2, wall + rise, true, -4e5);
+    slope(-over, wall - over * (rise / Math.max(run, 0.01)), B / 2, wall + rise, false, 0);
+  } else {
+    slope(-over, wall - over * (rise / Math.max(run, 0.01)), B + over, wall + rise + over * (rise / Math.max(run, 0.01)), false);
+  }
+
+  // eaves fascia, so the roof has real thickness at the edge
+  const fth = Math.max(0.05, Math.min(A, B) * 0.016);
+  const tanS = rise / Math.max(run, 0.01);
+  const eaveZ = wall - over * tanS;
+  const fasciaCol = mixHex(base, "#0a1016", 0.45);
+  faces.push(quad([[0, -over, eaveZ], [A, -over, eaveZ], [A, -over, eaveZ - fth], [0, -over, eaveZ - fth]],
+    [0, -1, 0], pvShade(fasciaCol, [0, -1, 0], { amb: 0.4, dif: 0.5, spec: 0.1, shin: 8, trans: 0, rim: 0, cool: "#05080b" }), 1, 9.8e5));
+  if (!apex) {
+    const topZ = wall + rise + over * tanS;
+    faces.push(quad([[A, -over, eaveZ], [A, B + over, topZ], [A, B + over, topZ - fth], [A, -over, eaveZ - fth]],
+      [1, 0, 0], pvShade(fasciaCol, [1, 0, 0], { amb: 0.44, dif: 0.5, spec: 0.12, shin: 8, trans: 0, rim: 0, cool: "#05080b" }), 1, 9.7e5));
+  } else {
+    faces.push(quad([[A, B + over, eaveZ], [A, -over, eaveZ], [A, -over, eaveZ - fth], [A, B + over, eaveZ - fth]],
+      [1, 0, 0], pvShade(fasciaCol, [1, 0, 0], { amb: 0.44, dif: 0.5, spec: 0.12, shin: 8, trans: 0, rim: 0, cool: "#05080b" }), 1, 9.7e5));
+    faces.push(quad([[0, B + over, eaveZ], [A, B + over, eaveZ], [A, B + over, eaveZ - fth], [0, B + over, eaveZ - fth]],
+      [0, 1, 0], pvShade(fasciaCol, [0, 1, 0], { amb: 0.4, dif: 0.5, spec: 0.1, shin: 8, trans: 0, rim: 0, cool: "#05080b" }), 1, -1.02e6));
+  }
+
+  if (apex) {
+    const capH = Math.max(0.05, Math.min(A, B) * 0.012);
+    const capW = Math.min(0.22, B * 0.03);
+    const capCol = mixHex(base, "#ffffff", look.surface === "clear" ? 0.1 : 0.22);
+    faces.push(quad([[0, B / 2 - capW, wall + rise + capH], [A, B / 2 - capW, wall + rise + capH],
+                     [A, B / 2 + capW, wall + rise + capH], [0, B / 2 + capW, wall + rise + capH]],
+                    [0, 0, 1], pvShade(capCol, [0, 0, 1], mat), 1, 9.5e5));
+  }
+
+  // ---- fit to the canvas
+  pts.push(pvProj([0, 0, 0]), pvProj([A, B, wall + rise]));
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const x0 = Math.min(...xs), x1b = Math.max(...xs), y0b = Math.min(...ys), y1b = Math.max(...ys);
+  const pad = 26;
+  const s = Math.min((PV.W - 2 * pad) / Math.max(x1b - x0, 0.01), (PV.H - 2 * pad - 14) / Math.max(y1b - y0b, 0.01));
+  const ox = (PV.W - (x1b - x0) * s) / 2 - x0 * s;
+  const oy = (PV.H - (y1b - y0b) * s) / 2 - y0b * s - 6;
+  const F = (p) => [p[0] * s + ox, p[1] * s + oy];
+
+  faces.sort((a, b) => (a.z || 0) - (b.z || 0));
+  const body = [];
+  const cx = ((x0 + x1b) / 2) * s + ox, gy = y1b * s + oy;
+  body.push(`<ellipse cx="${svgNum(cx)}" cy="${svgNum(gy + 6)}" rx="${svgNum((x1b - x0) * s * 0.42)}" ry="6"
+    fill="#0b1118" fill-opacity=".16" filter="url(#pv-blur)"/>`);
+  for (const f of faces) {
+    if (f.skip) continue;
+    if (f.line) {
+      const a = F(f.line[0]), b = F(f.line[1]);
+      body.push(`<line x1="${svgNum(a[0])}" y1="${svgNum(a[1])}" x2="${svgNum(b[0])}" y2="${svgNum(b[1])}"
+        stroke="${f.lip ? "#ffffff" : "#0b1118"}" stroke-opacity="${f.lip ? 0.3 : (f.soft ? 0.34 : 0.26)}" stroke-width="${f.soft || f.lip ? 0.9 : 0.9}"/>`);
+      continue;
+    }
+    const d = f.d.map((q) => { const p = q.split(","); return F([parseFloat(p[0]), parseFloat(p[1])]); })
+      .map((p) => `${svgNum(p[0])},${svgNum(p[1])}`).join(" ");
+    body.push(`<polygon points="${d}" fill="${f.fill}"${f.op < 1 ? ` fill-opacity="${f.op}"` : ""} stroke="${f.fill}" stroke-width=".4"/>`);
+  }
+  const bits = [];
+  if (look.profile) bits.push(look.profile.name);
+  if (look.colour) bits.push(look.colour.name);
+  if (sheets > 0) bits.push(`${sheets} sheet${sheets === 1 ? "" : "s"}`);
+  const caption = bits.join(" · ");
+  return `<div class="roof-preview">
+    <svg class="diagram" viewBox="0 0 ${PV.W} ${PV.H}" role="img" aria-label="${esc(caption || "Roof preview")}">
+      <defs><filter id="pv-blur" x="-30%" y="-80%" width="160%" height="300%"><feGaussianBlur stdDeviation="4"/></filter></defs>
+      ${body.join("")}
+    </svg>
+    ${caption ? `<p class="preview-caption">${esc(caption)}</p>` : ""}
+  </div>`;
+}
+
 function renderRoofDiagram(mode) {
   const apex = mode === "apex";
   const length = val(apex ? quote.apexA : quote.monoA);
@@ -768,62 +1090,85 @@ function renderRoofDiagram(mode) {
   const covered = sheets > 0 ? sheets * cover : length;
   const worldW = Math.max(length, covered);
   const longer = covered > length + 0.01;
-  const pad = { l: 86, r: 24, t: 18, b: longer ? 78 : 52 };
-  const scale = fitScale(worldW, span, 520, 220);
-  const x0 = pad.l;
-  const y0 = pad.t;
+  const scale = diaScale(worldW, span, 206);
   const drawW = length * scale;
   const fullW = worldW * scale;
   const drawH = span * scale;
-  const face = profile ? `url(#sheet-face-${key})` : "rgba(155,176,196,0.45)";
-  const parts = [roofSheetDefs(key, look)];
-  const bands = apex ? [0, span / 2, span] : [0, span];
+  const x0 = diaX0(fullW);
+  const y0 = DIA.padT;
+  const base = look.hex || "#9bb0c4";
+  const parts = [];
+
+  parts.push(diaTitle(DIA.padL - 2, 18, apex ? "Plan of the apex roof" : "Plan of the single slope", key));
+
+  // sheets laid along the eaves
   if (sheets > 0) {
-    for (let band = 0; band < bands.length - 1; band += 1) {
-      const yA = y0 + bands[band] * scale;
-      const yB = y0 + bands[band + 1] * scale;
-      for (let col = 0; col < sheets; col += 1) {
-        const x = x0 + col * cover * scale;
-        const w = cover * scale;
-        parts.push(`<rect x="${svgNum(x)}" y="${svgNum(yA)}" width="${svgNum(w)}" height="${svgNum(yB - yA)}" fill="${face}"/>`);
-        if (x + w > x0 + drawW + 0.4) {
-          const hx = Math.max(x, x0 + drawW);
-          parts.push(`<rect x="${svgNum(hx)}" y="${svgNum(yA)}" width="${svgNum(x + w - hx)}" height="${svgNum(yB - yA)}" fill="url(#sheet-hatch-${key})"/>`);
-        }
+    for (let col = 0; col < sheets; col += 1) {
+      const x = x0 + col * cover * scale;
+      const w = cover * scale;
+      const tint = col % 2 ? 0.30 : 0.44;
+      parts.push(`<rect x="${svgNum(x)}" y="${svgNum(y0)}" width="${svgNum(w)}" height="${svgNum(drawH)}"
+        fill="${base}" fill-opacity="${tint}"/>`);
+      if (x + w > x0 + drawW + 0.4) {
+        const hx = Math.max(x, x0 + drawW);
+        parts.push(`<rect x="${svgNum(hx)}" y="${svgNum(y0)}" width="${svgNum(x + w - hx)}" height="${svgNum(drawH)}"
+          fill="url(#waste-${key})"/>`);
       }
-    }
-    for (let band = 0; band < bands.length - 1; band += 1) {
-      const yA = y0 + bands[band] * scale;
-      const yB = y0 + bands[band + 1] * scale;
-      for (let col = 0; col < sheets; col += 1) {
-        const x = x0 + col * cover * scale;
-        const w = cover * scale;
-        parts.push(`<rect x="${svgNum(x)}" y="${svgNum(yA)}" width="${svgNum(w)}" height="${svgNum(yB - yA)}" fill="none" stroke="#1e428b" stroke-width="1"/>`);
+      if (col > 0) {
+        parts.push(`<line x1="${svgNum(x)}" y1="${svgNum(y0)}" x2="${svgNum(x)}" y2="${svgNum(y0 + drawH)}"
+          stroke="#ffffff" stroke-width="1.6" stroke-opacity=".85"/>
+          <line x1="${svgNum(x)}" y1="${svgNum(y0)}" x2="${svgNum(x)}" y2="${svgNum(y0 + drawH)}"
+          stroke="${DIA.soft}" stroke-width=".7" stroke-opacity=".7"/>`);
+      }
+      if (w > 18) {
+        parts.push(diaText(x + w / 2, y0 - 7, String(col + 1), "middle", 10, DIA.soft, 600));
       }
     }
   } else {
-    parts.push(`<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(drawW)}" height="${svgNum(drawH)}" fill="${face}"/>`);
+    parts.push(`<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(drawW)}" height="${svgNum(drawH)}"
+      fill="${base}" fill-opacity="0.34"/>`);
   }
-  parts.push(`<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(drawW)}" height="${svgNum(drawH)}" fill="none" stroke="#1e428b" stroke-width="2.4"/>`);
+
+  // the roof itself
+  parts.push(`<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(drawW)}" height="${svgNum(drawH)}"
+    fill="none" stroke="${DIA.rule}" stroke-width="1.8"/>`);
+
   if (apex) {
     const ridge = y0 + drawH / 2;
-    parts.push(`<line x1="${svgNum(x0)}" y1="${svgNum(ridge)}" x2="${svgNum(x0 + drawW)}" y2="${svgNum(ridge)}" stroke="#1e428b" stroke-width="1.6" stroke-dasharray="5 4"/>`);
-    parts.push(roofBackedText(x0 + 8, ridge - 6, "Ridge", "start", 12));
+    parts.push(`<line x1="${svgNum(x0)}" y1="${svgNum(ridge)}" x2="${svgNum(x0 + drawW)}" y2="${svgNum(ridge)}"
+      stroke="${DIA.rule}" stroke-width="1.3" stroke-dasharray="7 5"/>`);
+    parts.push(diaChip(x0 + 7, ridge - 6, "Ridge", "start", key, 11.5));
   }
+
+  // eave-to-ridge run, drawn as an arrow up one slope
   if (slope > 0) {
-    parts.push(roofBackedText(x0 + drawW / 2, y0 + (apex ? drawH / 4 : drawH / 2), `${trimNum(slope)} m up the slope`, "middle", 13));
+    const ax = x0 + drawW / 2;
+    const top = apex ? y0 + drawH / 2 : y0;
+    const bot = y0 + drawH;
+    parts.push(`<line x1="${svgNum(ax)}" y1="${svgNum(bot - 5)}" x2="${svgNum(ax)}" y2="${svgNum(top + 5)}"
+      stroke="${DIA.rule}" stroke-width="1.1" stroke-opacity=".75" marker-end="url(#da-${key})"/>`);
+    parts.push(diaChip(ax, (top + bot) / 2 + 4, `${trimNum(slope)} m up the slope`, "middle", key, 11.5));
   }
-  parts.push(dimAcross(x0, x0 + drawW, y0 + drawH + 24, `${trimNum(length)} m eaves`, key));
-  if (longer) parts.push(dimAcross(x0, x0 + fullW, y0 + drawH + 50, `${trimNum(covered)} m of covers`, key));
-  parts.push(dimDown(x0 - 8, y0, y0 + drawH, `${trimNum(span)} m span`, key));
+
+  parts.push(dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${trimNum(length)} m eaves`, key));
+  if (longer) parts.push(dimAcross(x0, x0 + fullW, y0 + drawH + 52, `${trimNum(covered)} m of cover`, key));
+  parts.push(dimDown(x0 - 16, y0, y0 + drawH, `${trimNum(span)} m span`, key));
+
+  const legendY = DIA.padT + drawH + (longer ? 74 : 50);
+  if (sheets > 0) {
+    parts.push(diaLegend(x0, legendY, base, `${sheets} sheet${sheets === 1 ? "" : "s"} at ${trimNum(cover)} m cover`, false, key));
+    if (longer) parts.push(diaLegend(x0 + 196, legendY, "", `${trimNum(covered - length)} m past the eaves`, true, key));
+  }
+
   let caption = `Plan of the ${apex ? "apex" : "single slope"}: ${roofMaterialCaption(look)} The filled area is ${trimNum(length)} m along the eaves by ${trimNum(span)} m across.`;
   if (sheets > 0) caption += ` ${sheets} sheet${sheets === 1 ? "" : "s"} cover the eaves at ${trimNum(cover)} m cover. Hatched sheet past the eaves is still a whole cover width.`;
   else caption += " Choose a sheet to see the covers along the eaves.";
   if (slope > 0) caption += ` Each sheet follows the ${trimNum(slope)} m eave-to-ridge length.`;
-  const svg = scaleFrame(pad.l + fullW + pad.r, pad.t + drawH + pad.b, parts.join(""), caption, key);
-  return `<div class="scale-diagram"><h3>To scale</h3>${svg}<p class="scale-caption">${esc(caption)}</p></div>`;
+  const bodyH = (legendY - DIA.padT) + (sheets > 0 ? 14 : -18);
+  const svg = diaFrame(fullW, bodyH, parts.join(""), caption, key);
+  const preview = renderRoofPreview(mode);
+  return `${preview}<div class="scale-diagram"><h3>Plan, to scale</h3>${svg}<p class="scale-caption">${esc(caption)}</p></div>`;
 }
-
 function renderMeasureStep() {
   const type = currentType();
   if (!type) return `<p class="muted">${esc(config.copy.needType)}</p>`;
@@ -1312,36 +1657,209 @@ function svgNum(n) {
   return (Math.round(Number(n) * 100) / 100).toFixed(2);
 }
 
-function scaleFrame(width, height, body, label, key) {
-  const id = key || "main";
-  return `<svg class="diagram" viewBox="0 0 ${svgNum(width)} ${svgNum(height)}" role="img" aria-label="${esc(label)}">
-    <defs>
-      <marker id="dim-arrow-${id}" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M0 0 L8 4 L0 8 Z" fill="#1e428b"></path>
-      </marker>
-      <pattern id="offcut-hatch-${id}" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(32)">
-        <rect width="7" height="7" fill="#f4f7fb"></rect>
-        <line x1="0" y1="0" x2="0" y2="7" stroke="#b7c3d6" stroke-width="2"></line>
-      </pattern>
-    </defs>
-    ${body}
-  </svg>`;
+function gridDiagram(layout, label) {
+  const key = "grid";
+  const pieceX = Number(layout.pieceX) || 0;
+  const pieceY = Number(layout.pieceY) || 0;
+  const along = Math.max(0, Math.round(layout.along) || 0);
+  const across = Math.max(0, Math.round(layout.across) || 0);
+  const boardsW = along * pieceX;
+  const boardsH = across * pieceY;
+  const clip = !!layout.clip;
+  const worldW = clip ? Math.max(layout.x, 0.01) : Math.max(layout.x, boardsW, 0.01);
+  const worldH = clip ? Math.max(layout.y, 0.01) : Math.max(layout.y, boardsH, 0.01);
+  const longer = !clip && boardsW > layout.x + 0.01;
+  const taller = !clip && boardsH > layout.y + 0.01;
+  const scale = diaScale(worldW, worldH, 212);
+  const drawW = worldW * scale;
+  const drawH = worldH * scale;
+  const x0 = diaX0(drawW);
+  const y0 = DIA.padT;
+  const X = (m) => x0 + m * scale;
+  const Y = (m) => y0 + m * scale;
+  const base = selectedFill();
+  const parts = [diaTitle(DIA.padL - 2, 18, "How the pieces fall", key)];
+  if (clip) parts.push(`<clipPath id="area-clip-${key}"><rect x="${svgNum(X(0))}" y="${svgNum(Y(0))}" width="${svgNum(layout.x * scale)}" height="${svgNum(layout.y * scale)}"/></clipPath>`);
+  parts.push(`<rect x="${svgNum(X(0))}" y="${svgNum(Y(0))}" width="${svgNum(layout.x * scale)}" height="${svgNum(layout.y * scale)}" fill="${base}" fill-opacity=".9"/>`);
+  if (pieceX > 0 && pieceY > 0) {
+    if (clip) parts.push(`<g clip-path="url(#area-clip-${key})">`);
+    const many = along * across > 420;
+    if (many) {
+      for (let col = 1; col < along; col += 1) {
+        const x = X(Math.min(col * pieceX, layout.x));
+        parts.push(`<line x1="${svgNum(x)}" y1="${svgNum(Y(0))}" x2="${svgNum(x)}" y2="${svgNum(Y(layout.y))}" stroke="${DIA.soft}" stroke-width=".7"/>`);
+      }
+      for (let row = 1; row < across; row += 1) {
+        const y = Y(Math.min(row * pieceY, layout.y));
+        parts.push(`<line x1="${svgNum(X(0))}" y1="${svgNum(y)}" x2="${svgNum(X(layout.x))}" y2="${svgNum(y)}" stroke="${DIA.soft}" stroke-width=".7"/>`);
+      }
+    } else {
+      for (let row = 0; row < across; row += 1) {
+        for (let col = 0; col < along; col += 1) {
+          const tint = (row + col) % 2 ? 0.34 : 0.5;
+          parts.push(`<rect x="${svgNum(X(col * pieceX) + 0.6)}" y="${svgNum(Y(row * pieceY) + 0.6)}"
+            width="${svgNum(Math.max(1, pieceX * scale - 1.2))}" height="${svgNum(Math.max(1, pieceY * scale - 1.2))}"
+            rx="1" fill="${base}" fill-opacity="${tint}" stroke="${DIA.soft}" stroke-width=".8"/>`);
+        }
+      }
+    }
+    if (clip) parts.push(`</g>`);
+  }
+  parts.push(`<rect x="${svgNum(X(0))}" y="${svgNum(Y(0))}" width="${svgNum(layout.x * scale)}" height="${svgNum(layout.y * scale)}" fill="none" stroke="${DIA.rule}" stroke-width="1.8"/>`);
+  let yDim = y0 + drawH + 26;
+  parts.push(dimAcross(X(0), X(layout.x), yDim, `${trimNum(layout.x)} m`, key));
+  if (longer) { yDim += 26; parts.push(dimAcross(X(0), X(boardsW), yDim, `${trimNum(boardsW)} m ordered`, key)); }
+  parts.push(dimDown(x0 - 16, Y(0), Y(layout.y), `${trimNum(layout.y)} m`, key));
+  if (taller) parts.push(dimDown(x0 + drawW + 22, Y(0), Y(boardsH), `${trimNum(boardsH)} m`, key));
+  const spare = Math.max(0, Math.round(layout.spare) || 0);
+  let legendY = yDim + 24;
+  const total = along * across;
+  if (total > 0) parts.push(diaLegend(x0, legendY, base, `${along} along × ${across} across = ${total}`, false, key));
+  if (spare > 0) parts.push(diaLegend(x0 + 212, legendY, "", `${spare} spare for ${trimNum(layout.waste)}% waste`, true, key));
+  return diaFrame(drawW, (legendY - DIA.padT) + 10, parts.join(""), label, key);
 }
 
-function dimAcross(x1, x2, y, label, key) {
-  const id = key || "main";
-  const mid = (x1 + x2) / 2;
-  const textW = Math.max(42, String(label).length * 7.2);
-  return `<line x1="${svgNum(x1)}" y1="${svgNum(y)}" x2="${svgNum(x2)}" y2="${svgNum(y)}" stroke="#1e428b" stroke-width="1.4" marker-start="url(#dim-arrow-${id})" marker-end="url(#dim-arrow-${id})"/>
-    <rect x="${svgNum(mid - textW / 2)}" y="${svgNum(y - 9)}" width="${svgNum(textW)}" height="16" fill="#fff"/>
-    <text x="${svgNum(mid)}" y="${svgNum(y + 4)}" text-anchor="middle" font-size="13" font-family="Lato, sans-serif" fill="#1e428b">${esc(label)}</text>`;
+function barDiagram(layout, label) {
+  const key = "bar";
+  const pieceX = Number(layout.pieceX) || 0;
+  const along = Math.max(0, Math.round(layout.along) || 0);
+  const boardsW = along * pieceX;
+  const worldW = Math.max(layout.x, boardsW, 0.01);
+  const longer = boardsW > layout.x + 0.01;
+  const scale = diaScale(worldW, 1, 999);
+  const drawW = worldW * scale;
+  const x0 = diaX0(drawW);
+  const y0 = DIA.padT + 10;
+  const barH = 46;
+  const base = selectedFill();
+  const parts = [diaTitle(DIA.padL - 2, 18, pieceX > 0 ? "Lengths along the run" : "Cut to length", key)];
+  if (pieceX > 0 && along > 0) {
+    for (let col = 0; col < along; col += 1) {
+      const w = Math.min(pieceX, Math.max(0, worldW - col * pieceX)) * scale;
+      parts.push(`<rect x="${svgNum(x0 + col * pieceX * scale + 0.6)}" y="${svgNum(y0)}" width="${svgNum(Math.max(1, w - 1.2))}" height="${barH}"
+        rx="1.5" fill="${base}" fill-opacity="${col % 2 ? 0.36 : 0.52}" stroke="${DIA.soft}" stroke-width=".8"/>`);
+      if (pieceX * scale > 20) parts.push(diaText(x0 + (col + 0.5) * pieceX * scale, y0 + barH / 2 + 4, String(col + 1), "middle", 11, DIA.soft, 600));
+    }
+  } else {
+    parts.push(`<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(layout.x * scale)}" height="${barH}" rx="2" fill="${base}" fill-opacity=".5"/>`);
+  }
+  parts.push(`<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(layout.x * scale)}" height="${barH}" fill="none" stroke="${DIA.rule}" stroke-width="1.8"/>`);
+  if (longer) {
+    parts.push(`<rect x="${svgNum(x0 + layout.x * scale)}" y="${svgNum(y0)}" width="${svgNum((boardsW - layout.x) * scale)}" height="${barH}" fill="url(#waste-${key})"/>`);
+  }
+  parts.push(dimAcross(x0, x0 + layout.x * scale, y0 + barH + 26, `${trimNum(layout.x)} m`, key));
+  let legendY = y0 + barH + 50;
+  if (longer) { parts.push(dimAcross(x0, x0 + boardsW * scale, y0 + barH + 52, `${trimNum(boardsW)} m ordered`, key)); legendY += 26; }
+  const hasLegend = along > 0 && pieceX > 0;
+  if (hasLegend) parts.push(diaLegend(x0, legendY, base, `${along} × ${trimNum(pieceX)} m length${along === 1 ? "" : "s"}`, false, key));
+  const bodyH = hasLegend ? (legendY - DIA.padT) + 10 : (y0 + barH + 34) - DIA.padT;
+  return diaFrame(drawW, bodyH, parts.join(""), label, key);
 }
 
-function dimDown(x, y1, y2, label, key) {
-  const id = key || "main";
-  const mid = (y1 + y2) / 2;
-  return `<line x1="${svgNum(x)}" y1="${svgNum(y1)}" x2="${svgNum(x)}" y2="${svgNum(y2)}" stroke="#1e428b" stroke-width="1.4" marker-start="url(#dim-arrow-${id})" marker-end="url(#dim-arrow-${id})"/>
-    <text x="${svgNum(x - 8)}" y="${svgNum(mid + 4)}" text-anchor="end" font-size="13" font-family="Lato, sans-serif" fill="#1e428b">${esc(label)}</text>`;
+function rectDiagram(layout, label) {
+  const key = "rect";
+  const scale = diaScale(Math.max(layout.x, 0.01), Math.max(layout.y, 0.01), 212);
+  const drawW = layout.x * scale;
+  const drawH = layout.y * scale;
+  const x0 = diaX0(drawW);
+  const y0 = DIA.padT;
+  const parts = [
+    diaTitle(DIA.padL - 2, 18, "Area, to scale", key),
+    `<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(drawW)}" height="${svgNum(drawH)}" fill="${selectedFill()}" fill-opacity=".75" stroke="${DIA.rule}" stroke-width="1.8"/>`,
+    dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${trimNum(layout.x)} m`, key),
+    dimDown(x0 - 16, y0, y0 + drawH, `${trimNum(layout.y)} m`, key),
+  ];
+  return diaFrame(drawW, drawH + 24, parts.join(""), label, key);
+}
+
+function stepsDiagram(layout, label) {
+  const key = "steps";
+  const treads = Math.max(1, Math.round(layout.treads) || 1);
+  const along = Math.max(1, Math.round(layout.along) || 1);
+  const pieceX = Number(layout.pieceX) || layout.x;
+  const depth = Number(layout.y) || 0;
+  const boardsW = along * pieceX;
+  const worldW = Math.max(layout.x, boardsW, 0.01);
+  const worldH = depth > 0 ? treads * depth : 1;
+  const scale = depth > 0 ? diaScale(worldW, worldH, 206) : diaScale(worldW, 1, 999);
+  const rowH = depth > 0 ? depth * scale : 30;
+  const gap = depth > 0 ? 2 : 9;
+  const drawW = worldW * scale;
+  const x0 = diaX0(drawW);
+  const base = selectedFill();
+  const parts = [diaTitle(DIA.padL - 2, 18, `${treads} tread${treads === 1 ? "" : "s"}, ${along} piece${along === 1 ? "" : "s"} across`, key)];
+  for (let row = 0; row < treads; row += 1) {
+    const y = DIA.padT + row * (rowH + gap);
+    for (let col = 0; col < along; col += 1) {
+      parts.push(`<rect x="${svgNum(x0 + col * pieceX * scale + 0.6)}" y="${svgNum(y)}" width="${svgNum(Math.max(1, pieceX * scale - 1.2))}" height="${svgNum(rowH)}"
+        rx="1.5" fill="${base}" fill-opacity="${col % 2 ? 0.36 : 0.52}" stroke="${DIA.soft}" stroke-width=".8"/>`);
+    }
+    if (boardsW > layout.x + 0.01) {
+      parts.push(`<rect x="${svgNum(x0 + layout.x * scale)}" y="${svgNum(y)}" width="${svgNum((boardsW - layout.x) * scale)}" height="${svgNum(rowH)}" fill="url(#waste-${key})"/>`);
+    }
+    parts.push(`<rect x="${svgNum(x0)}" y="${svgNum(y)}" width="${svgNum(layout.x * scale)}" height="${svgNum(rowH)}" fill="none" stroke="${DIA.rule}" stroke-width="1.6"/>`);
+  }
+  const rowsH = treads * rowH + (treads - 1) * gap;
+  parts.push(dimAcross(x0, x0 + layout.x * scale, DIA.padT + rowsH + 26, `${trimNum(layout.x)} m wide`, key));
+  if (depth > 0) parts.push(dimDown(x0 - 16, DIA.padT, DIA.padT + rowsH, `${trimNum(depth * treads)} m`, key));
+  const legendY = DIA.padT + rowsH + 50;
+  parts.push(diaLegend(x0, legendY, base, `${along * treads} piece${along * treads === 1 ? "" : "s"} of ${trimNum(pieceX)} m`, false, key));
+  return diaFrame(drawW, (legendY - DIA.padT) + 10, parts.join(""), label, key);
+}
+
+function perimeterDiagram(layout, label) {
+  const key = "perim";
+  const length = Number(layout.x) || 0;
+  const width = Number(layout.y) || 0;
+  const piece = Number(layout.pieceX) || 0;
+  const scale = diaScale(Math.max(length, 0.01), Math.max(width, 0.01), 200);
+  const drawW = length * scale;
+  const drawH = width * scale;
+  const x0 = diaX0(drawW);
+  const y0 = DIA.padT;
+  const total = 2 * (length + width);
+  const band = Math.max(7, Math.min(15, Math.min(drawW, drawH) * 0.08));
+  const base = selectedFill();
+  const parts = [
+    diaTitle(DIA.padL - 2, 18, "Lengths around the edge", key),
+    `<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(drawW)}" height="${svgNum(drawH)}" fill="${base}" fill-opacity=".34" stroke="${DIA.soft}" stroke-width="1"/>`,
+  ];
+  function pointAt(dist) {
+    const p = ((dist % total) + total) % total;
+    if (p <= length) return { x: x0 + p * scale, y: y0 };
+    if (p <= length + width) return { x: x0 + drawW, y: y0 + (p - length) * scale };
+    if (p <= 2 * length + width) return { x: x0 + drawW - (p - length - width) * scale, y: y0 + drawH };
+    return { x: x0, y: y0 + drawH - (p - 2 * length - width) * scale };
+  }
+  let whole = 0;
+  if (piece > 0 && total > 0) {
+    let start = 0, guard = 0, idx = 0;
+    while (start < total - 1e-6 && guard < 90) {
+      const len = Math.min(piece, total - start);
+      const pts = [pointAt(start)];
+      let walked = 0, at = start;
+      const corners = [length, length + width, 2 * length + width, total];
+      while (walked < len - 1e-6) {
+        const next = corners.find((corner) => corner > at + 1e-6) || total;
+        const step = Math.min(len - walked, next - at);
+        at += step; walked += step;
+        pts.push(pointAt(Math.min(at, total)));
+      }
+      const points = pts.map((pt) => `${svgNum(pt.x)},${svgNum(pt.y)}`).join(" ");
+      const full = len + 1e-6 >= piece;
+      if (full) whole += 1;
+      parts.push(`<polyline points="${points}" fill="none" stroke="${full ? DIA.rule : DIA.waste}" stroke-opacity="${full ? (idx % 2 ? 0.74 : 1) : 0.8}"
+        stroke-width="${svgNum(band)}" stroke-linejoin="miter" stroke-linecap="butt"/>`);
+      start += len; guard += 1; idx += 1;
+    }
+  }
+  parts.push(dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${trimNum(length)} m`, key));
+  parts.push(dimDown(x0 - 16, y0, y0 + drawH, `${trimNum(width)} m`, key));
+  const legendY = y0 + drawH + 50;
+  if (piece > 0) {
+    parts.push(diaLegend(x0, legendY, DIA.rule, `${trimNum(piece)} m lengths, perimeter ${trimNum(total)} m`, false, key));
+  }
+  return diaFrame(drawW, (legendY - DIA.padT) + 10, parts.join(""), label, key);
 }
 
 function scaleCaption(layout) {
@@ -1403,203 +1921,6 @@ function fitScale(worldW, worldH, maxW, maxH) {
   const w = Math.max(worldW, 0.01);
   const h = Math.max(worldH, 0.01);
   return Math.min(maxW / w, maxH / h);
-}
-
-function gridDiagram(layout, label) {
-  const pieceX = Number(layout.pieceX) || 0;
-  const pieceY = Number(layout.pieceY) || 0;
-  const along = Math.max(0, Math.round(layout.along) || 0);
-  const across = Math.max(0, Math.round(layout.across) || 0);
-  const boardsW = along * pieceX;
-  const boardsH = across * pieceY;
-  const clip = !!layout.clip;
-  const worldW = clip ? Math.max(layout.x, 0.01) : Math.max(layout.x, boardsW, 0.01);
-  const worldH = clip ? Math.max(layout.y, 0.01) : Math.max(layout.y, boardsH, 0.01);
-  const longer = !clip && boardsW > layout.x + 0.01;
-  const taller = !clip && boardsH > layout.y + 0.01;
-  const pad = { l: 78, r: taller ? 78 : 20, t: 16, b: longer ? 78 : 46 };
-  const scale = fitScale(worldW, worldH, 540, 240);
-  const drawW = worldW * scale;
-  const drawH = worldH * scale;
-  const X = (m) => pad.l + m * scale;
-  const Y = (m) => pad.t + m * scale;
-  const parts = [];
-  if (clip) {
-    parts.push(`<clipPath id="area-clip"><rect x="${svgNum(X(0))}" y="${svgNum(Y(0))}" width="${svgNum(layout.x * scale)}" height="${svgNum(layout.y * scale)}"/></clipPath>`);
-  }
-  if (pieceX > 0 && pieceY > 0) {
-    const pieceOpen = clip ? `<g clip-path="url(#area-clip)">` : "";
-    const pieceClose = clip ? `</g>` : "";
-    if (pieceOpen) parts.push(pieceOpen);
-    const many = along * across > 500;
-    if (many) {
-      parts.push(`<rect x="${svgNum(X(0))}" y="${svgNum(Y(0))}" width="${svgNum(layout.x * scale)}" height="${svgNum(layout.y * scale)}" fill="${selectedFill()}" stroke="#1e428b" stroke-width="1.2"/>`);
-      for (let col = 1; col < along; col += 1) {
-        const x = X(Math.min(col * pieceX, layout.x));
-        parts.push(`<line x1="${svgNum(x)}" y1="${svgNum(Y(0))}" x2="${svgNum(x)}" y2="${svgNum(Y(layout.y))}" stroke="#1e428b" stroke-width="0.8"/>`);
-      }
-      for (let row = 1; row < across; row += 1) {
-        const y = Y(Math.min(row * pieceY, layout.y));
-        parts.push(`<line x1="${svgNum(X(0))}" y1="${svgNum(y)}" x2="${svgNum(X(layout.x))}" y2="${svgNum(y)}" stroke="#1e428b" stroke-width="0.8"/>`);
-      }
-    } else {
-      for (let row = 0; row < across; row += 1) {
-        for (let col = 0; col < along; col += 1) {
-          parts.push(`<rect x="${svgNum(X(col * pieceX))}" y="${svgNum(Y(row * pieceY))}" width="${svgNum(pieceX * scale)}" height="${svgNum(pieceY * scale)}" fill="url(#offcut-hatch-main)" stroke="#1e428b" stroke-width="1.2"/>`);
-        }
-      }
-    }
-    if (pieceClose) parts.push(pieceClose);
-  }
-  parts.push(`<rect x="${svgNum(X(0))}" y="${svgNum(Y(0))}" width="${svgNum(layout.x * scale)}" height="${svgNum(layout.y * scale)}" fill="${selectedFill()}" stroke="#1e428b" stroke-width="2.4"/>`);
-  let yDim = pad.t + drawH + 22;
-  parts.push(dimAcross(X(0), X(layout.x), yDim, `${trimNum(layout.x)} m`));
-  if (longer) {
-    yDim += 28;
-    parts.push(dimAcross(X(0), X(boardsW), yDim, `${trimNum(boardsW)} m ordered`));
-  }
-  parts.push(dimDown(pad.l - 8, Y(0), Y(layout.y), `${trimNum(layout.y)} m`));
-  if (taller) parts.push(dimDown(pad.l + drawW + 28, Y(0), Y(boardsH), `${trimNum(boardsH)} m`));
-  const spare = Math.max(0, Math.round(layout.spare) || 0);
-  let extraH = 0;
-  if (spare > 0 && pieceX > 0 && pieceY > 0) {
-    const shown = Math.min(spare, 4);
-    const gap = 8;
-    const spareH = Math.max(pieceY * scale, 18);
-    const spareW = Math.min(pieceX * scale, 540);
-    let sx = pad.l;
-    let sy = yDim + 28;
-    parts.push(`<text x="${svgNum(sx)}" y="${svgNum(sy)}" font-size="13" font-family="Lato, sans-serif" fill="#1e428b">${esc(`${spare} spare for ${trimNum(layout.waste)}% waste`)}</text>`);
-    sy += 8;
-    for (let i = 0; i < shown; i += 1) {
-      parts.push(`<rect x="${svgNum(sx)}" y="${svgNum(sy)}" width="${svgNum(spareW)}" height="${svgNum(spareH)}" fill="url(#offcut-hatch-main)" stroke="#1e428b" stroke-width="1.2"/>`);
-      sx += spareW + gap;
-      if (i < shown - 1 && sx + spareW > pad.l + drawW) {
-        sx = pad.l;
-        sy += spareH + gap;
-      }
-    }
-    const spareBottom = sy + spareH;
-    extraH = spareBottom;
-    if (spare > shown) {
-      parts.push(`<text x="${svgNum(sx)}" y="${svgNum(sy + spareH / 2)}" font-size="13" font-family="Lato, sans-serif" fill="#1e428b">${esc(`+${spare - shown}`)}</text>`);
-    }
-  }
-  const width = pad.l + drawW + pad.r;
-  const height = (extraH > 0 ? extraH : pad.t + drawH + pad.b) + 18;
-  return scaleFrame(width, height, parts.join(""), label);
-}
-
-function barDiagram(layout, label) {
-  const pieceX = Number(layout.pieceX) || 0;
-  const along = Math.max(1, Math.round(layout.along) || 1);
-  const boardsW = pieceX > 0 ? along * pieceX : layout.x;
-  const worldW = Math.max(layout.x, boardsW, 0.01);
-  const longer = boardsW > layout.x + 0.01;
-  const pad = { l: 16, r: 16, t: 16, b: longer ? 78 : 46 };
-  const scale = fitScale(worldW, 1, 560, 36);
-  const barH = 36;
-  const drawW = worldW * scale;
-  const parts = [];
-  if (pieceX > 0) {
-    for (let col = 0; col < along; col += 1) {
-      parts.push(`<rect x="${svgNum(pad.l + col * pieceX * scale)}" y="${svgNum(pad.t)}" width="${svgNum(pieceX * scale)}" height="${barH}" fill="url(#offcut-hatch-main)" stroke="#1e428b" stroke-width="1.2"/>`);
-    }
-  }
-  parts.push(`<rect x="${svgNum(pad.l)}" y="${svgNum(pad.t)}" width="${svgNum(layout.x * scale)}" height="${barH}" fill="${selectedFill()}" stroke="#1e428b" stroke-width="2.4"/>`);
-  parts.push(dimAcross(pad.l, pad.l + layout.x * scale, pad.t + barH + 22, `${trimNum(layout.x)} m`));
-  if (longer) parts.push(dimAcross(pad.l, pad.l + boardsW * scale, pad.t + barH + 50, `${trimNum(boardsW)} m ordered`));
-  return scaleFrame(pad.l + drawW + pad.r, pad.t + barH + pad.b, parts.join(""), label);
-}
-
-function rectDiagram(layout, label) {
-  const pad = { l: 78, r: 20, t: 16, b: 46 };
-  const scale = fitScale(layout.x, layout.y, 540, 220);
-  const drawW = layout.x * scale;
-  const drawH = layout.y * scale;
-  const parts = [
-    `<rect x="${svgNum(pad.l)}" y="${svgNum(pad.t)}" width="${svgNum(drawW)}" height="${svgNum(drawH)}" fill="${selectedFill()}" stroke="#1e428b" stroke-width="2.4"/>`,
-    dimAcross(pad.l, pad.l + drawW, pad.t + drawH + 22, `${trimNum(layout.x)} m`),
-    dimDown(pad.l - 8, pad.t, pad.t + drawH, `${trimNum(layout.y)} m`),
-  ];
-  return scaleFrame(pad.l + drawW + pad.r, pad.t + drawH + pad.b, parts.join(""), label);
-}
-
-function stepsDiagram(layout, label) {
-  const treads = Math.max(1, Math.round(layout.treads) || 1);
-  const along = Math.max(1, Math.round(layout.along) || 1);
-  const pieceX = Number(layout.pieceX) || layout.x;
-  const depth = Number(layout.y) || 0;
-  const boardsW = along * pieceX;
-  const worldW = Math.max(layout.x, boardsW, 0.01);
-  const worldH = depth > 0 ? treads * depth : 1;
-  const pad = { l: depth > 0 ? 78 : 16, r: 16, t: 16, b: 46 };
-  const scale = depth > 0 ? fitScale(worldW, worldH, 520, 240) : fitScale(worldW, 1, 540, 28);
-  const rowH = depth > 0 ? depth * scale : 28;
-  const gap = depth > 0 ? 0 : 8;
-  const drawW = worldW * scale;
-  const parts = [];
-  for (let row = 0; row < treads; row += 1) {
-    const y = pad.t + row * (rowH + gap);
-    for (let col = 0; col < along; col += 1) {
-      parts.push(`<rect x="${svgNum(pad.l + col * pieceX * scale)}" y="${svgNum(y)}" width="${svgNum(pieceX * scale)}" height="${rowH}" fill="url(#offcut-hatch-main)" stroke="#1e428b" stroke-width="1.2"/>`);
-    }
-    parts.push(`<rect x="${svgNum(pad.l)}" y="${svgNum(y)}" width="${svgNum(layout.x * scale)}" height="${rowH}" fill="${selectedFill()}" stroke="#1e428b" stroke-width="2.4"/>`);
-  }
-  const rowsH = treads * rowH + (treads - 1) * gap;
-  parts.push(dimAcross(pad.l, pad.l + layout.x * scale, pad.t + rowsH + 22, `${trimNum(layout.x)} m`));
-  if (depth > 0) parts.push(dimDown(pad.l - 8, pad.t, pad.t + rowsH, `${trimNum(depth * treads)} m`));
-  return scaleFrame(pad.l + drawW + pad.r, pad.t + rowsH + pad.b, parts.join(""), label);
-}
-
-function perimeterDiagram(layout, label) {
-  const length = Number(layout.x) || 0;
-  const width = Number(layout.y) || 0;
-  const piece = Number(layout.pieceX) || 0;
-  const pad = { l: 78, r: 28, t: 20, b: 52 };
-  const scale = fitScale(length, width, 500, 220);
-  const x0 = pad.l;
-  const y0 = pad.t;
-  const drawW = length * scale;
-  const drawH = width * scale;
-  const total = 2 * (length + width);
-  const band = Math.max(8, Math.min(16, Math.min(drawW, drawH) * 0.08));
-  const parts = [
-    `<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(drawW)}" height="${svgNum(drawH)}" fill="${selectedFill()}" stroke="#1e428b" stroke-width="1.4"/>`,
-  ];
-  function pointAt(dist) {
-    const p = ((dist % total) + total) % total;
-    if (p <= length) return { x: x0 + p * scale, y: y0 };
-    if (p <= length + width) return { x: x0 + drawW, y: y0 + (p - length) * scale };
-    if (p <= 2 * length + width) return { x: x0 + drawW - (p - length - width) * scale, y: y0 + drawH };
-    return { x: x0, y: y0 + drawH - (p - 2 * length - width) * scale };
-  }
-  if (piece > 0 && total > 0) {
-    let start = 0;
-    let guard = 0;
-    while (start < total - 1e-6 && guard < 80) {
-      const len = Math.min(piece, total - start);
-      const pts = [pointAt(start)];
-      let walked = 0;
-      let at = start;
-      const corners = [length, length + width, 2 * length + width, total];
-      while (walked < len - 1e-6) {
-        const next = corners.find((corner) => corner > at + 1e-6) || total;
-        const step = Math.min(len - walked, next - at);
-        at += step;
-        walked += step;
-        pts.push(pointAt(Math.min(at, total)));
-      }
-      const points = pts.map((pt) => `${svgNum(pt.x)},${svgNum(pt.y)}`).join(" ");
-      const whole = len + 1e-6 >= piece;
-      parts.push(`<polyline points="${points}" fill="none" stroke="${whole ? "#1e428b" : "#8aa0c8"}" stroke-width="${svgNum(band)}" stroke-linejoin="miter" stroke-linecap="butt"/>`);
-      start += len;
-      guard += 1;
-    }
-  }
-  parts.push(dimAcross(x0, x0 + drawW, y0 + drawH + 24, `${trimNum(length)} m`));
-  parts.push(dimDown(x0 - 8, y0, y0 + drawH, `${trimNum(width)} m`));
-  return scaleFrame(pad.l + drawW + pad.r, pad.t + drawH + pad.b, parts.join(""), label);
 }
 
 function renderSizeStep() {
