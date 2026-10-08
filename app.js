@@ -1427,7 +1427,7 @@ function profileFromPrice(profile) {
 function renderProfileStep() {
   if (!config.profiles.length) return `<p class="muted">${esc(config.copy.emptyProducts)}</p>`;
   const groups = ["Metal roofing", "Clear roofing"];
-  return `<p class="note">Metal sheets first, then clear sheets. Tile effect 0.5mm Non Drip is £18 a metre, on the next step.</p>` + groups.map((name) => {
+  return groups.map((name) => {
     const profiles = config.profiles.filter((profile) => profileGroup(profile) === name);
     if (!profiles.length) return "";
     return `<h3>${esc(name)}</h3><div class="choices">${profiles.map((profile) => `
@@ -2597,8 +2597,7 @@ function renderCustomStep(step) {
 }
 
 function renderExportStep() {
-  return `<p>Download one Excel file with this quote, the measurements, every priced line, your answers, and the full product catalogue.</p>
-    <p class="muted">You can export before the quote is finished. Empty choices are left blank.</p>
+  return `<p class="muted">You can export before the quote is finished. Empty choices are left blank.</p>
     <button type="button" class="primary" data-action="export-excel">Export to Excel</button>`;
 }
 
@@ -2612,8 +2611,15 @@ function renderStepBody(step) {
 function continueBtn(id) {
   if (id === "clad-wall" && ui.cladPhase !== "summary") return "";
   const ids = visibleSteps().map((step) => step.id);
-  if (ids[ids.length - 1] === id) return "";
-  return `<button type="button" class="primary continue" data-action="next" data-step="${esc(id)}">Continue</button>`;
+  const at = ids.indexOf(id);
+  if (at < 0) return "";
+  const prev = at > 0 ? ids[at - 1] : "";
+  const next = at < ids.length - 1 ? ids[at + 1] : "";
+  if (!prev && !next) return "";
+  return `<div class="step-actions">
+    ${prev ? `<button type="button" class="ghost" data-action="jump" data-target="${esc(prev)}">Back</button>` : "<span></span>"}
+    ${next ? `<button type="button" class="primary continue" data-action="next" data-step="${esc(id)}">Continue</button>` : ""}
+  </div>`;
 }
 
 function displayStep(step) {
@@ -2669,18 +2675,20 @@ function renderSteps() {
   const current = currentNavStep(steps);
   animateStep = current !== lastStepShown ? current : null;
   lastStepShown = current;
-  return `<div class="steps">${steps.map((step, index) => {
-    const shown = displayStep(step);
-    return `
-    <section class="step${step.id === current ? " is-current" : ""}${step.id === animateStep ? " step-enter" : ""}" data-step-anchor="${esc(step.id)}">
+  const index = Math.max(0, steps.findIndex((step) => step.id === current));
+  const step = steps[index];
+  if (!step) return `<div class="steps"></div>`;
+  const shown = displayStep(step);
+  return `<div class="steps">
+    <section class="step is-current${step.id === animateStep ? " step-enter" : ""}" data-step-anchor="${esc(step.id)}">
       <div class="step-head">
         <span class="num">${index + 1}</span>
         <h2>${esc(shown.title)}</h2>
       </div>
       ${shown.hint ? `<p class="step-hint">${esc(shown.hint)}</p>` : ""}
       <div class="step-body">${stepMsg(step.id)}${warnHtml(step.id)}${renderStepBody(step)}${continueBtn(step.id)}</div>
-    </section>`;
-  }).join("")}</div>`;
+    </section>
+  </div>`;
 }
 
 function renderSummary() {
@@ -2706,35 +2714,22 @@ function renderSummary() {
   </aside>`;
 }
 
-function shopIcon(path) {
-  return `<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6">${path}</svg>`;
-}
-
 function renderHeader() {
   const shop = "https://bcmckeown.net";
   const roof = pageMode() === "roof";
   const logo = "https://bcmckeown.net/cdn/shop/files/Untitled_design_76_6a5283c2-c78c-4027-9a25-b7819b59d6af.png?v=1750868402";
-  const phrase = "Call us on 02844615148 ★ Delivery available ★ New arrivals every week ★ ";
   return `<div class="site-chrome no-print">
-    <div class="announce"><a href="tel:02844615148">Call Now On 02844615148</a></div>
     <header class="site-head">
-      <a class="head-icon" href="${shop}/search" aria-label="Search">${shopIcon('<circle cx="11" cy="11" r="6"/><path d="M16 16l5 5" stroke-linecap="round"/>')}</a>
       <a class="site-logo" href="${shop}/"><img src="${logo}" alt="B&amp;C McKeown"></a>
-      <div class="head-icons">
-        <a class="head-icon" href="${shop}/account" aria-label="Account">${shopIcon('<circle cx="12" cy="8" r="3"/><path d="M5.5 19c1.2-2.8 3.4-4 6.5-4s5.3 1.2 6.5 4" stroke-linecap="round"/>')}</a>
-        <a class="head-icon" href="${shop}/" aria-label="Wishlist">${shopIcon('<path d="M12 19s-6.2-3.8-8.2-7.2C2.4 9.6 3.2 6.8 5.8 6.2 7.4 5.8 9 6.4 12 9c3-2.6 4.6-3.2 6.2-2.8 2.6.6 3.4 3.4 2 5.6C18.2 15.2 12 19 12 19z" stroke-linejoin="round"/>')}</a>
-        <a class="head-icon" href="${shop}/cart" aria-label="Cart">${shopIcon('<path d="M6 8h12l-1 12H7L6 8z"/><path d="M9 8V7a3 3 0 0 1 6 0v1" stroke-linecap="round"/>')}</a>
-      </div>
+      <nav class="site-nav" aria-label="Shop">
+        <a href="${shop}/">Home</a>
+        <a href="${shop}/collections/composite-decking">Composites</a>
+        <a href="${shop}/collections/granite">Granite / Landscaping</a>
+        <a href="index.html"${roof ? ' class="is-current"' : ""}>Roofing</a>
+        <a href="${shop}/collections/security-fencing-v-mesh-kits">V Mesh Fencing / Gates</a>
+        <a href="tel:02844615148">Call 02844 615148</a>
+      </nav>
     </header>
-    <nav class="site-nav" aria-label="Shop">
-      <a href="${shop}/">Home</a>
-      <a href="${shop}/collections/composite-decking">Composites</a>
-      <a href="${shop}/collections/granite">Granite / Landscaping</a>
-      <a href="index.html"${roof ? ' class="is-current"' : ""}>Roofing</a>
-      <a href="${shop}/collections/security-fencing-v-mesh-kits">V Mesh Fencing / Gates</a>
-      <a href="${shop}/pages/contact">More</a>
-    </nav>
-    <div class="ticker"><div class="ticker-track"><span>${phrase}${phrase}</span><span>${phrase}${phrase}</span></div></div>
   </div>`;
 }
 
@@ -2742,7 +2737,7 @@ function renderBanners() {
   let html = "";
   if (ui.notice) html += `<p class="ok">${esc(ui.notice)} <button type="button" class="text-btn" data-action="dismiss-notice">Dismiss</button></p>`;
   if (config.meta && config.meta.sample) {
-    html += `<p class="banner"><strong>Sample products.</strong> Prices and names are examples. Use Edit products & prices to replace them.</p>`;
+    html += `<p class="banner"><strong>Sample products.</strong> Prices and names are examples.</p>`;
   }
   if (usingSavedCatalogue) {
     html += `<p class="banner"><strong>Using edits saved in this browser.</strong> They override config.js until you reset them.</p>`;
@@ -2763,7 +2758,7 @@ function renderQuotePage() {
     <section class="calc-intro">
       <h1>${esc(title)}</h1>
       <p>${esc(lede)}</p>
-      <p class="proto-links no-print">${otherLink}<button type="button" data-action="view" data-view="edit">Edit products &amp; prices</button></p>
+      <p class="proto-links no-print">${otherLink}</p>
     </section>
     <div class="wrap no-print">${renderBanners()}</div>
     <div class="layout">
@@ -3085,10 +3080,8 @@ function render() {
     document.getElementById("app").innerHTML = ui.view === "edit" ? renderEditorPage() : renderQuotePage();
     restoreFocus();
     if (pendingScroll) {
-      const target = pendingScroll;
       pendingScroll = null;
-      const el = document.getElementById(target) || document.querySelector(`[data-step-anchor="${target}"]`);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo(0, 0);
     } else if (y != null) {
       window.scrollTo(0, y);
     }
@@ -4202,7 +4195,7 @@ function onSubmit(event) {
     const target = event.submitter && event.submitter.dataset.target;
     const to = target === "business" ? String(config.company.email || "").trim() : email;
     if (target === "business" && !validEmail(to)) {
-      ui.modalError = "Add your business email in Edit products & prices first.";
+      ui.modalError = "Add a business email in the catalogue first.";
       render();
       return;
     }

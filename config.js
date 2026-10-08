@@ -1,6 +1,6 @@
 /* Roofing quote calculator — your catalogue
-   Open index.html in a browser, then click "Edit products & prices"
-   to change names, prices, and photos. You do not have to edit this file.
+ Open index.html in a browser. Change names, prices, and photos here
+ if you need to. You do not have to edit this file for a normal quote.
 
    If you prefer to edit here:
    - image: "images/photo.jpg"  (put the file in an images folder next to index.html)
@@ -46,7 +46,7 @@ const QUOTE_CONFIG = {
     needType: "Select a roof type above to see which flashings apply.",
     basketNote: "Nothing is sent to a shop. This builds the quote on this device so you can print it, save it, or email it.",
     disclaimer: "Check quantities before you order. Prices include VAT but not delivery, and they are taken from the public prices on bcmckeown.net. Confirm the current price, stock and colour on the website or by phone before you buy.",
-    emptyProducts: "Nothing here yet. Add products with Edit products & prices.",
+    emptyProducts: "Nothing here yet.",
   },
   steps: [
     { id: "job", kind: "job", title: "Choose a Calculator", hint: "Only products the website sells by the metre, or as pieces you can count from a size.", enabled: true, required: false },
