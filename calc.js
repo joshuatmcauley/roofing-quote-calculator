@@ -465,19 +465,17 @@ function calculate(quote, config) {
     }
   }
 
-  // A roof slope is the hypotenuse over its span, so it can never be shorter
-  // than the span it covers. Catching this stops a badly under-ordered quote.
-  function checkSlopeAgainstSpan(spanField, slopeField, label, halves) {
-    const span = val(q[spanField]);
+  // The span is no longer asked for, so there is nothing to compare the slope
+  // against. A slope under about a metre is almost always a typo, though, so
+  // warn rather than let a tenth-of-the-real-price quote through unnoticed.
+  function checkSlopeSane(slopeField, label) {
     const slope = val(q[slopeField]);
-    if (!(span > 0) || !(slope > 0)) return;
-    const needed = halves ? span / 2 : span;
-    if (slope + 1e-6 < needed) {
-      errors.push({
+    if (!(slope > 0)) return;
+    if (slope < 1.5) {
+      warnings.push({
         step: "measure",
         field: slopeField,
-        always: true,
-        message: `${label}: the eave-to-ridge length (${trimNum(slope)} m) cannot be shorter than ${halves ? "half the span" : "the span"} (${trimNum(needed)} m). On a roof the sheet runs up a slope, so it is always the longer of the two. Measure along the slope, or enter the span and the rise and work it out.`,
+        message: `${label}: ${trimNum(slope)} m from eave to ridge is very short. That is the distance a sheet travels up the slope, not the thickness. Check it before ordering.`,
       });
     }
   }
@@ -493,13 +491,11 @@ function calculate(quote, config) {
     else {
       if (type.includeApex) {
         requireField("apexA");
-        requireField("apexB");
         requireField("apexC");
         if (!q.apexSame) requireField("apexD");
       }
       if (type.includeMono) {
         requireField("monoA");
-        requireField("monoB");
         requireField("monoC");
       }
     }
@@ -526,8 +522,8 @@ function calculate(quote, config) {
   let geometryBad = false;
   if (type) {
     const before = errors.length;
-    if (type.includeApex) checkSlopeAgainstSpan("apexB", "apexC", "Apex roof", true);
-    if (type.includeMono) checkSlopeAgainstSpan("monoB", "monoC", "Single slope");
+    if (type.includeApex) checkSlopeSane("apexC", "Apex roof");
+    if (type.includeMono) checkSlopeSane("monoC", "Single slope");
     geometryBad = errors.length > before;
   }
 

@@ -194,6 +194,7 @@ function normalizeQuote() {
   if (typeof quote.apexSame !== "boolean") quote.apexSame = true;
   if (quote.units !== "ft") quote.units = "m";
   if (!quote.slopeRise || typeof quote.slopeRise !== "object") quote.slopeRise = {};
+  if (!quote.slopeSpan || typeof quote.slopeSpan !== "object") quote.slopeSpan = {};
   if (quote.roofTypeId === "roof-apex-mono") quote.roofTypeId = null;
   if (!Array.isArray(quote.walls)) quote.walls = [];
   if (!quote.wallDraft || typeof quote.wallDraft !== "object") quote.wallDraft = blankWall();
@@ -1016,11 +1017,19 @@ function pvProfile(kind, cover) {
   };
 }
 
+/* The span is no longer a question. For the drawings only, work it back from
+   the slope: a typical pitch makes the flat width about 96% of the slope. */
+function derivedSpan(apex, slope) {
+  const v = Number(slope);
+  if (!Number.isFinite(v) || v <= 0) return 0;
+  return apex ? v * 2 * 0.96 : v * 0.96;
+}
+
 function renderRoofPreview(mode) {
   const apex = mode === "apex";
   const mq = metricQuote();
   const A = val(apex ? mq.apexA : mq.monoA);     // along the eaves
-  const B = val(apex ? mq.apexB : mq.monoB);     // span across
+  const B = derivedSpan(apex, val(apex ? mq.apexC : mq.monoC));  // drawing only
   const C = val(apex ? mq.apexC : mq.monoC);     // eave to ridge
   if (!(A > 0) || !(B > 0)) return "";
   const look = roofLook();
@@ -1202,21 +1211,19 @@ function renderRoofPreview(mode) {
         font-family="Outfit, Lato, system-ui, sans-serif" fill="${col}">${letter}</text>`);
   }
   const fA = apex ? "apexA" : "monoA";
-  const fB = apex ? "apexB" : "monoB";
   const fC = apex ? "apexC" : "monoC";
   // A: along the front eaves, measured at the base so it clears the wall
   dim([0, -over, 0], [A, -over, 0], "A", fA, [0, -1, 0]);
-  // B: the span, down the right-hand side at the base
-  dim([A, -over, 0], [A, B + over, 0], "B", fB, [1, 0, 0]);
+
   // C: up the visible slope, on the left-hand gable edge
   if (apex) {
-    dim([0, -over, eaveZ2], [0, B / 2, wall + rise], "C", fC, [-1, 0, 0.35]);
+    dim([0, -over, eaveZ2], [0, B / 2, wall + rise], "B", fC, [-1, 0, 0.35]);
     // D only earns its place when the two sides differ; otherwise it repeats A
     if (!quote.apexSame) {
-      dim([0, B + over, eaveZ2], [A, B + over, eaveZ2], "D", "apexD", [0, 0.1, 1], true, 3.2);
+      dim([0, B + over, eaveZ2], [A, B + over, eaveZ2], "C", "apexD", [0, 0.1, 1], true, 1.9);
     }
   } else {
-    dim([0, -over, eaveZ2], [0, B + over, wall + rise + over * tanS2], "C", fC, [-1, 0, 0.35]);
+    dim([0, -over, eaveZ2], [0, B + over, wall + rise + over * tanS2], "B", fC, [-1, 0, 0.35]);
   }
 
   const bits = [];
@@ -1240,8 +1247,8 @@ function renderRoofDiagram(mode) {
   const apex = mode === "apex";
   const mq = metricQuote();
   const length = val(apex ? mq.apexA : mq.monoA);
-  const span = val(apex ? mq.apexB : mq.monoB);
   const slope = val(apex ? mq.apexC : mq.monoC);
+  const span = derivedSpan(apex, slope);
   if (!(length > 0) || !(span > 0)) {
     return `<div class="scale-diagram"><h3>To scale</h3><p class="muted">Enter the eaves length and the span to draw this roof.</p></div>`;
   }
@@ -1349,10 +1356,10 @@ function refreshRoofPreview() {
    Pythagoras: the slope is the hypotenuse over the span and the rise. */
 function slopeHelper(mode) {
   const apex = mode === "apex";
-  const spanField = apex ? "apexB" : "monoB";
-  const slopeField = apex ? "apexC" : "monoC";
   const open = ui.slopeHelp === mode;
-  const span = val(metricQuote()[spanField]);
+  const spanRaw = (quote.slopeSpan || {})[mode] || "";
+  const spanTyped = useFeet() ? metresFromFeet(Number(spanRaw)) : Number(spanRaw);
+  const span = Number.isFinite(spanTyped) ? spanTyped : 0;
   const run = apex ? span / 2 : span;
   const riseRaw = (quote.slopeRise || {})[mode] || "";
   const rise = useFeet() ? metresFromFeet(Number(riseRaw)) : Number(riseRaw);
@@ -1361,15 +1368,15 @@ function slopeHelper(mode) {
     const c = Math.sqrt(run * run + rise * rise);
     answer = `<p class="ok">That makes <strong>${fmtLen(c)}</strong> from eave to ridge.
       <button type="button" class="text-btn" data-action="use-slope" data-mode="${esc(mode)}" data-value="${svgNum(fromMetres(c))}">Use this for C</button></p>`;
-  } else if (open && !(run > 0)) {
-    answer = `<p class="muted">Fill in the span (B) first.</p>`;
   }
   return `<div class="slope-help">
     <button type="button" class="text-btn" data-action="slope-help" data-mode="${esc(mode)}">
       ${open ? "Hide" : "Not sure what C is? Work it out"}
     </button>
     ${open ? `<div class="slope-help-body">
-      <p class="muted">Measure the span (B) flat on the ground, then how much higher the top edge sits than the bottom.</p>
+      <p class="muted">Measure flat on the ground from the bottom edge to under the top edge, then how much higher the top sits.</p>
+      <label class="field" for="span_${esc(mode)}"><span>${apex ? "Full width across both slopes" : "Flat width on the ground"} (${unitShort()})</span>
+        <input id="span_${esc(mode)}" data-action="slope-span" data-mode="${esc(mode)}" value="${esc(spanRaw)}" inputmode="decimal" autocomplete="off"></label>
       <label class="field" for="rise_${esc(mode)}"><span>Height difference, bottom edge to top (${unitShort()})</span>
         <input id="rise_${esc(mode)}" data-action="slope-rise" data-mode="${esc(mode)}" value="${esc(riseRaw)}" inputmode="decimal" autocomplete="off"></label>
       ${answer}
@@ -1384,9 +1391,8 @@ function renderMeasureStep() {
   if (type.includeApex) {
     html += `<h3>Apex Roof Measurements</h3><div class="step-grid">
       ${renderMeasureInput("apexA")}
-      ${renderMeasureInput("apexB")}
       ${renderMeasureInput("apexC")}
-      <div>${renderMeasureInput("apexD")}
+      <div>${quote.apexSame ? "" : renderMeasureInput("apexD")}
         <label class="check" for="apex_same"><input id="apex_same" type="checkbox" data-action="apex-same" ${quote.apexSame ? "checked" : ""}><span>${esc(config.copy.sameSide)}</span></label>
       </div>
     </div>${slopeHelper("apex")}${renderRoofDiagram("apex")}`;
@@ -1394,7 +1400,6 @@ function renderMeasureStep() {
   if (type.includeMono) {
     html += `<h3>Single Slope Measurements</h3><div class="step-grid">
       ${renderMeasureInput("monoA")}
-      ${renderMeasureInput("monoB")}
       ${renderMeasureInput("monoC")}
     </div>${slopeHelper("mono")}${renderRoofDiagram("mono")}`;
   }
@@ -3435,11 +3440,9 @@ function downloadExcel() {
     ["Field", "Value"],
     ["Side 2 matches side 1", yesNo(quote.apexSame)],
     ["Apex A length side 1 m", cellNum(quote.apexA)],
-    ["Apex B span m", cellNum(quote.apexB)],
     ["Apex C eave to ridge m", cellNum(quote.apexC)],
     ["Apex D length side 2 m", cellNum(quote.apexSame ? quote.apexA : quote.apexD)],
     ["Single slope A length m", cellNum(quote.monoA)],
-    ["Single slope B span m", cellNum(quote.monoB)],
     ["Single slope C eave to ridge m", cellNum(quote.monoC)],
   ].concat((result.slopes || []).flatMap((slope) => [
     [`${slope.label} sheets`, slope.sheets == null ? "" : slope.sheets],
@@ -3988,6 +3991,12 @@ function handleField(el) {
   if (action === "job-variant") {
     quote.jobVariantId = el.value;
     ui.added = false;
+    render();
+    return;
+  }
+  if (action === "slope-span") {
+    rememberFocus(el);
+    quote.slopeSpan = { ...(quote.slopeSpan || {}), [el.dataset.mode]: el.value };
     render();
     return;
   }
