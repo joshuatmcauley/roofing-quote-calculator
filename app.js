@@ -3468,6 +3468,12 @@ function onClick(event) {
     window.scrollTo(0, 0);
     return;
   }
+  if (action === "units") {
+    setUnits(el.dataset.unit);
+    ui.added = false;
+    render();
+    return;
+  }
   if (action === "toggle-step") {
     ui.closed[el.dataset.step] = !ui.closed[el.dataset.step];
     render();
@@ -3868,12 +3874,6 @@ function handleField(el) {
   }
   if (action === "job-variant") {
     quote.jobVariantId = el.value;
-    ui.added = false;
-    render();
-    return;
-  }
-  if (action === "units") {
-    setUnits(el.dataset.unit);
     ui.added = false;
     render();
     return;
