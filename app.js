@@ -191,6 +191,7 @@ function normalizeQuote() {
   quote.customer = { ...base.customer, ...(quote.customer || {}) };
   quote.customNotes = { ...(quote.customNotes || {}) };
   if (typeof quote.apexSame !== "boolean") quote.apexSame = true;
+  if (quote.units !== "ft") quote.units = "m";
   if (quote.roofTypeId === "roof-apex-mono") quote.roofTypeId = null;
   if (!Array.isArray(quote.walls)) quote.walls = [];
   if (!quote.wallDraft || typeof quote.wallDraft !== "object") quote.wallDraft = blankWall();
@@ -505,15 +506,118 @@ function roofArt(type) {
   return `<div class="media pattern">${drawing}</div>`;
 }
 
+/* ---- Metres or feet -------------------------------------------------------
+   Everything is priced per metre, so measurements are converted to metres at
+   one boundary (metricQuote) before they reach calc.js. The stored numbers are
+   whatever the person typed, in whichever unit was on at the time.          */
+const FT_PER_M = 3.280839895;
+const LENGTH_FIELDS = ["apexA", "apexB", "apexC", "apexD", "monoA", "monoB", "monoC",
+  "jobLength", "jobWidth", "jobHeight"];
+const WALL_LENGTH_FIELDS = ["height", "width", "gableHeight", "gableWidth", "doorH", "doorW"];
+
+function useFeet() { return quote.units === "ft"; }
+function unitShort() { return useFeet() ? "ft" : "m"; }
+function unitWord() { return useFeet() ? "feet" : "metres"; }
+/* Feet come back to metres rounded to 0.1 mm. Without this, a 3 m slope typed
+   in metres, switched to feet and back lands on 3.000019 m, which rounds up to
+   the next stock length and moves the price. */
+function metresFromFeet(ft) { return Math.round((ft / FT_PER_M) * 10000) / 10000; }
+function toMetres(n) { const v = Number(n); if (!Number.isFinite(v)) return v; return useFeet() ? metresFromFeet(v) : v; }
+function fromMetres(n) { const v = Number(n); if (!Number.isFinite(v)) return v; return useFeet() ? v * FT_PER_M : v; }
+
+/* a length that calc.js produced (always metres), shown in the chosen unit */
+function fmtLen(metres) {
+  const v = Number(metres);
+  if (!Number.isFinite(v)) return "";
+  return `${trimNum(useFeet() ? v * FT_PER_M : v)} ${unitShort()}`;
+}
+
+function unitLabel(text) {
+  if (!useFeet()) return text;
+  return String(text).replace(/\(metres\)/gi, "(feet)").replace(/\bmetres\b/g, "feet").replace(/\bmetre\b/g, "foot");
+}
+
+/* the quote as calc.js wants it: every length in metres */
+function metricQuote() {
+  if (!useFeet()) return quote;
+  const copy = { ...quote };
+  LENGTH_FIELDS.forEach((key) => {
+    const raw = copy[key];
+    if (raw === "" || raw == null) return;
+    const v = Number(raw);
+    if (Number.isFinite(v)) copy[key] = metresFromFeet(v);
+  });
+  const convertWall = (wall) => {
+    const w = { ...wall };
+    WALL_LENGTH_FIELDS.forEach((key) => {
+      const v = Number(w[key]);
+      if (w[key] !== "" && w[key] != null && Number.isFinite(v)) w[key] = metresFromFeet(v);
+    });
+    if (Array.isArray(w.windows)) {
+      w.windows = w.windows.map((win) => {
+        const o = { ...win };
+        ["h", "w"].forEach((key) => {
+          const v = Number(o[key]);
+          if (o[key] !== "" && o[key] != null && Number.isFinite(v)) o[key] = metresFromFeet(v);
+        });
+        return o;
+      });
+    }
+    return w;
+  };
+  if (Array.isArray(copy.walls)) copy.walls = copy.walls.map(convertWall);
+  if (copy.wallDraft && typeof copy.wallDraft === "object") copy.wallDraft = convertWall(copy.wallDraft);
+  return copy;
+}
+
+/* switching units rewrites what is on screen so the real size does not change */
+function setUnits(next) {
+  if (next !== "m" && next !== "ft") return;
+  if (quote.units === next) return;
+  const factor = next === "ft" ? FT_PER_M : 1 / FT_PER_M;
+  const conv = (raw) => {
+    if (raw === "" || raw == null) return raw;
+    const v = Number(raw);
+    if (!Number.isFinite(v)) return raw;
+    return String(Math.round(v * factor * 10000) / 10000);
+  };
+  LENGTH_FIELDS.forEach((key) => { quote[key] = conv(quote[key]); });
+  const convWall = (wall) => {
+    if (!wall || typeof wall !== "object") return wall;
+    WALL_LENGTH_FIELDS.forEach((key) => { wall[key] = conv(wall[key]); });
+    if (Array.isArray(wall.windows)) wall.windows.forEach((win) => { win.h = conv(win.h); win.w = conv(win.w); });
+    return wall;
+  };
+  if (Array.isArray(quote.walls)) quote.walls.forEach(convWall);
+  convWall(quote.wallDraft);
+  quote.units = next;
+}
+
+function unitNote() {
+  return useFeet()
+    ? `<p class="note unit-note">Measurements are in feet. The shop sells by the metre, so the quote itself stays in metres.</p>`
+    : "";
+}
+
+function unitToggle() {
+  return `<div class="unit-toggle" role="group" aria-label="Measurement units">
+    <span>Measure in</span>
+    <button type="button" class="unit-btn${useFeet() ? "" : " is-on"}" data-action="units" data-unit="m"
+      aria-pressed="${useFeet() ? "false" : "true"}">Metres</button>
+    <button type="button" class="unit-btn${useFeet() ? " is-on" : ""}" data-action="units" data-unit="ft"
+      aria-pressed="${useFeet() ? "true" : "false"}">Feet</button>
+  </div>`;
+}
+
 function renderMeasureInput(key) {
   const field = config.measureFields[key];
   const value = key === "apexD" && quote.apexSame ? quote.apexA : quote[key];
   const disabled = key === "apexD" && quote.apexSame;
   const bad = ui.showErrors && lastCalc.errors.some((error) => error.field === key);
   return `<label class="field${bad ? " has-error" : ""}" for="m_${key}">
-    <span>${esc(field.label)}</span>
+    <span>${esc(unitLabel(field.label))}</span>
     <input id="m_${key}" data-action="measure" data-field="${key}" value="${esc(value)}" ${disabled ? "disabled" : ""} inputmode="decimal" autocomplete="off">
-    <small>${esc(field.help)}</small>
+    <small>${esc(unitLabel(field.help))}</small>
     ${fieldMsg(key)}
   </label>`;
 }
@@ -910,9 +1014,10 @@ function pvProfile(kind, cover) {
 
 function renderRoofPreview(mode) {
   const apex = mode === "apex";
-  const A = val(apex ? quote.apexA : quote.monoA);     // along the eaves
-  const B = val(apex ? quote.apexB : quote.monoB);     // span across
-  const C = val(apex ? quote.apexC : quote.monoC);     // eave to ridge
+  const mq = metricQuote();
+  const A = val(apex ? mq.apexA : mq.monoA);     // along the eaves
+  const B = val(apex ? mq.apexB : mq.monoB);     // span across
+  const C = val(apex ? mq.apexC : mq.monoC);     // eave to ridge
   if (!(A > 0) || !(B > 0)) return "";
   const look = roofLook();
   const base = look.hex || "#9bb0c4";
@@ -1076,9 +1181,10 @@ function renderRoofPreview(mode) {
 
 function renderRoofDiagram(mode) {
   const apex = mode === "apex";
-  const length = val(apex ? quote.apexA : quote.monoA);
-  const span = val(apex ? quote.apexB : quote.monoB);
-  const slope = val(apex ? quote.apexC : quote.monoC);
+  const mq = metricQuote();
+  const length = val(apex ? mq.apexA : mq.monoA);
+  const span = val(apex ? mq.apexB : mq.monoB);
+  const slope = val(apex ? mq.apexC : mq.monoC);
   if (!(length > 0) || !(span > 0)) {
     return `<div class="scale-diagram"><h3>To scale</h3><p class="muted">Enter the eaves length and the span to draw this roof.</p></div>`;
   }
@@ -1147,23 +1253,23 @@ function renderRoofDiagram(mode) {
     const bot = y0 + drawH;
     parts.push(`<line x1="${svgNum(ax)}" y1="${svgNum(bot - 5)}" x2="${svgNum(ax)}" y2="${svgNum(top + 5)}"
       stroke="${DIA.rule}" stroke-width="1.1" stroke-opacity=".75" marker-end="url(#da-${key})"/>`);
-    parts.push(diaChip(ax, (top + bot) / 2 + 4, `${trimNum(slope)} m up the slope`, "middle", key, 11.5));
+    parts.push(diaChip(ax, (top + bot) / 2 + 4, `${fmtLen(slope)} up the slope`, "middle", key, 11.5));
   }
 
-  parts.push(dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${trimNum(length)} m eaves`, key));
-  if (longer) parts.push(dimAcross(x0, x0 + fullW, y0 + drawH + 52, `${trimNum(covered)} m of cover`, key));
-  parts.push(dimDown(x0 - 16, y0, y0 + drawH, `${trimNum(span)} m span`, key));
+  parts.push(dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${fmtLen(length)} eaves`, key));
+  if (longer) parts.push(dimAcross(x0, x0 + fullW, y0 + drawH + 52, `${fmtLen(covered)} of cover`, key));
+  parts.push(dimDown(x0 - 16, y0, y0 + drawH, `${fmtLen(span)} span`, key));
 
   const legendY = DIA.padT + drawH + (longer ? 74 : 50);
   if (sheets > 0) {
-    parts.push(diaLegend(x0, legendY, base, `${sheets} sheet${sheets === 1 ? "" : "s"} at ${trimNum(cover)} m cover`, false, key));
-    if (longer) parts.push(diaLegend(x0 + 196, legendY, "", `${trimNum(covered - length)} m past the eaves`, true, key));
+    parts.push(diaLegend(x0, legendY, base, `${sheets} sheet${sheets === 1 ? "" : "s"} at ${fmtLen(cover)} cover`, false, key));
+    if (longer) parts.push(diaLegend(x0 + 196, legendY, "", `${fmtLen(covered - length)} past the eaves`, true, key));
   }
 
-  let caption = `Plan of the ${apex ? "apex" : "single slope"}: ${roofMaterialCaption(look)} The filled area is ${trimNum(length)} m along the eaves by ${trimNum(span)} m across.`;
-  if (sheets > 0) caption += ` ${sheets} sheet${sheets === 1 ? "" : "s"} cover the eaves at ${trimNum(cover)} m cover. Hatched sheet past the eaves is still a whole cover width.`;
+  let caption = `Plan of the ${apex ? "apex" : "single slope"}: ${roofMaterialCaption(look)} The filled area is ${fmtLen(length)} along the eaves by ${fmtLen(span)} across.`;
+  if (sheets > 0) caption += ` ${sheets} sheet${sheets === 1 ? "" : "s"} cover the eaves at ${fmtLen(cover)} cover. Hatched sheet past the eaves is still a whole cover width.`;
   else caption += " Choose a sheet to see the covers along the eaves.";
-  if (slope > 0) caption += ` Each sheet follows the ${trimNum(slope)} m eave-to-ridge length.`;
+  if (slope > 0) caption += ` Each sheet follows the ${fmtLen(slope)} eave-to-ridge length.`;
   const bodyH = (legendY - DIA.padT) + (sheets > 0 ? 14 : -18);
   const svg = diaFrame(fullW, bodyH, parts.join(""), caption, key);
   const preview = renderRoofPreview(mode);
@@ -1172,7 +1278,7 @@ function renderRoofDiagram(mode) {
 function renderMeasureStep() {
   const type = currentType();
   if (!type) return `<p class="muted">${esc(config.copy.needType)}</p>`;
-  let html = `<p class="note">${esc(config.copy.measurementNote)} Stock lengths: ${esc((config.rules.stockLengthsM || []).join(", "))} m.</p>`;
+  let html = unitToggle() + unitNote() + `<p class="note">${esc(unitLabel(config.copy.measurementNote))} Stock lengths: ${esc((config.rules.stockLengthsM || []).map((len) => trimNum(useFeet() ? len * FT_PER_M : len)).join(", "))} ${unitShort()}.</p>`;
   if (type.includeApex) {
     html += `<h3>Apex Roof Measurements</h3><div class="step-grid">
       ${renderMeasureInput("apexA")}
@@ -1197,12 +1303,12 @@ function renderMeasureStep() {
       const round = slope.blocked
         ? slope.blockReason
         : slope.cutToSize
-        ? `${trimNum(slope.slope)} m cut to size`
+        ? `${fmtLen(slope.slope)} cut to size`
         : slope.special
-          ? `${trimNum(slope.slope)} m is above your longest stock size`
+          ? `${fmtLen(slope.slope)} is above your longest stock size`
           : same
-            ? `${trimNum(slope.slope)} m matches a stock length`
-            : `${trimNum(slope.slope)} m rounds up to ${trimNum(slope.ordered)} m`;
+            ? `${fmtLen(slope.slope)} matches a stock length`
+            : `${fmtLen(slope.slope)} rounds up to ${fmtLen(slope.ordered)}`;
       return `<li><strong>${esc(slope.label)}</strong> — ${esc(round)}. ${esc(sheets)}.</li>`;
     }).join("")}</ul>`;
   }
@@ -1726,7 +1832,7 @@ function renderJobStep() {
 
 function jobInput(field, label, numeric) {
   const bad = ui.showErrors && lastCalc.errors.some((error) => error.field === field);
-  return `<label class="field${bad ? " has-error" : ""}" for="job_${field}"><span>${esc(label)}</span>
+  return `<label class="field${bad ? " has-error" : ""}" for="job_${field}"><span>${esc(unitLabel(label))}</span>
     <input id="job_${field}" data-action="job-measure" data-field="${field}" value="${esc(quote[field] || "")}" inputmode="${numeric ? "numeric" : "decimal"}" autocomplete="off">
     ${fieldMsg(field)}</label>`;
 }
@@ -1785,10 +1891,10 @@ function gridDiagram(layout, label) {
   }
   parts.push(`<rect x="${svgNum(X(0))}" y="${svgNum(Y(0))}" width="${svgNum(layout.x * scale)}" height="${svgNum(layout.y * scale)}" fill="none" stroke="${DIA.rule}" stroke-width="1.8"/>`);
   let yDim = y0 + drawH + 26;
-  parts.push(dimAcross(X(0), X(layout.x), yDim, `${trimNum(layout.x)} m`, key));
-  if (longer) { yDim += 26; parts.push(dimAcross(X(0), X(boardsW), yDim, `${trimNum(boardsW)} m ordered`, key)); }
-  parts.push(dimDown(x0 - 16, Y(0), Y(layout.y), `${trimNum(layout.y)} m`, key));
-  if (taller) parts.push(dimDown(x0 + drawW + 22, Y(0), Y(boardsH), `${trimNum(boardsH)} m`, key));
+  parts.push(dimAcross(X(0), X(layout.x), yDim, `${fmtLen(layout.x)}`, key));
+  if (longer) { yDim += 26; parts.push(dimAcross(X(0), X(boardsW), yDim, `${fmtLen(boardsW)} ordered`, key)); }
+  parts.push(dimDown(x0 - 16, Y(0), Y(layout.y), `${fmtLen(layout.y)}`, key));
+  if (taller) parts.push(dimDown(x0 + drawW + 22, Y(0), Y(boardsH), `${fmtLen(boardsH)}`, key));
   const spare = Math.max(0, Math.round(layout.spare) || 0);
   let legendY = yDim + 24;
   const total = along * across;
@@ -1825,11 +1931,11 @@ function barDiagram(layout, label) {
   if (longer) {
     parts.push(`<rect x="${svgNum(x0 + layout.x * scale)}" y="${svgNum(y0)}" width="${svgNum((boardsW - layout.x) * scale)}" height="${barH}" fill="url(#waste-${key})"/>`);
   }
-  parts.push(dimAcross(x0, x0 + layout.x * scale, y0 + barH + 26, `${trimNum(layout.x)} m`, key));
+  parts.push(dimAcross(x0, x0 + layout.x * scale, y0 + barH + 26, `${fmtLen(layout.x)}`, key));
   let legendY = y0 + barH + 50;
-  if (longer) { parts.push(dimAcross(x0, x0 + boardsW * scale, y0 + barH + 52, `${trimNum(boardsW)} m ordered`, key)); legendY += 26; }
+  if (longer) { parts.push(dimAcross(x0, x0 + boardsW * scale, y0 + barH + 52, `${fmtLen(boardsW)} ordered`, key)); legendY += 26; }
   const hasLegend = along > 0 && pieceX > 0;
-  if (hasLegend) parts.push(diaLegend(x0, legendY, base, `${along} × ${trimNum(pieceX)} m length${along === 1 ? "" : "s"}`, false, key));
+  if (hasLegend) parts.push(diaLegend(x0, legendY, base, `${along} × ${fmtLen(pieceX)} length${along === 1 ? "" : "s"}`, false, key));
   const bodyH = hasLegend ? (legendY - DIA.padT) + 10 : (y0 + barH + 34) - DIA.padT;
   return diaFrame(drawW, bodyH, parts.join(""), label, key);
 }
@@ -1844,8 +1950,8 @@ function rectDiagram(layout, label) {
   const parts = [
     diaTitle(DIA.padL - 2, 18, "Area, to scale", key),
     `<rect x="${svgNum(x0)}" y="${svgNum(y0)}" width="${svgNum(drawW)}" height="${svgNum(drawH)}" fill="${selectedFill()}" fill-opacity=".75" stroke="${DIA.rule}" stroke-width="1.8"/>`,
-    dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${trimNum(layout.x)} m`, key),
-    dimDown(x0 - 16, y0, y0 + drawH, `${trimNum(layout.y)} m`, key),
+    dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${fmtLen(layout.x)}`, key),
+    dimDown(x0 - 16, y0, y0 + drawH, `${fmtLen(layout.y)}`, key),
   ];
   return diaFrame(drawW, drawH + 24, parts.join(""), label, key);
 }
@@ -1878,10 +1984,10 @@ function stepsDiagram(layout, label) {
     parts.push(`<rect x="${svgNum(x0)}" y="${svgNum(y)}" width="${svgNum(layout.x * scale)}" height="${svgNum(rowH)}" fill="none" stroke="${DIA.rule}" stroke-width="1.6"/>`);
   }
   const rowsH = treads * rowH + (treads - 1) * gap;
-  parts.push(dimAcross(x0, x0 + layout.x * scale, DIA.padT + rowsH + 26, `${trimNum(layout.x)} m wide`, key));
-  if (depth > 0) parts.push(dimDown(x0 - 16, DIA.padT, DIA.padT + rowsH, `${trimNum(depth * treads)} m`, key));
+  parts.push(dimAcross(x0, x0 + layout.x * scale, DIA.padT + rowsH + 26, `${fmtLen(layout.x)} wide`, key));
+  if (depth > 0) parts.push(dimDown(x0 - 16, DIA.padT, DIA.padT + rowsH, `${fmtLen(depth * treads)}`, key));
   const legendY = DIA.padT + rowsH + 50;
-  parts.push(diaLegend(x0, legendY, base, `${along * treads} piece${along * treads === 1 ? "" : "s"} of ${trimNum(pieceX)} m`, false, key));
+  parts.push(diaLegend(x0, legendY, base, `${along * treads} piece${along * treads === 1 ? "" : "s"} of ${fmtLen(pieceX)}`, false, key));
   return diaFrame(drawW, (legendY - DIA.padT) + 10, parts.join(""), label, key);
 }
 
@@ -1931,11 +2037,11 @@ function perimeterDiagram(layout, label) {
       start += len; guard += 1; idx += 1;
     }
   }
-  parts.push(dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${trimNum(length)} m`, key));
-  parts.push(dimDown(x0 - 16, y0, y0 + drawH, `${trimNum(width)} m`, key));
+  parts.push(dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${fmtLen(length)}`, key));
+  parts.push(dimDown(x0 - 16, y0, y0 + drawH, `${fmtLen(width)}`, key));
   const legendY = y0 + drawH + 50;
   if (piece > 0) {
-    parts.push(diaLegend(x0, legendY, DIA.rule, `${trimNum(piece)} m lengths, perimeter ${trimNum(total)} m`, false, key));
+    parts.push(diaLegend(x0, legendY, DIA.rule, `${fmtLen(piece)} lengths, perimeter ${fmtLen(total)}`, false, key));
   }
   return diaFrame(drawW, (legendY - DIA.padT) + 10, parts.join(""), label, key);
 }
@@ -1947,11 +2053,11 @@ function scaleCaption(layout) {
     const boardsW = (Number(layout.along) || 0) * (Number(layout.pieceX) || 0);
     const boardsH = (Number(layout.across) || 0) * (Number(layout.pieceY) || 0);
     const overhang = boardsW > Number(layout.x) + 0.01 || boardsH > Number(layout.y) + 0.01;
-    let text = `The filled area is the ${trimNum(layout.x)} m × ${trimNum(layout.y)} m you entered. Each piece is ${trimNum(layout.pieceX)} m long`;
+    let text = `The filled area is the ${fmtLen(layout.x)} × ${fmtLen(layout.y)} you entered. Each piece is ${fmtLen(layout.pieceX)} long`;
     if (coverMm > 0) text += ` and covers ${coverMm} mm`;
     text += overhang ? ". Hatched is the rest of a whole piece." : ". The pieces cover that size exactly.";
     if (layout.unit === "m2") {
-      return `The filled area is ${trimNum(layout.x)} m × ${trimNum(layout.y)} m. Each cobble is ${Math.round(layout.pieceX * 1000)} × ${Math.round(layout.pieceY * 1000)} mm. This product is sold by the square metre, so the order is ${layout.qty} m².`;
+      return `The filled area is ${fmtLen(layout.x)} × ${fmtLen(layout.y)}. Each cobble is ${Math.round(layout.pieceX * 1000)} × ${Math.round(layout.pieceY * 1000)} mm. This product is sold by the square metre, so the order is ${layout.qty} m².`;
     }
     if (spare > 0) {
       const word = spare === 1 ? "piece is" : "pieces are";
@@ -1961,22 +2067,22 @@ function scaleCaption(layout) {
   }
   if (layout.kind === "perimeter") {
     const run = 2 * (Number(layout.x) + Number(layout.y));
-    return `The rectangle is ${trimNum(layout.x)} m × ${trimNum(layout.y)} m. The edge is ${trimNum(run)} m, covered by ${layout.qty} whole lengths of ${trimNum(layout.pieceX)} m.`;
+    return `The rectangle is ${fmtLen(layout.x)} × ${fmtLen(layout.y)}. The edge is ${fmtLen(run)}, covered by ${layout.qty} whole lengths of ${fmtLen(layout.pieceX)}.`;
   }
   if (layout.kind === "bar" && layout.pieceX > 0) {
-    return `The filled area is the ${trimNum(layout.x)} m run. Each piece is ${trimNum(layout.pieceX)} m. Hatched is the rest of a whole piece.`;
+    return `The filled area is the ${fmtLen(layout.x)} run. Each piece is ${fmtLen(layout.pieceX)}. Hatched is the rest of a whole piece.`;
   }
-  if (layout.kind === "bar") return `Drawn to the ${trimNum(layout.x)} m cut length.`;
+  if (layout.kind === "bar") return `Drawn to the ${fmtLen(layout.x)} cut length.`;
   if (layout.kind === "steps") {
     const depth = Number(layout.y) || 0;
     const rows = Math.max(1, Math.round(layout.treads) || 1);
-    let text = `Each band is one tread, ${trimNum(layout.x)} m wide.`;
+    let text = `Each band is one tread, ${fmtLen(layout.x)} wide.`;
     if (depth > 0) text += ` The going is ${trimNum(depth)} m, so ${rows} treads run ${trimNum(depth * rows)} m.`;
-    text += ` Pieces are ${trimNum(layout.pieceX)} m and are sold whole.`;
+    text += ` Pieces are ${fmtLen(layout.pieceX)} and are sold whole.`;
     return text;
   }
-  if (layout.pieceX > 0) return `The rectangle is ${trimNum(layout.x)} m × ${trimNum(layout.y)} m. Lengths are ${trimNum(layout.pieceX)} m.`;
-  return `The rectangle is ${trimNum(layout.x)} m × ${trimNum(layout.y)} m, drawn to scale.`;
+  if (layout.pieceX > 0) return `The rectangle is ${fmtLen(layout.x)} × ${fmtLen(layout.y)}. Lengths are ${fmtLen(layout.pieceX)}.`;
+  return `The rectangle is ${fmtLen(layout.x)} × ${fmtLen(layout.y)}, drawn to scale.`;
 }
 
 function renderScaleDiagram() {
@@ -2026,19 +2132,20 @@ function renderSizeStep() {
   const waste = wasteDefault > 0 || String(quote.jobWaste || "").trim() !== ""
     ? jobInput("jobWaste", `Extra waste % (blank uses ${trimNum(wasteDefault)})`, false)
     : "";
-  let fields = "";
+  const needsLength = ["wall", "run", "linear", "steps", "area", "grid"].includes(job.mode) || !["circles", "each"].includes(job.mode);
+  let fields = needsLength ? unitToggle() + unitNote() : "";
   if (job.mode === "wall") {
-    fields = jobInput("jobLength", "Length of wall or fence to cover (metres)", false) + jobInput("jobHeight", "Height to cover (metres)", false) + waste;
+    fields += jobInput("jobLength", "Length of wall or fence to cover (metres)", false) + jobInput("jobHeight", "Height to cover (metres)", false) + waste;
   } else if (job.mode === "run" || job.mode === "linear") {
-    fields = jobInput("jobLength", "Length (metres)", false);
+    fields += jobInput("jobLength", "Length (metres)", false);
   } else if (job.mode === "steps") {
-    fields = jobInput("jobWidth", "Step width (metres)", false) + jobInput("jobCount", "Number of treads", true);
+    fields += jobInput("jobWidth", "Step width (metres)", false) + jobInput("jobCount", "Number of treads", true);
   } else if (job.mode === "circles") {
     fields = jobInput("jobCount", "Number of full circles", true);
   } else if (job.mode === "each") {
     fields = jobInput("jobCount", "Quantity (blank means 1)", true);
   } else {
-    fields = jobInput("jobLength", "Length (metres)", false) + jobInput("jobWidth", "Width (metres)", false) + waste;
+    fields += jobInput("jobLength", "Length (metres)", false) + jobInput("jobWidth", "Width (metres)", false) + waste;
   }
   const preview = (lastCalc.lines || []).filter((line) => line.section === "Calculated");
   const result = preview.length
@@ -2878,7 +2985,7 @@ function render() {
     document.body.className = ui.view === "edit" ? "is-edit" : "is-quote";
     if (ui.view === "quote") {
       syncJobChoice();
-      lastCalc = calculate(quote, config);
+      lastCalc = calculate(metricQuote(), config);
     }
     if (pendingScroll && pendingScroll !== "summary") ui.navStep = pendingScroll;
     const y = pendingScroll ? null : window.scrollY;
@@ -3037,7 +3144,7 @@ function goNext(id) {
 }
 
 function requireReady() {
-  lastCalc = calculate(quote, config);
+  lastCalc = calculate(metricQuote(), config);
   if (lastCalc.quoteReady && !customMissing().length) return true;
   ui.showErrors = true;
   ui.added = false;
@@ -3761,6 +3868,12 @@ function handleField(el) {
   }
   if (action === "job-variant") {
     quote.jobVariantId = el.value;
+    ui.added = false;
+    render();
+    return;
+  }
+  if (action === "units") {
+    setUnits(el.dataset.unit);
     ui.added = false;
     render();
     return;
