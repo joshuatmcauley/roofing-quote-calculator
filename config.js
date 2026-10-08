@@ -313,7 +313,7 @@ const QUOTE_CONFIG = {
       coverWidthM: 0.988,
       cutToSize: false,
       stockLengthsM: [5],
-      image: "images/profiles/diamond.svg?v=11",
+      image: "images/profiles/diamond.svg?v=10",
       photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Diamond_Embossed_Corrugated_Polycarbonate_Sheet.png?v=1758625612&width=640",
       allowsDripstop: false,
       finishes: [
