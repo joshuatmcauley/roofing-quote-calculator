@@ -632,3 +632,21 @@ input:focus, select:focus, textarea:focus {
   }
   .choice:hover, .swatch:hover, .pick:hover, .editor-card:hover { transform: none; }
 }
+
+.dim-letter {
+  display: inline-grid;
+  place-items: center;
+  width: 21px;
+  height: 21px;
+  margin-right: 8px;
+  border: 1px solid #4a5a73;
+  border-radius: 50%;
+  color: #4a5a73;
+  font-size: 12px;
+  font-weight: 700;
+  font-style: normal;
+  vertical-align: -4px;
+  transition: background-color var(--quick) var(--ease), color var(--quick) var(--ease), border-color var(--quick) var(--ease);
+}
+.dim-letter.is-warm { border-color: #c9682c; color: #c9682c; }
+.field:focus-within .dim-letter { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }

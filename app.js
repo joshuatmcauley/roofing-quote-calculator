@@ -615,8 +615,10 @@ function renderMeasureInput(key) {
   const value = key === "apexD" && quote.apexSame ? quote.apexA : quote[key];
   const disabled = key === "apexD" && quote.apexSame;
   const bad = ui.showErrors && lastCalc.errors.some((error) => error.field === key);
-  return `<label class="field${bad ? " has-error" : ""}" for="m_${key}">
-    <span>${esc(unitLabel(field.label))}</span>
+  const letter = (String(field.label).match(/^([A-D])\b/) || [])[1] || "";
+  const warm = key === "apexD";
+  return `<label class="field${bad ? " has-error" : ""}${letter ? " has-letter" : ""}" for="m_${key}">
+    <span>${letter ? `<i class="dim-letter${warm ? " is-warm" : ""}">${letter}</i>` : ""}${esc(unitLabel(field.label).replace(/^[A-D]\s*—\s*/, ""))}</span>
     <input id="m_${key}" data-action="measure" data-field="${key}" value="${esc(value)}" ${disabled ? "disabled" : ""} inputmode="decimal" autocomplete="off">
     <small>${esc(unitLabel(field.help))}</small>
     ${fieldMsg(key)}
@@ -1166,6 +1168,56 @@ function renderRoofPreview(mode) {
       .map((p) => `${svgNum(p[0])},${svgNum(p[1])}`).join(" ");
     body.push(`<polygon points="${d}" fill="${f.fill}"${f.op < 1 ? ` fill-opacity="${f.op}"` : ""} stroke="${f.fill}" stroke-width=".4"/>`);
   }
+  // ---- labelled dimensions on the actual edges, so A/B/C/D are unmistakable.
+  // The offset direction comes from the real outward normal in 3D, not from a
+  // screen-space guess, or a label ends up lying across the roof.
+  const dims = [];
+  const tanS2 = rise / Math.max(run, 0.01);
+  const eaveZ2 = wall - over * tanS2;
+  const active = ui.focusField || "";
+  function dim(p0, p1, letter, field, outward, warm, offScale) {
+    const a = F(pvProj(p0)), b = F(pvProj(p1));
+    const mid3 = [(p0[0] + p1[0]) / 2, (p0[1] + p1[1]) / 2, (p0[2] + p1[2]) / 2];
+    const step = Math.max(A, B) * 0.12;
+    const m0 = F(pvProj(mid3));
+    const m1 = F(pvProj([mid3[0] + outward[0] * step, mid3[1] + outward[1] * step, mid3[2] + outward[2] * step]));
+    let nx = m1[0] - m0[0], ny = m1[1] - m0[1];
+    const nl = Math.hypot(nx, ny) || 1;
+    nx /= nl; ny /= nl;
+    const off = 22 * (offScale || 1);
+    const A2 = [a[0] + nx * off, a[1] + ny * off];
+    const B2 = [b[0] + nx * off, b[1] + ny * off];
+    const on = active === field;
+    const col = on ? "#1d4ed8" : (warm ? "#c9682c" : "#4a5a73");
+    const w = on ? 2.3 : 1.5;
+    const lx = (A2[0] + B2[0]) / 2 + nx * 15;
+    const ly = (A2[1] + B2[1]) / 2 + ny * 15 + 5;
+    dims.push(`<line x1="${svgNum(a[0] + nx * 5)}" y1="${svgNum(a[1] + ny * 5)}" x2="${svgNum(A2[0])}" y2="${svgNum(A2[1])}" stroke="${col}" stroke-width=".8" stroke-opacity=".5"/>
+      <line x1="${svgNum(b[0] + nx * 5)}" y1="${svgNum(b[1] + ny * 5)}" x2="${svgNum(B2[0])}" y2="${svgNum(B2[1])}" stroke="${col}" stroke-width=".8" stroke-opacity=".5"/>
+      <line x1="${svgNum(A2[0])}" y1="${svgNum(A2[1])}" x2="${svgNum(B2[0])}" y2="${svgNum(B2[1])}" stroke="${col}" stroke-width="${w}"
+        marker-start="url(#pv-ar)" marker-end="url(#pv-ar)"/>
+      <circle cx="${svgNum(lx)}" cy="${svgNum(ly - 5)}" r="${on ? 12 : 10.5}" fill="#ffffff" stroke="${col}" stroke-width="${on ? 1.6 : 1}"/>
+      <text x="${svgNum(lx)}" y="${svgNum(ly)}" text-anchor="middle" font-size="${on ? 15 : 13}" font-weight="700"
+        font-family="Outfit, Lato, system-ui, sans-serif" fill="${col}">${letter}</text>`);
+  }
+  const fA = apex ? "apexA" : "monoA";
+  const fB = apex ? "apexB" : "monoB";
+  const fC = apex ? "apexC" : "monoC";
+  // A: along the front eaves, measured at the base so it clears the wall
+  dim([0, -over, 0], [A, -over, 0], "A", fA, [0, -1, 0]);
+  // B: the span, down the right-hand side at the base
+  dim([A, -over, 0], [A, B + over, 0], "B", fB, [1, 0, 0]);
+  // C: up the visible slope, on the left-hand gable edge
+  if (apex) {
+    dim([0, -over, eaveZ2], [0, B / 2, wall + rise], "C", fC, [-1, 0, 0.35]);
+    // D only earns its place when the two sides differ; otherwise it repeats A
+    if (!quote.apexSame) {
+      dim([0, B + over, eaveZ2], [A, B + over, eaveZ2], "D", "apexD", [0, 0.1, 1], true, 3.2);
+    }
+  } else {
+    dim([0, -over, eaveZ2], [0, B + over, wall + rise + over * tanS2], "C", fC, [-1, 0, 0.35]);
+  }
+
   const bits = [];
   if (look.profile) bits.push(look.profile.name);
   if (look.colour) bits.push(look.colour.name);
@@ -1173,8 +1225,11 @@ function renderRoofPreview(mode) {
   const caption = bits.join(" · ");
   return `<div class="roof-preview">
     <svg class="diagram" viewBox="0 0 ${PV.W} ${PV.H}" role="img" aria-label="${esc(caption || "Roof preview")}">
-      <defs><filter id="pv-blur" x="-30%" y="-80%" width="160%" height="300%"><feGaussianBlur stdDeviation="4"/></filter></defs>
+      <defs><filter id="pv-blur" x="-30%" y="-80%" width="160%" height="300%"><feGaussianBlur stdDeviation="4"/></filter>
+        <marker id="pv-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M0.5 1.6 L9.4 5 L0.5 8.4 Z" fill="context-stroke"/></marker></defs>
       ${body.join("")}
+      ${dims.join("")}
     </svg>
     ${caption ? `<p class="preview-caption">${esc(caption)}</p>` : ""}
   </div>`;
@@ -4181,6 +4236,22 @@ function init() {
   if (quote.jobId && !(config.jobs || []).some((item) => item.id === quote.jobId)) quote.jobId = null;
   applySavedFromHash();
   const app = document.getElementById("app");
+  // highlight the matching letter on the 3D preview while a measurement is focused
+  app.addEventListener("focusin", (event) => {
+    const el = event.target.closest('[data-action="measure"]');
+    const field = el ? el.dataset.field : null;
+    if (ui.focusField === field) return;
+    ui.focusField = field;
+    if (field || ui.focusField === null) render();
+  });
+  app.addEventListener("focusout", (event) => {
+    const el = event.target.closest('[data-action="measure"]');
+    if (!el) return;
+    window.setTimeout(() => {
+      const still = document.activeElement && document.activeElement.closest('[data-action="measure"]');
+      if (!still && ui.focusField) { ui.focusField = null; render(); }
+    }, 0);
+  });
   app.addEventListener("click", onClick);
   app.addEventListener("input", onInput);
   app.addEventListener("change", onChange);
