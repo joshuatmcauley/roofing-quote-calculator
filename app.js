@@ -1040,7 +1040,9 @@ function renderRoofPreview(mode) {
   const prof = pvProfile(look.kind, cover || 1);
   const run = apex ? B / 2 : B;                         // horizontal run of one slope
   const rise = C > run ? Math.sqrt(Math.max(C * C - run * run, 0)) : run * 0.28;
-  const wall = Math.max(Math.min(A, B) * 0.30, 0.9);
+  // Real buildings have roughly 2.4 m walls whatever the roof measures. Scaling
+  // the wall off the roof made a long shallow roof sit on a crawl space.
+  const wall = Math.max(1.6, Math.min(2.4, Math.max(A, B) * 0.55));
   const over = Math.min(0.25, Math.min(A, B) * 0.05);   // eaves overhang
   const parts = [];
   const pts = [];
@@ -1067,9 +1069,13 @@ function renderRoofPreview(mode) {
     faces.push(quad(g, [1, 0, 0], pvShade(wallCol, [1, 0, 0], wallMat), 1, -1.005e6));
   }
   // door
-  const dw = Math.min(A * 0.18, 1.1), dh = Math.min(wall * 0.72, 2.1);
-  faces.push(quad([[A / 2 - dw / 2, -0.01, 0], [A / 2 + dw / 2, -0.01, 0], [A / 2 + dw / 2, -0.01, dh], [A / 2 - dw / 2, -0.01, dh]],
-    [0, -1, 0], "#55606b", 1, -0.99e6));
+  // a real door: 0.9 m wide, 2 m tall, and left off if the wall cannot hold it
+  const dw = Math.min(0.9, A * 0.3), dh = Math.min(2.0, wall * 0.84);
+  const showDoor = A > 1.6 && wall > 1.9;
+  if (showDoor) {
+    faces.push(quad([[A / 2 - dw / 2, -0.01, 0], [A / 2 + dw / 2, -0.01, 0], [A / 2 + dw / 2, -0.01, dh], [A / 2 - dw / 2, -0.01, dh]],
+      [0, -1, 0], "#55606b", 1, -0.99e6));
+  }
 
   // ---- roof planes, pressed with the chosen profile
   function slope(y0, z0, y1, z1, flip, zBias) {
@@ -1260,10 +1266,10 @@ function renderRoofDiagram(mode) {
   const covered = sheets > 0 ? sheets * cover : length;
   const worldW = Math.max(length, covered);
   const longer = covered > length + 0.01;
-  const scale = diaScale(worldW, span, 206);
+  const scale = diaScale(worldW, slope, 206);
   const drawW = length * scale;
   const fullW = worldW * scale;
-  const drawH = span * scale;
+  const drawH = slope * scale;
   const x0 = diaX0(fullW);
   const y0 = DIA.padT;
   const base = look.hex || "#9bb0c4";
@@ -1317,12 +1323,12 @@ function renderRoofDiagram(mode) {
     const bot = y0 + drawH;
     parts.push(`<line x1="${svgNum(ax)}" y1="${svgNum(bot - 5)}" x2="${svgNum(ax)}" y2="${svgNum(top + 5)}"
       stroke="${DIA.rule}" stroke-width="1.1" stroke-opacity=".75" marker-end="url(#da-${key})"/>`);
-    parts.push(diaChip(ax, (top + bot) / 2 + 4, `${fmtLen(slope)} up the slope`, "middle", key, 11.5));
+    parts.push(diaChip(ax, (top + bot) / 2 + 4, `${sheets > 0 ? `each sheet ${fmtLen(slope)}` : fmtLen(slope)}`, "middle", key, 11.5));
   }
 
   parts.push(dimAcross(x0, x0 + drawW, y0 + drawH + 26, `${fmtLen(length)} eaves`, key));
   if (longer) parts.push(dimAcross(x0, x0 + fullW, y0 + drawH + 52, `${fmtLen(covered)} of cover`, key));
-  parts.push(dimDown(x0 - 16, y0, y0 + drawH, `${fmtLen(span)} span`, key));
+  parts.push(dimDown(x0 - 16, y0, y0 + drawH, `${fmtLen(slope)} up the slope`, key));
 
   const legendY = DIA.padT + drawH + (longer ? 74 : 50);
   if (sheets > 0) {
@@ -1330,7 +1336,7 @@ function renderRoofDiagram(mode) {
     if (longer) parts.push(diaLegend(x0 + 196, legendY, "", `${fmtLen(covered - length)} past the eaves`, true, key));
   }
 
-  let caption = `Plan of the ${apex ? "apex" : "single slope"}: ${roofMaterialCaption(look)} The filled area is ${fmtLen(length)} along the eaves by ${fmtLen(span)} across.`;
+  let caption = `Plan of the ${apex ? "apex" : "single slope"}: ${roofMaterialCaption(look)} The filled area is ${fmtLen(length)} along the eaves by ${fmtLen(slope)} up the slope.`;
   if (sheets > 0) caption += ` ${sheets} sheet${sheets === 1 ? "" : "s"} cover the eaves at ${fmtLen(cover)} cover. Hatched sheet past the eaves is still a whole cover width.`;
   else caption += " Choose a sheet to see the covers along the eaves.";
   if (slope > 0) caption += ` Each sheet follows the ${fmtLen(slope)} eave-to-ridge length.`;

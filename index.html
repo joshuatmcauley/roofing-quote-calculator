@@ -3,18 +3,196 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Roofing Quote Calculator</title>
+  <title>B&amp;C McKeown — Roofing Sheets, Composite Decking &amp; Landscaping | Downpatrick</title>
+  <meta name="description" content="Roofing sheets, composite decking, fencing, cladding and granite landscaping supplies, stocked and cut to size in Downpatrick, County Down.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Teko:wght@500;600&display=swap">
-  <link rel="stylesheet" href="styles.css?v=step3">
+  <link rel="stylesheet" href="site.css">
 </head>
-<body data-page="roof">
-  <div id="app"></div>
-  <script src="config.js"></script>
-  <script src="range.js"></script>
-  <script src="jobs.js"></script>
-  <script src="calc.js"></script>
-  <script src="app.js?v=step3"></script>
+<body>
+<header class="site-head" data-site-head></header>
+
+<main>
+  <section class="hero">
+    <div class="shell hero-grid">
+      <div>
+        <p class="eyebrow">Downpatrick &middot; County Down</p>
+        <h1>Built to sit out<br>an <em>Irish winter</em></h1>
+        <p class="lede">Roofing sheets, composite decking, fencing and granite landscaping.
+          Stocked locally, cut to the length you need, and priced the same whether
+          you are roofing a shed or a shed row.</p>
+        <div class="hero-actions">
+          <a class="btn" href="products.html">Browse the range</a>
+          <a class="btn ghost" href="calculator.html">Price a roof</a>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><b>60+</b><span>Products in stock</span></div>
+          <div class="stat"><b>Cut</b><span>To your length</span></div>
+          <div class="stat"><b>Local</b><span>Delivery across NI</span></div>
+        </div>
+      </div>
+
+      <div class="hero-art">
+        <svg viewBox="0 0 520 340" role="img" aria-label="Illustration of a single slope metal roof on a building">
+          <defs>
+            <linearGradient id="hr" x1="0" y1="0" x2="0.6" y2="1">
+              <stop offset="0" stop-color="#4b555f"/><stop offset="0.5" stop-color="#2f373f"/>
+              <stop offset="1" stop-color="#232a31"/>
+            </linearGradient>
+            <linearGradient id="hw" x1="0" y1="0" x2="1" y2="0.4">
+              <stop offset="0" stop-color="#f2f3f4"/><stop offset="1" stop-color="#d9dcdf"/>
+            </linearGradient>
+            <filter id="hs" x="-30%" y="-60%" width="160%" height="260%">
+              <feGaussianBlur stdDeviation="9"/>
+            </filter>
+          </defs>
+          <ellipse cx="262" cy="300" rx="186" ry="14" fill="#0b1118" opacity=".13" filter="url(#hs)"/>
+          <path d="M96 186 L96 272 L300 294 L300 204 Z" fill="url(#hw)"/>
+          <path d="M300 204 L300 294 L430 248 L430 162 Z" fill="#c3c8cd"/>
+          <rect x="152" y="226" width="44" height="56" fill="#59636d"/>
+          <path d="M72 188 L286 100 L452 158 L240 214 Z" fill="url(#hr)"/>
+          <g stroke="#1b2127" stroke-width="1" opacity=".48">
+            <path d="M97 180 L271 230"/><path d="M122 169 L302 221"/><path d="M147 159 L333 212"/>
+            <path d="M172 148 L364 203"/><path d="M197 138 L395 194"/><path d="M222 127 L426 185"/>
+          </g>
+          <g stroke="#ffffff" stroke-width=".9" opacity=".16">
+            <path d="M104 177 L278 227"/><path d="M129 166 L309 218"/><path d="M154 156 L340 209"/>
+            <path d="M179 145 L371 200"/><path d="M204 135 L402 191"/><path d="M229 124 L433 182"/>
+          </g>
+          <path d="M72 188 L240 214 L240 222 L72 196 Z" fill="#171c21"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="shell">
+      <div class="band-head rv">
+        <p class="eyebrow">What we stock</p>
+        <h2>Four things, done properly</h2>
+        <p class="lede">Everything here is chosen to last outdoors with very little
+          looking after. No annual staining, no rust streaks down a wall.</p>
+      </div>
+      <div class="cat-grid rv" data-pillars></div>
+    </div>
+  </section>
+
+  <section class="band wash">
+    <div class="shell split">
+      <div class="rv">
+        <p class="eyebrow">Price it yourself</p>
+        <h2>Know the cost before you lift the phone</h2>
+        <p class="lede">Give the calculator two measurements and it works out how many
+          sheets you need, what length to order them, and what the whole lot comes to
+          including VAT. It knows our stock lengths, so it will not quote you a size
+          that cannot be bought.</p>
+        <p style="color:var(--muted);font-size:15.5px">It covers roofing, decking, paving,
+          fencing, cladding, kerbs, steps and purlins.</p>
+        <div class="hero-actions">
+          <a class="btn" href="calculator.html">Open the roofing calculator</a>
+          <a class="btn ghost" href="other.html">Other calculators</a>
+        </div>
+      </div>
+      <div class="split-art rv">
+        <svg viewBox="0 0 460 290" role="img" aria-label="Plan of a roof showing six sheets with measurements">
+          <defs>
+            <marker id="ha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+              <path d="M0.5 1.6 L9.4 5 L0.5 8.4 Z" fill="#2f5080"/>
+            </marker>
+          </defs>
+          <rect x="74" y="44" width="46" height="150" fill="#9fa8b0" opacity=".46"/>
+          <rect x="120" y="44" width="46" height="150" fill="#9fa8b0" opacity=".3"/>
+          <rect x="166" y="44" width="46" height="150" fill="#9fa8b0" opacity=".46"/>
+          <rect x="212" y="44" width="46" height="150" fill="#9fa8b0" opacity=".3"/>
+          <rect x="258" y="44" width="46" height="150" fill="#9fa8b0" opacity=".46"/>
+          <rect x="304" y="44" width="46" height="150" fill="#9fa8b0" opacity=".3"/>
+          <rect x="350" y="44" width="30" height="150" fill="#fdf4e6"/>
+          <path d="M350 44 h30 v150 h-30 z" fill="none" stroke="#c8822b" stroke-width="1" opacity=".55"/>
+          <rect x="74" y="44" width="276" height="150" fill="none" stroke="#2f5080" stroke-width="1.8"/>
+          <g font-family="Outfit, sans-serif" font-size="11" fill="#5b6b84" text-anchor="middle">
+            <text x="97" y="36">1</text><text x="143" y="36">2</text><text x="189" y="36">3</text>
+            <text x="235" y="36">4</text><text x="281" y="36">5</text><text x="327" y="36">6</text>
+          </g>
+          <line x1="74" y1="218" x2="350" y2="218" stroke="#2f5080" stroke-width="1.1"
+                marker-start="url(#ha)" marker-end="url(#ha)"/>
+          <text x="212" y="236" text-anchor="middle" font-family="Outfit, sans-serif" font-size="12.5"
+                font-weight="600" fill="#334155">A &mdash; 6 m along the eaves</text>
+          <line x1="56" y1="44" x2="56" y2="194" stroke="#2f5080" stroke-width="1.1"
+                marker-start="url(#ha)" marker-end="url(#ha)"/>
+          <text x="40" y="119" text-anchor="middle" font-family="Outfit, sans-serif" font-size="12.5"
+                font-weight="600" fill="#334155" transform="rotate(-90 40 119)">B &mdash; 4 m up the slope</text>
+          <text x="212" y="266" text-anchor="middle" font-family="Outfit, sans-serif" font-size="12"
+                fill="#6b6b6b">6 sheets &middot; 0.5 m past the eaves</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="shell">
+      <div class="band-head rv">
+        <p class="eyebrow">A sample of the range</p>
+        <h2>Off the shelf today</h2>
+      </div>
+      <div class="prod-grid rv" data-featured></div>
+      <p style="margin-top:34px"><a class="btn ghost" href="products.html">See all products</a></p>
+    </div>
+  </section>
+
+  <section class="band dark">
+    <div class="shell">
+      <div class="band-head rv">
+        <p class="eyebrow">Why buy here</p>
+        <h2>Straight answers, stock on the floor</h2>
+      </div>
+      <div class="feat-grid rv">
+        <div class="feat">
+          <span class="feat-num">01</span>
+          <h3>Cut to your length</h3>
+          <p>Box profile and tile effect are cut to the metre, so you pay for the roof
+            you have and not the nearest sheet size up.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-num">02</span>
+          <h3>Real stock, real lengths</h3>
+          <p>What the calculator offers is what sits in the yard. If a length is out,
+            it says so rather than taking the order.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-num">03</span>
+          <h3>Prices include VAT</h3>
+          <p>The number you see is the number you pay at the counter. Delivery is the
+            only extra and we will tell you that up front.</p>
+        </div>
+        <div class="feat">
+          <span class="feat-num">04</span>
+          <h3>Advice that fits</h3>
+          <p>Ask what overlaps, fixings or flashings you need and you will get an
+            answer from someone who has done the job.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band wash cta-band">
+    <div class="shell">
+      <div class="rv">
+        <p class="eyebrow">Next step</p>
+        <h2>Tell us what you are building</h2>
+        <p class="lede" style="margin-inline:auto">Send through your measurements, or
+          ring and talk it over. Either way you will get a straight price.</p>
+        <div class="cta-actions">
+          <a class="btn" href="contact.html">Send an enquiry</a>
+          <a class="btn ghost" href="tel:+442844615148">02844 615148</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot" data-site-foot></footer>
+<script src="range.js"></script>
+<script src="site.js"></script>
 </body>
 </html>
