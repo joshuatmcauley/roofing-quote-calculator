@@ -205,7 +205,7 @@ function renderProducts() {
       <div class="prod-grid">${g.items.map(productCard).join("")}</div>
     </section>`).join("")
       || `<p class="empty">Nothing in this section yet. Give us a ring on ${esc(SITE.tel)}.</p>`;
-    revealAll();
+    if (typeof setupReveals === "function") setupReveals();
   }
 
   paint("all");
@@ -324,5 +324,232 @@ document.addEventListener("DOMContentLoaded", () => {
   renderFeatured();
   renderProducts();
   wireContact();
-  revealAll();
+  startMotion();
 });
+
+/* =========================================================================
+   Motion
+   One observer drives every reveal, one scroll listener drives the header and
+   parallax, and all of it switches off for anyone who asked for reduced
+   motion. Nothing here hijacks the scrollbar: native scrolling stays native.
+   ========================================================================= */
+
+// Guarded: a missing matchMedia should degrade to "motion is fine", never throw
+// and take the rest of the page's scripts down with it.
+const REDUCED = (() => {
+  try {
+    return typeof window.matchMedia === "function"
+      && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch (err) {
+    return false;
+  }
+})();
+
+/* ---------- reveals ---------- */
+function setupReveals() {
+  // Anything tagged .rv in the markup gets a sensible default, and children of
+  // a grid are staggered so a row arrives as a run rather than all at once.
+  document.querySelectorAll(".rv:not([data-rv])").forEach((el) => {
+    el.setAttribute("data-rv", "up");
+  });
+
+  const stagger = [
+    [".cat-photos", "rise", 95],
+    [".prod-grid", "rise", 80],
+    [".gallery", "scale", 60],
+    [".feat-grid", "up", 90],
+    [".cat-grid", "up", 80],
+  ];
+  stagger.forEach(([sel, kind, gap]) => {
+    document.querySelectorAll(sel).forEach((grid) => {
+      grid.removeAttribute("data-rv");
+      grid.classList.remove("rv");
+      [...grid.children].forEach((child, i) => {
+        child.setAttribute("data-rv", kind);
+        child.style.setProperty("--rv-delay", `${i * gap}ms`);
+      });
+    });
+  });
+
+  // images inside a photo split wipe upward instead of sliding
+  document.querySelectorAll(".split-photo").forEach((el) => {
+    el.setAttribute("data-rv", "wipe");
+  });
+
+  // split text columns come in from the side they sit on
+  document.querySelectorAll(".split").forEach((split) => {
+    const kids = [...split.children];
+    kids.forEach((kid, i) => {
+      if (kid.classList.contains("split-photo")) return;
+      if (!kid.hasAttribute("data-rv")) return;
+      kid.setAttribute("data-rv", i === 0 ? "left" : "right");
+    });
+  });
+
+  const targets = document.querySelectorAll("[data-rv]:not(.is-in)");
+  if (REDUCED || !("IntersectionObserver" in window)) {
+    targets.forEach((el) => el.classList.add("is-in"));
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("is-in");
+      io.unobserve(entry.target);
+    });
+  }, { rootMargin: "0px 0px -9% 0px", threshold: 0.12 });
+  targets.forEach((el) => io.observe(el));
+
+  // Anything already on screen should not wait for a scroll that may never come
+  // (someone landing on a short page, or deep-linked near the bottom).
+  requestAnimationFrame(() => {
+    targets.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 0.92 && rect.bottom > 0) {
+        el.classList.add("is-in");
+        io.unobserve(el);
+      }
+    });
+  });
+
+  // Last resort: content must never be left invisible because of a hiccup.
+  window.setTimeout(() => {
+    document.querySelectorAll("[data-rv]:not(.is-in)").forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight * 1.4) el.classList.add("is-in");
+    });
+  }, 2600);
+}
+
+/* ---------- headings that arrive a line at a time ---------- */
+function setupHeadlines() {
+  if (REDUCED) return;
+  document.querySelectorAll("[data-lines]").forEach((h) => {
+    const parts = h.innerHTML.split(/<br\s*\/?>/i);
+    h.innerHTML = parts
+      .map((part, i) => `<span class="line-mask"><span style="--rv-delay:${i * 110}ms">${part}</span></span>`)
+      .join("");
+  });
+}
+
+/* ---------- sticky header: hide going down, show coming up ---------- */
+function setupHeader() {
+  const head = document.querySelector(".site-head");
+  if (!head) return;
+  let last = window.scrollY;
+  let ticking = false;
+  function update() {
+    const y = window.scrollY;
+    head.classList.toggle("is-stuck", y > 8);
+    if (!REDUCED) {
+      const navOpen = head.querySelector(".nav.open");
+      const down = y > last && y > 240 && !navOpen;
+      head.classList.toggle("is-hidden", down);
+    }
+    last = y;
+    ticking = false;
+  }
+  window.addEventListener("scroll", () => {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(update);
+  }, { passive: true });
+  update();
+}
+
+/* ---------- gentle parallax ---------- */
+function setupParallax() {
+  if (REDUCED) return;
+  const items = [...document.querySelectorAll("[data-parallax]")];
+  if (!items.length) return;
+  let ticking = false;
+  function frame() {
+    const vh = window.innerHeight;
+    items.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom < -200 || rect.top > vh + 200) return;
+      const depth = parseFloat(el.dataset.parallax) || 0.12;
+      // -1 above the fold, +1 below it
+      const progress = (rect.top + rect.height / 2 - vh / 2) / (vh / 2 + rect.height / 2);
+      el.style.transform = `translate3d(0, ${(progress * depth * 100).toFixed(2)}px, 0)`;
+    });
+    ticking = false;
+  }
+  window.addEventListener("scroll", () => {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(frame);
+  }, { passive: true });
+  window.addEventListener("resize", frame, { passive: true });
+  frame();
+}
+
+/* ---------- stats that count up ---------- */
+function setupCounters() {
+  const stats = [...document.querySelectorAll(".stat b")]
+    .filter((el) => /^\d/.test(el.textContent.trim()));
+  if (!stats.length || REDUCED || !("IntersectionObserver" in window)) return;
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      io.unobserve(el);
+      const raw = el.textContent.trim();
+      const target = parseFloat(raw);
+      const suffix = raw.replace(/^[\d.,]+/, "");
+      const start = performance.now();
+      const run = (now) => {
+        const t = Math.min(1, (now - start) / 1100);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(target * eased) + suffix;
+        if (t < 1) requestAnimationFrame(run);
+      };
+      requestAnimationFrame(run);
+    });
+  }, { threshold: 0.6 });
+  stats.forEach((el) => io.observe(el));
+}
+
+/* ---------- anchor links glide, allowing for the sticky header ---------- */
+function setupAnchors() {
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest('a[href^="#"]');
+    if (!link) return;
+    const id = link.getAttribute("href").slice(1);
+    if (!id) return;
+    const target = document.getElementById(id);
+    if (!target) return;
+    event.preventDefault();
+    const top = target.getBoundingClientRect().top + window.scrollY - 92;
+    window.scrollTo({ top, behavior: REDUCED ? "auto" : "smooth" });
+    history.replaceState(null, "", "#" + id);
+  });
+}
+
+/* ---------- a short fade when leaving for another page ---------- */
+function setupPageFade() {
+  if (REDUCED) return;
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("a[href]");
+    if (!link) return;
+    const href = link.getAttribute("href");
+    if (!href || href.startsWith("#") || href.startsWith("tel:") || href.startsWith("mailto:")) return;
+    if (link.target === "_blank" || link.host !== location.host) return;
+    if (event.metaKey || event.ctrlKey || event.shiftKey) return;
+    event.preventDefault();
+    document.body.classList.add("is-leaving");
+    window.setTimeout(() => { window.location.href = href; }, 210);
+  });
+  // coming back via the back button should not leave the page blank
+  window.addEventListener("pageshow", () => document.body.classList.remove("is-leaving"));
+}
+
+function startMotion() {
+  setupHeadlines();
+  setupReveals();
+  setupHeader();
+  setupParallax();
+  setupCounters();
+  setupAnchors();
+  setupPageFade();
+}

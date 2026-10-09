@@ -685,3 +685,96 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   .ticker-track { animation: none; }
   .scroll-hint i { animation: none; }
 }
+
+/* =========================================================================
+   Motion system
+   Reveals are driven by [data-rv] + an observer in site.js. Each element
+   declares how it should arrive and how long to wait, so nothing animates
+   until it is actually on screen and nothing animates twice.
+   ========================================================================= */
+
+:root {
+  --rv-dur: 760ms;
+  --rv-ease: cubic-bezier(0.16, 0.84, 0.28, 1);
+}
+
+[data-rv] {
+  opacity: 0;
+  transition:
+    opacity var(--rv-dur) var(--rv-ease) var(--rv-delay, 0ms),
+    transform var(--rv-dur) var(--rv-ease) var(--rv-delay, 0ms),
+    clip-path var(--rv-dur) var(--rv-ease) var(--rv-delay, 0ms),
+    filter var(--rv-dur) var(--rv-ease) var(--rv-delay, 0ms);
+  will-change: opacity, transform;
+}
+[data-rv="up"]     { transform: translate3d(0, 34px, 0); }
+[data-rv="down"]   { transform: translate3d(0, -26px, 0); }
+[data-rv="left"]   { transform: translate3d(-40px, 0, 0); }
+[data-rv="right"]  { transform: translate3d(40px, 0, 0); }
+[data-rv="scale"]  { transform: scale(0.94); }
+[data-rv="rise"]   { transform: translate3d(0, 52px, 0) scale(0.985); }
+[data-rv="wipe"]   { clip-path: inset(0 0 100% 0); transform: scale(1.06); }
+[data-rv="blur"]   { filter: blur(9px); transform: translate3d(0, 20px, 0); }
+
+[data-rv].is-in {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 0 0);
+  filter: none;
+}
+[data-rv].is-in { will-change: auto; }
+
+/* headings that arrive a line at a time */
+.line-mask { display: block; overflow: hidden; }
+.line-mask > span {
+  display: block;
+  transform: translate3d(0, 108%, 0);
+  transition: transform 900ms var(--rv-ease) var(--rv-delay, 0ms);
+}
+.is-in .line-mask > span, .line-mask.is-in > span { transform: none; }
+
+/* ---------- sticky header states ---------- */
+.site-head {
+  transition: transform 420ms var(--rv-ease), box-shadow 300ms var(--ease),
+              background-color 300ms var(--ease);
+}
+.site-head.is-stuck { box-shadow: 0 1px 18px rgba(16, 20, 24, 0.09); }
+.site-head.is-hidden { transform: translateY(-100%); }
+
+/* anchors clear the sticky header */
+[id] { scroll-margin-top: 104px; }
+
+/* ---------- parallax ---------- */
+[data-parallax] { will-change: transform; }
+
+/* ---------- counters ---------- */
+.stat b { font-variant-numeric: tabular-nums; }
+
+/* ---------- link and button polish ---------- */
+.btn { position: relative; overflow: hidden; }
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 460ms var(--rv-ease), opacity 460ms var(--rv-ease);
+}
+.btn:hover::before { opacity: 0.08; transform: scaleX(1); }
+.btn > * { position: relative; z-index: 1; }
+
+.prod, .cat-photo, .gallery figure { transform-origin: center; }
+
+/* ---------- page fade on arrival ---------- */
+body { opacity: 1; }
+body.is-leaving { opacity: 0; transition: opacity 240ms var(--ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-rv] { opacity: 1 !important; transform: none !important; clip-path: none !important; filter: none !important; }
+  .line-mask > span { transform: none !important; }
+  .site-head.is-hidden { transform: none; }
+  [data-parallax] { transform: none !important; }
+  body.is-leaving { opacity: 1; }
+}
