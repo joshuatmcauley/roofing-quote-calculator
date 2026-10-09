@@ -238,8 +238,8 @@ function renderPillars() {
   if (photoMount) {
     photoMount.innerHTML = PILLARS.map((p) => `<a class="cat-photo" href="products.html#${esc(p.id)}">
       <picture>
-        <source srcset="images/site/${esc(p.photo)}.webp" type="image/webp">
-        <img src="images/site/${esc(p.photo)}.jpg" alt="${esc(p.title)}" loading="lazy" decoding="async" width="900" height="700">
+        <source srcset="${esc(p.photo)}.webp" type="image/webp">
+        <img src="${esc(p.photo)}.jpg" alt="${esc(p.title)}" loading="lazy" decoding="async" width="900" height="700">
       </picture>
       <span class="count">${count(p)}</span>
       <span class="cat-body">
