@@ -7,6 +7,7 @@
   <meta name="description" content="Roofing sheets, composite decking, fencing, cladding and granite landscaping supplies, stocked and cut to size in Downpatrick, County Down.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="image" href="images/site/hero.webp" fetchpriority="high">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Teko:wght@500;600&display=swap">
   <link rel="stylesheet" href="site.css">
 </head>
@@ -14,58 +15,60 @@
 <header class="site-head" data-site-head></header>
 
 <main>
-  <section class="hero">
-    <div class="shell hero-grid">
-      <div>
-        <p class="eyebrow">Downpatrick &middot; County Down</p>
-        <h1>Built to sit out<br>an <em>Irish winter</em></h1>
-        <p class="lede">Roofing sheets, composite decking, fencing and granite landscaping.
-          Stocked locally, cut to the length you need, and priced the same whether
-          you are roofing a shed or a shed row.</p>
-        <div class="hero-actions">
-          <a class="btn" href="products.html">Browse the range</a>
-          <a class="btn ghost" href="calculator.html">Price a roof</a>
+  <!-- ================= hero ================= -->
+  <section class="hero-photo">
+    <div class="hero-media">
+      <picture>
+        <source media="(max-width: 700px)" srcset="images/site/hero-sm.webp" type="image/webp">
+        <source media="(max-width: 700px)" srcset="images/site/hero-sm.jpg">
+        <source srcset="images/site/hero.webp" type="image/webp">
+        <img src="images/site/hero.jpg" alt="Clear polycarbonate roof sheeting on a steel framed lean-to" width="1920" height="1100" fetchpriority="high">
+      </picture>
+    </div>
+    <div class="shell">
+      <div class="hero-inner">
+        <div>
+          <p class="eyebrow">Downpatrick &middot; County Down</p>
+          <h1>Built to sit out an <em>Irish winter</em></h1>
+          <p class="lede">Roofing sheets, composite decking, fencing and granite
+            landscaping. Stocked locally, cut to the length you need, and priced
+            the same whether you are roofing a shed or a shed row.</p>
+          <div class="hero-actions">
+            <a class="btn light" href="products.html">Browse the range</a>
+            <a class="btn ghost" style="color:#fff;border-color:rgba(255,255,255,.55)" href="calculator.html">Price a roof</a>
+          </div>
+          <div class="stat-row">
+            <div class="stat"><b>60+</b><span>Products in stock</span></div>
+            <div class="stat"><b>Cut</b><span>To your length</span></div>
+            <div class="stat"><b>VAT</b><span>Included in every price</span></div>
+          </div>
         </div>
-        <div class="stat-row">
-          <div class="stat"><b>60+</b><span>Products in stock</span></div>
-          <div class="stat"><b>Cut</b><span>To your length</span></div>
-          <div class="stat"><b>Local</b><span>Delivery across NI</span></div>
-        </div>
-      </div>
-
-      <div class="hero-art">
-        <svg viewBox="0 0 520 340" role="img" aria-label="Illustration of a single slope metal roof on a building">
-          <defs>
-            <linearGradient id="hr" x1="0" y1="0" x2="0.6" y2="1">
-              <stop offset="0" stop-color="#4b555f"/><stop offset="0.5" stop-color="#2f373f"/>
-              <stop offset="1" stop-color="#232a31"/>
-            </linearGradient>
-            <linearGradient id="hw" x1="0" y1="0" x2="1" y2="0.4">
-              <stop offset="0" stop-color="#f2f3f4"/><stop offset="1" stop-color="#d9dcdf"/>
-            </linearGradient>
-            <filter id="hs" x="-30%" y="-60%" width="160%" height="260%">
-              <feGaussianBlur stdDeviation="9"/>
-            </filter>
-          </defs>
-          <ellipse cx="262" cy="300" rx="186" ry="14" fill="#0b1118" opacity=".13" filter="url(#hs)"/>
-          <path d="M96 186 L96 272 L300 294 L300 204 Z" fill="url(#hw)"/>
-          <path d="M300 204 L300 294 L430 248 L430 162 Z" fill="#c3c8cd"/>
-          <rect x="152" y="226" width="44" height="56" fill="#59636d"/>
-          <path d="M72 188 L286 100 L452 158 L240 214 Z" fill="url(#hr)"/>
-          <g stroke="#1b2127" stroke-width="1" opacity=".48">
-            <path d="M97 180 L271 230"/><path d="M122 169 L302 221"/><path d="M147 159 L333 212"/>
-            <path d="M172 148 L364 203"/><path d="M197 138 L395 194"/><path d="M222 127 L426 185"/>
-          </g>
-          <g stroke="#ffffff" stroke-width=".9" opacity=".16">
-            <path d="M104 177 L278 227"/><path d="M129 166 L309 218"/><path d="M154 156 L340 209"/>
-            <path d="M179 145 L371 200"/><path d="M204 135 L402 191"/><path d="M229 124 L433 182"/>
-          </g>
-          <path d="M72 188 L240 214 L240 222 L72 196 Z" fill="#171c21"/>
-        </svg>
+        <aside class="hero-card">
+          <h3>Two measurements</h3>
+          <p>Length along the eaves, length up the slope. That is all we need to tell
+            you the sheet count and the full price.</p>
+          <a class="btn light" href="calculator.html">Open the calculator</a>
+        </aside>
       </div>
     </div>
+    <span class="scroll-hint" aria-hidden="true">Scroll<i></i></span>
   </section>
 
+  <!-- ================= ticker ================= -->
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      <span>Box profile</span><span>Tile effect</span><span>Insulated panels</span>
+      <span>Clear polycarbonate</span><span>Composite decking</span><span>Wall cladding</span>
+      <span>V mesh fencing</span><span>Porcelain paving</span><span>Granite kerbs</span>
+      <span>Purlins</span>
+      <span>Box profile</span><span>Tile effect</span><span>Insulated panels</span>
+      <span>Clear polycarbonate</span><span>Composite decking</span><span>Wall cladding</span>
+      <span>V mesh fencing</span><span>Porcelain paving</span><span>Granite kerbs</span>
+      <span>Purlins</span>
+    </div>
+  </div>
+
+  <!-- ================= categories ================= -->
   <section class="band">
     <div class="shell">
       <div class="band-head rv">
@@ -74,21 +77,47 @@
         <p class="lede">Everything here is chosen to last outdoors with very little
           looking after. No annual staining, no rust streaks down a wall.</p>
       </div>
-      <div class="cat-grid rv" data-pillars></div>
+      <div class="cat-photos rv" data-pillars-photo></div>
     </div>
   </section>
 
+  <!-- ================= cut to size ================= -->
   <section class="band wash">
     <div class="shell split">
+      <div class="rv">
+        <p class="eyebrow">Cut to size</p>
+        <h2>Pay for the roof you have</h2>
+        <p class="lede">Box profile and tile effect come off the roll and get cut to
+          the metre. A 4.3 metre slope is a 4.3 metre sheet, not a 5 metre sheet with
+          700 mm in the skip.</p>
+        <p style="color:var(--ink-soft)">Insulated panels and polycarbonate come in
+          fixed stock lengths, so there we will tell you which length to take and what
+          the offcut will be before you commit.</p>
+        <div class="hero-actions">
+          <a class="btn" href="products.html#roofing">See roofing sheets</a>
+        </div>
+      </div>
+      <div class="split-photo rv">
+        <picture>
+          <source srcset="images/site/feat-cut.webp" type="image/webp">
+          <img src="images/site/feat-cut.jpg" alt="Grey 24/1000 box profile roofing sheet" loading="lazy" decoding="async" width="1000" height="760">
+        </picture>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= calculator ================= -->
+  <section class="band">
+    <div class="shell split flip">
       <div class="rv">
         <p class="eyebrow">Price it yourself</p>
         <h2>Know the cost before you lift the phone</h2>
         <p class="lede">Give the calculator two measurements and it works out how many
-          sheets you need, what length to order them, and what the whole lot comes to
+          sheets you need, what length to order them, and what the lot comes to
           including VAT. It knows our stock lengths, so it will not quote you a size
           that cannot be bought.</p>
-        <p style="color:var(--muted);font-size:15.5px">It covers roofing, decking, paving,
-          fencing, cladding, kerbs, steps and purlins.</p>
+        <p style="color:var(--muted);font-size:15.5px">Covers roofing, decking, paving,
+          fencing, cladding, kerbs, steps and purlins. Works in metres or feet.</p>
         <div class="hero-actions">
           <a class="btn" href="calculator.html">Open the roofing calculator</a>
           <a class="btn ghost" href="other.html">Other calculators</a>
@@ -129,17 +158,31 @@
     </div>
   </section>
 
-  <section class="band">
-    <div class="shell">
-      <div class="band-head rv">
-        <p class="eyebrow">A sample of the range</p>
-        <h2>Off the shelf today</h2>
+  <!-- ================= daylight ================= -->
+  <section class="band wash">
+    <div class="shell split">
+      <div class="rv">
+        <p class="eyebrow">Let the light in</p>
+        <h2>Clear and tinted roofing</h2>
+        <p class="lede">Polycarbonate and FRP for lean-tos, car ports, pergolas and
+          rooflight panels in a sheeted roof. Clear where you want brightness, bronze
+          where you want to take the glare off a south-facing patio.</p>
+        <p style="color:var(--ink-soft)">Box profile and corrugated versions match the
+          metal sheets, so a clear panel drops straight into the same roof.</p>
+        <div class="hero-actions">
+          <a class="btn" href="products.html#roofing">See clear roofing</a>
+        </div>
       </div>
-      <div class="prod-grid rv" data-featured></div>
-      <p style="margin-top:34px"><a class="btn ghost" href="products.html">See all products</a></p>
+      <div class="split-photo rv">
+        <picture>
+          <source srcset="images/site/feat-bronze.webp" type="image/webp">
+          <img src="images/site/feat-bronze.jpg" alt="Bronze tinted corrugated polycarbonate roofing" loading="lazy" decoding="async" width="1000" height="760">
+        </picture>
+      </div>
     </div>
   </section>
 
+  <!-- ================= why ================= -->
   <section class="band dark">
     <div class="shell">
       <div class="band-head rv">
@@ -163,7 +206,7 @@
           <span class="feat-num">03</span>
           <h3>Prices include VAT</h3>
           <p>The number you see is the number you pay at the counter. Delivery is the
-            only extra and we will tell you that up front.</p>
+            only extra and we tell you that up front.</p>
         </div>
         <div class="feat">
           <span class="feat-num">04</span>
@@ -175,17 +218,67 @@
     </div>
   </section>
 
-  <section class="band wash cta-band">
+  <!-- ================= gallery ================= -->
+  <section class="band">
     <div class="shell">
+      <div class="band-head rv">
+        <p class="eyebrow">From the yard</p>
+        <h2>What it actually looks like</h2>
+        <p class="lede">Profiles and finishes photographed here rather than pulled from
+          a brochure, so you know what is arriving on the lorry.</p>
+      </div>
+      <div class="gallery rv">
+        <figure><picture><source srcset="images/site/g1.webp" type="image/webp"><img src="images/site/g1.jpg" alt="Anthracite tile effect roofing sheets" loading="lazy" decoding="async" width="640" height="640"></picture></figure>
+        <figure><picture><source srcset="images/site/g2.webp" type="image/webp"><img src="images/site/g2.jpg" alt="50mm insulated sandwich panel edge" loading="lazy" decoding="async" width="640" height="640"></picture></figure>
+        <figure><picture><source srcset="images/site/g3.webp" type="image/webp"><img src="images/site/g3.jpg" alt="Clear corrugated polycarbonate sheet" loading="lazy" decoding="async" width="640" height="640"></picture></figure>
+        <figure><picture><source srcset="images/site/g4.webp" type="image/webp"><img src="images/site/g4.jpg" alt="Juniper green box profile sheet" loading="lazy" decoding="async" width="640" height="640"></picture></figure>
+        <figure><picture><source srcset="images/site/g5.webp" type="image/webp"><img src="images/site/g5.jpg" alt="Diamond embossed polycarbonate sheet" loading="lazy" decoding="async" width="640" height="640"></picture></figure>
+        <figure><picture><source srcset="images/site/g6.webp" type="image/webp"><img src="images/site/g6.jpg" alt="Clear acrylic sheet" loading="lazy" decoding="async" width="640" height="640"></picture></figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= featured products ================= -->
+  <section class="band wash">
+    <div class="shell">
+      <div class="band-head rv">
+        <p class="eyebrow">A sample of the range</p>
+        <h2>Off the shelf today</h2>
+        <p class="lede">Prices include VAT. Lengths and colours vary, so give us a
+          shout if you need something particular.</p>
+      </div>
+      <div class="prod-grid rv" data-featured></div>
+      <p style="margin-top:34px"><a class="btn ghost" href="products.html">See all 63 products</a></p>
+    </div>
+  </section>
+
+  <!-- ================= quote band ================= -->
+  <section class="band quote-band">
+    <div class="shell split">
       <div class="rv">
-        <p class="eyebrow">Next step</p>
-        <h2>Tell us what you are building</h2>
-        <p class="lede" style="margin-inline:auto">Send through your measurements, or
-          ring and talk it over. Either way you will get a straight price.</p>
-        <div class="cta-actions">
-          <a class="btn" href="contact.html">Send an enquiry</a>
-          <a class="btn ghost" href="tel:+442844615148">02844 615148</a>
-        </div>
+        <blockquote>Bring your measurements. We would rather spend ten minutes getting
+          the order right than have you back on Saturday for one more sheet.</blockquote>
+        <cite>— The counter, most mornings</cite>
+      </div>
+      <div class="split-photo rv">
+        <picture>
+          <source srcset="images/site/feat-purlin.webp" type="image/webp">
+          <img src="images/site/feat-purlin.jpg" alt="Galvanised C purlin section" loading="lazy" decoding="async" width="1000" height="760">
+        </picture>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= cta ================= -->
+  <section class="band dark cta-band">
+    <div class="shell rv">
+      <p class="eyebrow">Next step</p>
+      <h2>Tell us what you are building</h2>
+      <p class="lede" style="margin-inline:auto">Send through your measurements, or
+        ring and talk it over. Either way you get a straight price.</p>
+      <div class="cta-actions">
+        <a class="btn light" href="contact.html">Send an enquiry</a>
+        <a class="btn ghost" style="color:#fff;border-color:rgba(255,255,255,.55)" href="tel:+442844615148">02844 615148</a>
       </div>
     </div>
   </section>

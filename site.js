@@ -19,6 +19,7 @@ const PILLARS = [
     blurb: "Metal box profile, tile effect, insulated panels, clear polycarbonate and purlins.",
     cats: ["Metal roofing", "Clear roofing and flat sheets", "Purlins"],
     icon: "roof",
+    photo: "cat-roofing",
   },
   {
     id: "decking",
@@ -26,6 +27,7 @@ const PILLARS = [
     blurb: "Composite decking boards, wall cladding and the trims that finish them properly.",
     cats: ["Composite decking", "Composite wall cladding", "Stone wall cladding"],
     icon: "deck",
+    photo: "cat-decking",
   },
   {
     id: "fencing",
@@ -33,6 +35,7 @@ const PILLARS = [
     blurb: "Composite fence panels, V mesh systems, gates and posts for any boundary.",
     cats: ["Composite fencing", "V mesh fencing", "Gates"],
     icon: "fence",
+    photo: "cat-fencing",
   },
   {
     id: "landscaping",
@@ -41,6 +44,7 @@ const PILLARS = [
     cats: ["Porcelain paving", "Granite and landscaping", "Granite kerbs", "Granite steps",
            "Composite sheds and garden rooms"],
     icon: "stone",
+    photo: "cat-landscaping",
   },
 ];
 
@@ -226,18 +230,35 @@ function renderProducts() {
 
 /* ---------- homepage category grid ---------- */
 function renderPillars() {
+  const products = allProducts();
+  const count = (p) => products.filter((item) => p.cats.includes(item.category)).length;
+
+  // photo tiles
+  const photoMount = document.querySelector("[data-pillars-photo]");
+  if (photoMount) {
+    photoMount.innerHTML = PILLARS.map((p) => `<a class="cat-photo" href="products.html#${esc(p.id)}">
+      <picture>
+        <source srcset="images/site/${esc(p.photo)}.webp" type="image/webp">
+        <img src="images/site/${esc(p.photo)}.jpg" alt="${esc(p.title)}" loading="lazy" decoding="async" width="900" height="700">
+      </picture>
+      <span class="count">${count(p)}</span>
+      <span class="cat-body">
+        <h3>${esc(p.title)}</h3>
+        <p>${esc(p.blurb)}</p>
+        <span class="more">View range ${ARROW}</span>
+      </span>
+    </a>`).join("");
+  }
+
+  // plain icon tiles, used on inner pages
   const mount = document.querySelector("[data-pillars]");
   if (!mount) return;
-  const products = allProducts();
-  mount.innerHTML = PILLARS.map((p) => {
-    const count = products.filter((item) => p.cats.includes(item.category)).length;
-    return `<a class="cat" href="products.html#${esc(p.id)}">
+  mount.innerHTML = PILLARS.map((p) => `<a class="cat" href="products.html#${esc(p.id)}">
       <span class="cat-ico">${ICONS[p.icon] || ""}</span>
       <h3>${esc(p.title)}</h3>
       <p>${esc(p.blurb)}</p>
-      <span class="more">${count} product${count === 1 ? "" : "s"} ${ARROW}</span>
-    </a>`;
-  }).join("");
+      <span class="more">${count(p)} product${count(p) === 1 ? "" : "s"} ${ARROW}</span>
+    </a>`).join("");
 }
 
 /* ---------- a short featured strip on the homepage ---------- */
