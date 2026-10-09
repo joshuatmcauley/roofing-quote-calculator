@@ -310,7 +310,10 @@ const QUOTE_CONFIG = {
     {
       id: "profile-diamond",
       name: "Diamond embossed polycarbonate",
-      coverWidthM: 0.988,
+      // Shop asked for this to be treated as a 1 m cover. The sheet's stated
+      // cover is 988 mm, so a long run can come up to ~1 sheet short; put
+      // 0.988 back here to return to exact counting.
+      coverWidthM: 1,
       cutToSize: false,
       stockLengthsM: [5],
       image: "images/profiles/diamond.svg?v=22",

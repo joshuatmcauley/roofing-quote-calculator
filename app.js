@@ -175,6 +175,8 @@ function defaultQuote() {
     jobHeight: "",
     jobCount: "",
     jobWaste: "",
+    bndStretches: [""],
+    bndJoins: [],
     walls: [],
     wallDraft: null,
     notes: "",
@@ -568,6 +570,13 @@ function metricQuote() {
     }
     return w;
   };
+  if (Array.isArray(copy.bndStretches)) {
+    copy.bndStretches = copy.bndStretches.map((raw) => {
+      if (raw === "" || raw == null) return raw;
+      const v = Number(raw);
+      return Number.isFinite(v) ? metresFromFeet(v) : raw;
+    });
+  }
   if (Array.isArray(copy.walls)) copy.walls = copy.walls.map(convertWall);
   if (copy.wallDraft && typeof copy.wallDraft === "object") copy.wallDraft = convertWall(copy.wallDraft);
   return copy;
@@ -591,6 +600,7 @@ function setUnits(next) {
     if (Array.isArray(wall.windows)) wall.windows.forEach((win) => { win.h = conv(win.h); win.w = conv(win.w); });
     return wall;
   };
+  if (Array.isArray(quote.bndStretches)) quote.bndStretches = quote.bndStretches.map(conv);
   if (Array.isArray(quote.walls)) quote.walls.forEach(convWall);
   convWall(quote.wallDraft);
   quote.units = next;
@@ -2161,6 +2171,16 @@ function perimeterDiagram(layout, label) {
 
 function scaleCaption(layout) {
   const spare = Number(layout.spare) || 0;
+  if (layout.kind === "boundary") {
+    const lens = layout.stretches || [];
+    const total = lens.reduce((a, b) => a + (Number(b) || 0), 0);
+    let text = `${lens.length === 1 ? "One straight stretch" : `${lens.length} stretches`} of mesh, ${fmtLen(total)} in all, drawn from above.`;
+    text += ` Each square is a post, ${fmtLen(layout.bayLen)} apart.`;
+    if (layout.gates) text += ` ${layout.gates === 1 ? "The gate is" : "Gates are"} drawn open, with ${layout.gates === 1 ? "its" : "their"} own posts.`;
+    const cuts = (layout.cuts || []).filter((c) => c > 0).length;
+    if (cuts) text += ` The last bay of ${cuts === 1 ? "one stretch" : `${cuts} stretches`} is a panel cut to fit.`;
+    return text;
+  }
   if (layout.kind === "grid") {
     const coverMm = Math.round((Number(layout.pieceY) || 0) * 1000);
     const boardsW = (Number(layout.along) || 0) * (Number(layout.pieceX) || 0);
@@ -2206,7 +2226,8 @@ function renderScaleDiagram() {
   const layout = line.layout;
   const label = scaleCaption(layout);
   let svg = "";
-  if (layout.kind === "grid") svg = gridDiagram(layout, label);
+  if (layout.kind === "boundary") svg = boundaryDiagram(layout, label);
+  else if (layout.kind === "grid") svg = gridDiagram(layout, label);
   else if (layout.kind === "bar") svg = barDiagram(layout, label);
   else if (layout.kind === "steps") svg = stepsDiagram(layout, label);
   else if (layout.kind === "perimeter") svg = perimeterDiagram(layout, label);
@@ -2220,11 +2241,192 @@ function fitScale(worldW, worldH, maxW, maxH) {
   return Math.min(maxW / w, maxH / h);
 }
 
+/* ---- V mesh boundary with gates ------------------------------------------
+   Photos come from range.js by the shop's own product handle, so the cards
+   show exactly what is on bcmckeown.net. */
+function rangePhoto(handle) {
+  if (!handle || typeof RANGE_EXTRAS === "undefined") return "";
+  const hit = RANGE_EXTRAS.find((item) => item.id === handle);
+  return hit && hit.image ? hit.image : "";
+}
+
+const BND_MAX = 8;
+function bndLetter(i) { return String.fromCharCode(65 + i); }
+
+function bndState() {
+  if (!Array.isArray(quote.bndStretches) || !quote.bndStretches.length) quote.bndStretches = [""];
+  if (quote.bndStretches.length > BND_MAX) quote.bndStretches.length = BND_MAX;
+  if (!Array.isArray(quote.bndJoins)) quote.bndJoins = [];
+  while (quote.bndJoins.length < quote.bndStretches.length - 1) quote.bndJoins.push("corner");
+  quote.bndJoins.length = Math.max(0, quote.bndStretches.length - 1);
+}
+
+function bndColour(product) {
+  const colours = jobColours(product);
+  return colours.find((item) => item.id === quote.jobVariantId) || colours[0] || null;
+}
+
+function renderBoundarySize(job, products, product) {
+  bndState();
+  const picked = product ? bndColour(product) : null;
+  const wantName = picked ? picked.name : "Black";
+  const cards = products.map((item) => {
+    const colour = jobColours(item).find((c) => c.name === wantName) || jobColours(item)[0];
+    const photo = rangePhoto(colour && colour.meshHandle);
+    const gate = Number(colour && colour.gatePrice) || 0;
+    return `<button type="button" class="choice${product && product.id === item.id ? " is-selected" : ""}" data-action="select-job-product" data-id="${esc(item.id)}">
+      ${thumb(photo, item.name)}
+      <strong>${esc(item.name)}</strong>
+      <p>${esc(incMoney(item.price))} per ${esc(fmtLen(item.lengthM))} bay<br>Gate ${esc(incMoney(gate))}</p>
+    </button>`;
+  }).join("");
+
+  const n = quote.bndStretches.length;
+  const rows = quote.bndStretches.map((value, i) => {
+    const bad = lastCalc.errors.some((error) => error.field === `bnd-${i}`) && (ui.showErrors || String(value).trim() !== "");
+    const row = `<div class="bnd-row">
+      <label class="field has-letter${bad ? " has-error" : ""}" for="bnd_${i}">
+        <span><i class="dim-letter">${bndLetter(i)}</i>${esc(unitLabel(`Stretch ${bndLetter(i)} (metres)`))}</span>
+        <input id="bnd_${i}" data-action="bnd-stretch" data-index="${i}" value="${esc(value)}" inputmode="decimal" autocomplete="off">
+        ${bad ? fieldMsg(`bnd-${i}`) : ""}
+      </label>
+      ${n > 1 ? `<button type="button" class="text-btn bnd-remove" data-action="bnd-remove" data-index="${i}" aria-label="Remove stretch ${bndLetter(i)}">Remove</button>` : ""}
+    </div>`;
+    if (i === n - 1) return row;
+    const join = quote.bndJoins[i] === "gate" ? "gate" : "corner";
+    return row + `<div class="bnd-join" role="group" aria-label="What sits between ${bndLetter(i)} and ${bndLetter(i + 1)}">
+      <span>Between ${bndLetter(i)} and ${bndLetter(i + 1)}</span>
+      <button type="button" class="unit-btn${join === "corner" ? " is-on" : ""}" data-action="bnd-join" data-index="${i}" data-value="corner" aria-pressed="${join === "corner"}">Corner</button>
+      <button type="button" class="unit-btn${join === "gate" ? " is-on" : ""}" data-action="bnd-join" data-index="${i}" data-value="gate" aria-pressed="${join === "gate"}">Gate</button>
+    </div>`;
+  }).join("");
+
+  const add = n < BND_MAX
+    ? `<button type="button" class="text-btn bnd-add" data-action="bnd-add">+ Add a stretch</button>`
+    : `<p class="muted">That is the most stretches one quote takes. Ring us for a longer boundary.</p>`;
+
+  const preview = (lastCalc.lines || []).filter((line) => line.section === "Calculated");
+  const result = preview.map((line) =>
+    `<p class="ok"><strong>${esc(line.qtyLabel)}</strong> — ${esc(line.name)}<br>${esc(line.detail)}<br>${esc(incMoney(line.total))}</p>`
+  ).join("");
+  const warn = (lastCalc.warnings || []).filter((w) => w.step === "size")
+    .map((w) => `<p class="warn">${esc(w.message)}</p>`).join("");
+  const note = job.note ? `<p class="muted">${esc(job.note)}</p>` : "";
+  return `${stepMsg("size")}${note}<div class="choices">${cards}</div>
+    ${unitToggle()}${unitNote()}
+    <div class="bnd-list">${rows}${add}</div>
+    ${renderScaleDiagram()}${result}${warn}`;
+}
+
+function renderBoundaryColours(product) {
+  const colours = jobColours(product);
+  const gates = (quote.bndJoins || []).filter((j) => j === "gate").length;
+  return `<div class="swatches bnd-colours">${colours.map((colour) => {
+    const mesh = rangePhoto(colour.meshHandle);
+    const gate = rangePhoto(colour.gateHandle);
+    const media = gates > 0 && gate
+      ? `<span class="bnd-photos"><img src="${esc(mesh)}" alt="" loading="lazy"><img src="${esc(gate)}" alt="" loading="lazy"></span>`
+      : `<img class="chip chip-photo" src="${esc(mesh)}" alt="" loading="lazy">`;
+    return `<button type="button" class="swatch${quote.jobVariantId === colour.id ? " is-selected" : ""}" data-action="select-job-colour" data-id="${esc(colour.id)}">
+      ${media}
+      <strong>${esc(colour.name)}</strong>
+      <small>${gates > 0 ? "Mesh and gate" : "Mesh bays"}</small>
+    </button>`;
+  }).join("")}</div>`;
+}
+
+/* Plan view of the run: stretches turn at corners, gates sit in line with
+   their swing drawn, posts mark every bay. Drawn to scale. */
+function boundaryDiagram(layout, label) {
+  const key = "bnd";
+  const lens = layout.stretches || [];
+  const joins = layout.joins || [];
+  const bayLen = Number(layout.bayLen) || 3;
+  const gateW = Number(layout.gateW) || 1.2;
+  const fill = (() => {
+    const colour = bndColour(currentJobProduct());
+    return colour ? safeHex(colour.hex) : "#2f5080";
+  })();
+
+  // walk the run in metres; y grows downward like the screen
+  let x = 0, y = 0, dx = 1, dy = 0;
+  const segs = [];
+  const pts = [[0, 0]];
+  lens.forEach((len, i) => {
+    const L = Math.max(0, Number(len) || 0);
+    segs.push({ type: "fence", i, x, y, dx, dy, len: L });
+    x += dx * L; y += dy * L; pts.push([x, y]);
+    if (i < lens.length - 1) {
+      if (joins[i] === "gate") {
+        segs.push({ type: "gate", x, y, dx, dy, len: gateW });
+        x += dx * gateW; y += dy * gateW; pts.push([x, y]);
+      } else {
+        const ndx = -dy, ndy = dx; dx = ndx; dy = ndy;   // clockwise turn
+      }
+    }
+  });
+
+  const xs = pts.map((p) => p[0]), ys = pts.map((p) => p[1]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const worldW = Math.max(maxX - minX, 0.6), worldH = Math.max(maxY - minY, 0.6);
+  // margin in pixels, not metres, so labels always have room however big the run
+  const PAD = 44;
+  const boxW = DIA.W - DIA.padL - DIA.padR - PAD * 2;
+  const scale = Math.min(boxW / worldW, 200 / worldH);
+  const drawW = worldW * scale + PAD * 2, drawH = worldH * scale + PAD * 2;
+  const x0 = diaX0(drawW) + PAD - minX * scale;
+  const y0 = DIA.padT + PAD - minY * scale;
+  const X = (m) => x0 + m * scale, Y = (m) => y0 + m * scale;
+  const cx = X((minX + maxX) / 2), cy = Y((minY + maxY) / 2);
+
+  const parts = [diaTitle(DIA.padL - 2, 18, "Plan of the run, to scale", key)];
+  segs.forEach((s) => {
+    const ax = X(s.x), ay = Y(s.y), bx = X(s.x + s.dx * s.len), by = Y(s.y + s.dy * s.len);
+    if (s.type === "gate") {
+      // posts either side, the leaf open at 90 degrees, and its swing
+      const r = s.len * scale;
+      const nx = -s.dy, ny = s.dx;                      // swing toward the inside of the run
+      const lx = ax + nx * r, ly = ay + ny * r;
+      parts.push(`<path d="M ${svgNum(bx)} ${svgNum(by)} A ${svgNum(r)} ${svgNum(r)} 0 0 1 ${svgNum(lx)} ${svgNum(ly)}" fill="none" stroke="${DIA.waste}" stroke-width="1.1" stroke-dasharray="4 3"/>`);
+      parts.push(`<line x1="${svgNum(ax)}" y1="${svgNum(ay)}" x2="${svgNum(lx)}" y2="${svgNum(ly)}" stroke="${DIA.waste}" stroke-width="2.4"/>`);
+      [[ax, ay], [bx, by]].forEach(([px, py]) => parts.push(`<rect x="${svgNum(px - 3.6)}" y="${svgNum(py - 3.6)}" width="7.2" height="7.2" fill="${DIA.waste}"/>`));
+      return;
+    }
+    if (!(s.len > 0)) return;
+    parts.push(`<line x1="${svgNum(ax)}" y1="${svgNum(ay)}" x2="${svgNum(bx)}" y2="${svgNum(by)}" stroke="${fill}" stroke-width="4.5" stroke-linecap="butt"/>`);
+    const bays = Math.ceil(s.len / bayLen - 1e-9);
+    for (let k = 0; k <= bays; k += 1) {
+      const d = Math.min(k * bayLen, s.len);
+      const px = X(s.x + s.dx * d), py = Y(s.y + s.dy * d);
+      parts.push(`<rect x="${svgNum(px - 3)}" y="${svgNum(py - 3)}" width="6" height="6" fill="${DIA.rule}"/>`);
+    }
+    // letter and length, pushed to the outside of the run
+    const mx = (ax + bx) / 2, my = (ay + by) / 2;
+    let ox = -s.dy, oy = s.dx;
+    if ((mx - cx) * ox + (my - cy) * oy < 0) { ox = -ox; oy = -oy; }
+    const lx = mx + ox * 22, ly = my + oy * 22;
+    parts.push(`<circle cx="${svgNum(lx - 30)}" cy="${svgNum(ly - 4)}" r="9" fill="#ffffff" stroke="${DIA.rule}" stroke-width="1"/>
+      <text x="${svgNum(lx - 30)}" y="${svgNum(ly)}" text-anchor="middle" font-size="11.5" font-weight="700" font-family="Outfit, Lato, system-ui, sans-serif" fill="${DIA.rule}">${bndLetter(s.i)}</text>`);
+    parts.push(diaChip(lx - 16, ly, fmtLen(s.len), "start", key, 12));
+  });
+
+  const legendY = DIA.padT + drawH + 10;
+  parts.push(diaLegend(DIA.padL, legendY, fill, `Mesh, ${fmtLen(bayLen)} bays`, false, key));
+  parts.push(`<rect x="${svgNum(DIA.padL + 168)}" y="${svgNum(legendY - 8)}" width="8" height="8" fill="${DIA.rule}"/>`
+    + diaText(DIA.padL + 182, legendY, "Post", "start", 11.5, DIA.soft, 500));
+  if ((layout.gates || 0) > 0) {
+    parts.push(`<line x1="${svgNum(DIA.padL + 236)}" y1="${svgNum(legendY - 3)}" x2="${svgNum(DIA.padL + 250)}" y2="${svgNum(legendY - 3)}" stroke="${DIA.waste}" stroke-width="2.4"/>`
+      + diaText(DIA.padL + 256, legendY, "Gate, 1.2 m, shown open", "start", 11.5, DIA.soft, 500));
+  }
+  return diaFrame(drawW, drawH + 20, parts.join(""), label, key);
+}
+
 function renderSizeStep() {
   const job = currentJob();
   if (!job || job.mode === "roof") return `<p>Choose a calculator above.</p>`;
   const products = job.products || [];
   const product = products.find((item) => item.id === quote.jobProductId) || null;
+  if (job.mode === "boundary") return renderBoundarySize(job, products, product);
   const cards = products.map((item) => {
     const from = productFromPrice(item);
     const many = productPriceVaries(item);
@@ -2284,6 +2486,7 @@ function renderJobColourStep() {
   const product = currentJobProduct();
   const colours = jobColours(product);
   if (colours.length < 2) return `<p class="muted">Choose a product above to see its colours.</p>`;
+  if (quote.jobId === "boundary") return renderBoundaryColours(product);
   const lengths = colours.map((item) => Number(item.lengthM) || Number(product.lengthM) || 0);
   const showLength = Math.max(...lengths) - Math.min(...lengths) > 0.01;
   return `<div class="swatches">${colours.map((colour) => {
@@ -3629,13 +3832,47 @@ function onClick(event) {
     return;
   }
   if (action === "select-job-product") {
+    const before = currentJobProduct();
+    const beforeColour = before ? jobColours(before).find((item) => item.id === quote.jobVariantId) : null;
     quote.jobProductId = el.dataset.id;
     const job = currentJob();
     const product = job && (job.products || []).find((item) => item.id === quote.jobProductId);
     const options = jobOptions(product);
-    quote.jobVariantId = options.length ? options[0].id : null;
+    const same = beforeColour && options.find((item) => item.name === beforeColour.name);
+    quote.jobVariantId = same ? same.id : (options.length ? options[0].id : null);
     ui.added = false;
     if (quote.jobId === "cladding") pendingScroll = "job-colour";
+    render();
+    return;
+  }
+  if (action === "bnd-join") {
+    bndState();
+    const i = Number(el.dataset.index);
+    if (Number.isInteger(i) && i >= 0 && i < quote.bndJoins.length) quote.bndJoins[i] = el.dataset.value === "gate" ? "gate" : "corner";
+    ui.added = false;
+    render();
+    return;
+  }
+  if (action === "bnd-add") {
+    bndState();
+    if (quote.bndStretches.length < BND_MAX) {
+      quote.bndStretches.push("");
+      quote.bndJoins.push("corner");
+    }
+    ui.added = false;
+    render();
+    const next = document.getElementById(`bnd_${quote.bndStretches.length - 1}`);
+    if (next) next.focus();
+    return;
+  }
+  if (action === "bnd-remove") {
+    bndState();
+    const i = Number(el.dataset.index);
+    if (quote.bndStretches.length > 1 && Number.isInteger(i)) {
+      quote.bndStretches.splice(i, 1);
+      quote.bndJoins.splice(Math.min(i, quote.bndJoins.length - 1), 1);
+    }
+    ui.added = false;
     render();
     return;
   }
@@ -3972,6 +4209,15 @@ function onClick(event) {
 
 function handleField(el) {
   const action = el.dataset.action;
+  if (action === "bnd-stretch") {
+    rememberFocus(el);
+    bndState();
+    const i = Number(el.dataset.index);
+    if (Number.isInteger(i) && i >= 0 && i < quote.bndStretches.length) quote.bndStretches[i] = el.value;
+    ui.added = false;
+    render();
+    return;
+  }
   if (action === "job-measure") {
     rememberFocus(el);
     quote[el.dataset.field] = el.value;

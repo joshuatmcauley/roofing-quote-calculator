@@ -205,6 +205,108 @@ function setting(n, fallback) {
   return Number.isFinite(v) ? v : fallback;
 }
 
+/* V mesh boundary with gates.
+   The run is measured as straight stretches. A corner or a gate starts a new
+   stretch, and each stretch rounds up to whole bays on its own, because a
+   panel cannot bend round a corner or pass through a gate.
+
+   Posts: every bay kit brings one post and every gate kit brings two. A
+   section of fence between two gates is closed off by gate posts at both
+   ends, so it needs no extra post. A run with no gate at all needs one post
+   more than it has bays, and that post is not sold on its own online. */
+function priceBoundary(q, job, product, colour, site) {
+  const fail = (errors) => ({ lines: [], errors, warnings: [], overview: [], ok: false });
+  const letter = (i) => String.fromCharCode(65 + i);
+  const bayLen = Number(product.lengthM) || 0;
+  const bayPrice = Number(colour && colour.price != null ? colour.price : product.price) || 0;
+  const gatePrice = Number(colour && colour.gatePrice) || 0;
+  const gateW = Number(product.gateWidthM) || 1.2;
+  if (!(bayLen > 0)) return fail([{ step: "size", message: "This fence height has no bay width set." }]);
+
+  const raw = Array.isArray(q.bndStretches) && q.bndStretches.length ? q.bndStretches : [""];
+  const joins = (Array.isArray(q.bndJoins) ? q.bndJoins : []).slice(0, raw.length - 1);
+  while (joins.length < raw.length - 1) joins.push("corner");
+  const lens = raw.map((v) => (String(v == null ? "" : v).trim() === "" ? NaN : val(v)));
+  const gates = joins.filter((j) => j === "gate").length;
+
+  const errors = [];
+  lens.forEach((len, i) => {
+    const byGate = joins[i - 1] === "gate" || joins[i] === "gate";
+    if (!Number.isFinite(len) || len < 0) {
+      errors.push({ step: "size", field: `bnd-${i}`,
+        message: `Enter a length for stretch ${letter(i)}${byGate ? " (0 if the gate sits right at the end)" : ""}.` });
+    } else if (len === 0 && !byGate) {
+      errors.push({ step: "size", field: `bnd-${i}`,
+        message: `Stretch ${letter(i)} is 0 m. Remove it, or enter its length.` });
+    }
+  });
+  if (errors.length) return fail(errors);
+  if (gates === 0 && lens.every((len) => len === 0)) {
+    return fail([{ step: "size", message: "Enter the length of fence you need." }]);
+  }
+
+  const perStretch = lens.map((len) => (len > 0 ? Math.ceil(len / bayLen - 1e-9) : 0));
+  const bays = perStretch.reduce((a, b) => a + b, 0);
+  const cuts = lens.map((len, i) => {
+    const n = perStretch[i];
+    if (!(n > 0)) return 0;
+    const last = len - (n - 1) * bayLen;
+    return last < bayLen - 1e-6 ? last : 0;
+  });
+
+  const lines = [];
+  const warnings = [];
+  const colourName = colour ? colour.name : "";
+  if (bays > 0) {
+    const parts = lens.map((len, i) => `${letter(i)} ${trimNum(len)} m: ${perStretch[i]}`).join(", ");
+    const cutCount = cuts.filter((c) => c > 0).length;
+    let detail = `${lens.length > 1 ? `${lens.length} stretches (${parts}).` : `${trimNum(lens[0])} m run.`}`
+      + ` Bays are ${trimNum(bayLen)} m wide. ${site(bayPrice)} each.`;
+    if (cutCount) detail += ` ${cutCount === 1 ? "One panel is" : `${cutCount} panels are`} cut down to finish a stretch.`;
+    lines.push({
+      id: `job-${product.id}-bays`,
+      section: "Calculated",
+      name: `V mesh bay kit, ${product.name}${colourName ? `, ${colourName}` : ""}`,
+      detail,
+      qty: bays,
+      qtyLabel: `${bays} bay${bays === 1 ? "" : "s"}`,
+      unitPrice: round4(bayPrice),
+      total: round2(bayPrice * bays),
+      layout: { kind: "boundary", stretches: lens, joins, bayLen, perStretch, cuts, gateW, gates, qty: bays },
+    });
+  }
+  if (gates > 0) {
+    if (!(gatePrice > 0)) {
+      warnings.push({ step: "size", message: "This gate has no price, so it is not on the quote." });
+    } else {
+      const height = String(product.name).replace(/\s*\(.*$/, "");
+      lines.push({
+        id: `job-${product.id}-gates`,
+        section: "Calculated",
+        name: `Pedestrian gate kit, ${height} high × 1.2m wide${colourName ? `, ${colourName}` : ""}`,
+        detail: `Includes both gate posts and the lock. ${site(gatePrice)} each.`,
+        qty: gates,
+        qtyLabel: `${gates} gate${gates === 1 ? "" : "s"}`,
+        unitPrice: round4(gatePrice),
+        total: round2(gatePrice * gates),
+        layout: bays > 0 ? null : { kind: "boundary", stretches: lens, joins, bayLen, perStretch, cuts, gateW, gates, qty: 0 },
+      });
+    }
+  }
+  if (bays > 0 && gates === 0) {
+    warnings.push({ step: "size",
+      message: "A run with no gate needs one more post than it has bays, for the far end. The post is not sold on its own online, so ask in store." });
+  }
+  return {
+    lines,
+    errors: [],
+    warnings,
+    overview: [`${job.name}: ${product.name}${colourName ? `, ${colourName}` : ""}`,
+      `${bays} bay${bays === 1 ? "" : "s"}${gates ? `, ${gates} gate${gates === 1 ? "" : "s"}` : ""}`],
+    ok: lines.length > 0,
+  };
+}
+
 function priceSizedJob(q, cfg, money) {
   const empty = { lines: [], errors: [], warnings: [], overview: [], ok: false };
   const vatPercent = setting((cfg.company || {}).vatPercent, 20);
@@ -249,6 +351,9 @@ function priceSizedJob(q, cfg, money) {
 
   if (job.id === "cladding") {
     return priceCladding(q, job, product, option, price, site, lengthM, coverM, waste);
+  }
+  if (job.mode === "boundary") {
+    return priceBoundary(q, job, product, colourPick, site);
   }
 
   if (unit === "m2") {

@@ -3,8 +3,9 @@
    A product is here only when a measurement changes how many you buy,
    or the site sells it by the metre or the square metre.
    Whole pieces are counted. They are not priced as if they were cut shorter.
-   Gates, sheds, gate posts, V mesh kits, fence bay kits, and anything
-   sold only as one finished item stay in the product list. */
+   Sheds, granite gate posts, fence bay kits, and anything sold only as
+   one finished item stay in the product list. Mesh gates are priced in the
+   boundary job, because they share posts with the bays either side. */
 const JOBS = [
   {
     id: "roof",
@@ -134,6 +135,63 @@ const JOBS = [
         colours: [
           { id: "vmesh-24-black", name: "Black", hex: "#1a1c1e", price: 80, shopifyHandle: "security-fencing-v-mesh-kit-8-feet-high-2-4m-x-9-84-feet-3m-wide-in-green-copy" },
           { id: "vmesh-24-green", name: "Green", hex: "#2f4a3c", price: 80, shopifyHandle: "security-fencing-v-mesh-kit-8-feet-high-2-4m-x-9-84-feet-3m-wide-in-green" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "boundary",
+    name: "V mesh fence with gates",
+    blurb: "Bays and gates priced together. Gate kits bring their own posts, so you only buy what the run needs.",
+    mode: "boundary",
+    note: "Measure each straight stretch of mesh on its own. A corner or a gate starts a new stretch, because a panel cannot bend round a corner and each stretch rounds up to whole bays. Every bay kit is one panel and one dig-in post. Gate kits come with both their posts and the lock.",
+    products: [
+      {
+        id: "bnd-12",
+        name: "1.2m high (4ft)",
+        lengthM: 2.5,
+        price: 40,
+        gateWidthM: 1.2,
+        note: "Bays are 2.5m wide, £48 inc VAT. Gate kit 4ft × 4ft, £300 inc VAT.",
+        colours: [
+          { id: "bnd-12-black", name: "Black", hex: "#1a1c1e", price: 40, gatePrice: 250,
+            meshHandle: "security-fencing-v-mesh-kit-4-feet-high-1-2m-x-8-20-feet-2-5m-wide-in-green-copy",
+            gateHandle: "green-4ft-1-2m-high-x-4ft-1-2m-wide-pedestrian-gate-kit-inc-posts-lock-etc-copy" },
+          { id: "bnd-12-green", name: "Green", hex: "#2f4a3c", price: 40, gatePrice: 250,
+            meshHandle: "security-fencing-v-mesh-kit-4-feet-high-1-2m-x-8-20-feet-2-5m-wide-in-green",
+            gateHandle: "green-8ft-2-4m-high-x-4ft-1-2m-wide-pedestrian-gate-kit-inc-posts-lock-etc-copy-1" },
+        ],
+      },
+      {
+        id: "bnd-18",
+        name: "1.8m high (6ft)",
+        lengthM: 3,
+        price: 70,
+        gateWidthM: 1.2,
+        note: "Bays are 3m wide, £84 inc VAT. Gate kit 6ft × 4ft, £336 inc VAT.",
+        colours: [
+          { id: "bnd-18-black", name: "Black", hex: "#1a1c1e", price: 70, gatePrice: 280,
+            meshHandle: "security-fencing-v-mesh-kit-6-feet-high-1-8m-x-9-84-feet-3m-wide-in-black",
+            gateHandle: "6ft-1-8m-high-x-4ft-1-2m-wide-pedestrian-gate-kit-inc-posts-lock-etc-copy" },
+          { id: "bnd-18-green", name: "Green", hex: "#2f4a3c", price: 70, gatePrice: 280,
+            meshHandle: "security-fencing-v-mesh-kit-6-feet-high-1-8m-x-9-84-feet-3m-wide-in-black-copy",
+            gateHandle: "mesh-gates" },
+        ],
+      },
+      {
+        id: "bnd-24",
+        name: "2.4m high (8ft)",
+        lengthM: 3,
+        price: 80,
+        gateWidthM: 1.2,
+        note: "Bays are 3m wide, £96 inc VAT. Gate kit 8ft × 4ft, £360 inc VAT.",
+        colours: [
+          { id: "bnd-24-black", name: "Black", hex: "#1a1c1e", price: 80, gatePrice: 300,
+            meshHandle: "security-fencing-v-mesh-kit-8-feet-high-2-4m-x-9-84-feet-3m-wide-in-green-copy",
+            gateHandle: "green-8ft-2-4m-high-x-4ft-1-2m-wide-pedestrian-gate-kit-inc-posts-lock-etc-copy" },
+          { id: "bnd-24-green", name: "Green", hex: "#2f4a3c", price: 80, gatePrice: 300,
+            meshHandle: "security-fencing-v-mesh-kit-8-feet-high-2-4m-x-9-84-feet-3m-wide-in-green",
+            gateHandle: "green-8ft-2-4m-high-x-4ft-1-2m-wide-pedestrian-gate-kit-inc-posts-lock-etc" },
         ],
       },
     ],
