@@ -39,27 +39,6 @@ const JOBS = [
     ],
   },
   {
-    id: "trim",
-    name: "Decking corner trim",
-    blurb: "3m lengths, £10 inc VAT each.",
-    mode: "perimeter",
-    note: "Sold in whole 3m lengths. This counts how many lengths cover the outside edge, 2 × (length + width). A length is not cut to a lower price.",
-    products: [
-      {
-        id: "trim-3",
-        name: "WPC 90° corner trim, 3m",
-        lengthM: 3,
-        price: 8.333333,
-        note: "£10 inc VAT. Grey, black, and teak are the same price.",
-        colours: [
-          { id: "trim-grey", name: "Grey", hex: "#5C6065", price: 8.333333, shopifyHandle: "wpc-edging-corner-trims-exterior-corners-90-degree-grey-black-teak-3-metre-lengths", shopifyVariantId: "51958359163211" },
-          { id: "trim-black", name: "Black", hex: "#353C3F", price: 8.333333, shopifyHandle: "wpc-edging-corner-trims-exterior-corners-90-degree-grey-black-teak-3-metre-lengths", shopifyVariantId: "51958359163211" },
-          { id: "trim-teak", name: "Teak", hex: "#845D39", price: 8.333333, shopifyHandle: "wpc-edging-corner-trims-exterior-corners-90-degree-grey-black-teak-3-metre-lengths", shopifyVariantId: "51958359163211" },
-        ],
-      },
-    ],
-  },
-  {
     id: "fence-board",
     name: "Composite fence boards",
     blurb: "3.6m tongue and groove boards, 170mm cover, £27.50 inc VAT.",
@@ -68,33 +47,6 @@ const JOBS = [
     note: "Boards are sold whole at 3.6m. Height is stacked in 170mm courses. This does not cut a board down, and it does not include posts, rails, or a ready-made fence bay.",
     products: [
       { id: "fence-tg", name: "Black tongue and groove fence board", lengthM: 3.6, coverM: 0.17, price: 22.916667, swatch: "#2A2A2A", shopifyHandle: "black-composite-fencing-board-tongue-groove-3-6m-x-170mm", note: "3.6m × 170mm cover. £27.50 inc VAT. The shop export shows 0 in stock." },
-    ],
-  },
-  {
-    id: "fence-bay",
-    name: "Composite fence bays",
-    blurb: "1.8m wide bays, £240 inc VAT.",
-    mode: "run",
-    note: "Each bay is 1.8m wide and includes one post. A straight run is one post short, so allow an extra end post. That end post is not a separate price on the website.",
-    products: [
-      {
-        id: "fence-antique",
-        name: "Antique slatted bay 1.8 × 1.8m",
-        lengthM: 1.8,
-        price: 200,
-        swatch: "#8A6A45",
-        shopifyHandle: "antique-slatted-composite-fencing-1-8mx1-8m-6ftx6ft",
-        note: "£240 inc VAT. Includes 1 post, 12 composite boards, top rail, bottom rail, and a post cap.",
-      },
-      {
-        id: "fence-standard",
-        name: "Composite fence bay 1.8 × 1.8m",
-        lengthM: 1.8,
-        price: 200,
-        swatch: "#5C6065",
-        shopifyHandle: "composite-fencing",
-        note: "£240 inc VAT. 10 panels (180 × 1750 × 20mm), one 2.4m post (80 × 80mm, 500mm in the ground), cap, and rails.",
-      },
     ],
   },
   {
@@ -246,24 +198,6 @@ const JOBS = [
     ],
   },
   {
-    id: "radius",
-    name: "Radius kerbs",
-    blurb: "Eight G603 kerbs make one full circle, £42 inc VAT each.",
-    mode: "circles",
-    note: "The website says eight 98 × 90 × 115mm kerbs fit one complete circle. This does not price a straight kerb run.",
-    products: [
-      {
-        id: "kerb-radius",
-        name: "G603 silver radius kerb",
-        price: 35,
-        perCircle: 8,
-        swatch: "#C5C7C4",
-        shopifyHandle: "silver-g603-granite-radius-kerbs-98x90x115mm",
-        note: "£42 inc VAT each.",
-      },
-    ],
-  },
-  {
     id: "cladding",
     name: "Composite wall cladding",
     blurb: "Wood grain £12 and slatted £24 inc VAT, from wall width and height.",
@@ -351,64 +285,5 @@ const JOBS = [
         ],
       },
     ],
-  },
-  {
-    id: "steps",
-    name: "Steps",
-    blurb: "Granite treads and the 3.6m composite step board.",
-    mode: "steps",
-    note: "Treads and risers are sold whole. A wider step needs another whole piece. Nothing is cut to a shorter price. Loose step corners stay in the product list.",
-    products: [
-      {
-        id: "step-bull",
-        name: "Granite bullnose step 1000 × 400mm",
-        lengthM: 1,
-        depthM: 0.4,
-        swatch: "#C8C6C2",
-        note: "Thickness prices are £24, £36, and £48 inc VAT.",
-        variants: [
-          { id: "step-bull-30", name: "30mm", price: 20 },
-          { id: "step-bull-40", name: "40mm", price: 30 },
-          { id: "step-bull-50", name: "50mm", price: 40 },
-        ],
-      },
-      { id: "step-silver", name: "G603 silver step 1000 × 400 × 30mm", lengthM: 1, depthM: 0.4, price: 20, swatch: "#C5C7C4", note: "£24 inc VAT each." },
-      { id: "step-solid", name: "Solid granite step 900 × 300 × 255mm", lengthM: 0.9, depthM: 0.3, price: 60, swatch: "#A9A59C", note: "£72 inc VAT each." },
-      { id: "step-riser", name: "G603 riser 1000 × 150 × 30mm", lengthM: 1, depthM: 0.15, price: 10, swatch: "#C5C7C4", note: "£12 inc VAT each." },
-      { id: "step-board", name: "Composite step board 3600 × 310 × 55mm", lengthM: 3.6, depthM: 0.31, price: 58.333333, swatch: "#8B7355", note: "£70 inc VAT each." },
-    ],
-  },
-  {
-    id: "purlin",
-    name: "Purlins",
-    blurb: "Cut to the length you enter, £6 inc VAT per metre.",
-    mode: "linear",
-    note: "The website price is £5 plus VAT per metre, cut to length.",
-    products: [
-      { id: "purlin-c", name: "Multibeam C purlin 210 × 65 × 1.5mm", priceUnit: "m", price: 5, swatch: "#8D97A3", note: "£6 inc VAT per metre." },
-    ],
-  },
-  {
-    id: "acrylic",
-    name: "Acrylic sheets",
-    blurb: "2.4 × 1.2m sheets in 4mm, 6mm, and 10mm.",
-    mode: "area",
-    wasteDefault: 0,
-    note: "Sheets are sold whole at 2.4m × 1.2m. This counts how many cover the area. A smaller opening does not get a cut-down price. The 2.4m side runs along the length you enter.",
-    products: [
-      {
-        id: "acrylic-sheet",
-        name: "Clear acrylic sheet 2.4 × 1.2m",
-        lengthM: 2.4,
-        coverM: 1.2,
-        swatch: "#D7EEF8",
-        note: "£80, £120, and £200 inc VAT.",
-        variants: [
-          { id: "acrylic-4", name: "4mm", price: 66.666667 },
-          { id: "acrylic-6", name: "6mm", price: 100 },
-          { id: "acrylic-10", name: "10mm", price: 166.666667 },
-        ],
-      },
-    ],
-  },
+  }
 ];
