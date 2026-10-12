@@ -120,7 +120,8 @@ function wallBoardCount(wall, boardLen, cover) {
   const shape = (wall && wall.shape) || "full";
   let boards = 0;
   if (shape === "gable" || shape === "both") {
-    boards += gableBoardCount(val(wall.gableW), val(wall.gableH), boardLen, cover, vertical);
+    const gableW = val(wall.gableW) > 0 ? val(wall.gableW) : val(wall.wallW);
+    boards += gableBoardCount(gableW, val(wall.gableH), boardLen, cover, vertical);
   }
   if (shape !== "gable") {
     let count = rectBoardCount(val(wall.wallW), val(wall.wallH), boardLen, cover, vertical);
@@ -155,8 +156,11 @@ function priceCladding(q, job, product, option, price, site, lengthM, coverM, wa
     if (shape !== "gable" && !(val(wall.wallW) > 0 && val(wall.wallH) > 0)) {
       errors.push({ step: "clad-wall", message: `Wall ${index + 1} needs a height and a width.` });
     }
-    if ((shape === "gable" || shape === "both") && !(val(wall.gableW) > 0 && val(wall.gableH) > 0)) {
+    if (shape === "gable" && !(val(wall.gableW) > 0 && val(wall.gableH) > 0)) {
       errors.push({ step: "clad-wall", message: `Wall ${index + 1} needs a gable height and width.` });
+    }
+    if (shape === "both" && !(val(wall.gableH) > 0)) {
+      errors.push({ step: "clad-wall", message: `Wall ${index + 1} needs the gable height from the eaves to the ridge.` });
     }
     const count = wallBoardCount(wall, lengthM, coverM);
     base += count;

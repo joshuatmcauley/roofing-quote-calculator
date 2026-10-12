@@ -42,6 +42,7 @@ function uid(prefix) {
 
 function saveCladWall() {
   const draft = quote.wallDraft;
+  if (draft && draft.shape === "both") draft.gableW = draft.wallW;
   if (!draft.shape || !draft.orientation || !wallDimsOk(draft)) {
     ui.cladError = "Choose the wall, the direction, and the measurements first.";
     ui.cladPhase = !draft.shape ? "shape" : !draft.orientation ? "direction" : "measure";
@@ -2563,13 +2564,13 @@ function measureHouseSvg(draft) {
   const showG = shape === "gable" || shape === "both";
   const showW = shape !== "gable";
   const gH = Math.max(val(draft.gableH), showG ? 0.5 : 0);
-  const gW = Math.max(val(draft.gableW), showG ? 1 : 0);
   const wH = Math.max(val(draft.wallH), showW ? 0.5 : 0);
   const wW = Math.max(val(draft.wallW), showW ? 1 : 0);
+  const gW = shape === "both" ? wW : Math.max(val(draft.gableW), showG ? 1 : 0);
   const span = Math.max(showG ? gW : 0, showW ? wW : 0, 1);
   const total = (showG ? gH : 0) + (showW ? wH : 0) || 1;
-  const padL = 58;
-  const padT = 24;
+  const padL = 86;
+  const padT = 28;
   const drawW = 240;
   const drawH = 190;
   const sx = drawW / span;
@@ -2583,8 +2584,8 @@ function measureHouseSvg(draft) {
     const left = x0 + (span * sx - gw) / 2;
     parts += `<polygon points="${left},${y + gh} ${left + gw / 2},${y} ${left + gw},${y + gh}" fill="#d7eef8" stroke="#1e428b" stroke-width="2"/>`;
     parts += `<rect x="${left + gw * 0.16}" y="${y + gh * 0.08}" width="${Math.max(12, gw * 0.08)}" height="${gh * 0.42}" fill="#f7f7f7" stroke="#333"/>`;
-    parts += arrowV(left + gw / 2, y + 14, y + gh - 14, "#1e428b", "H");
-    parts += arrowH(left + 10, left + gw - 10, y + gh - 12, "#1e428b", "W");
+    parts += arrowV(left + gw / 2, y + 14, y + gh - 14, "#1e428b", "Gable H");
+    if (shape !== "both") parts += arrowH(left + 10, left + gw - 10, y + gh - 12, "#1e428b", "Width");
     y += gh;
   }
   if (showW) {
@@ -2594,41 +2595,34 @@ function measureHouseSvg(draft) {
     parts += `<rect x="${left}" y="${y}" width="${ww}" height="${wh}" fill="${shape === "half" ? "#fff" : "#f8d5dc"}" stroke="#c0392b" stroke-width="2"/>`;
     if (shape === "half") parts += `<rect x="${left}" y="${y + wh / 2}" width="${ww}" height="${wh / 2}" fill="#f8d5dc"/>`;
     const markTop = shape === "half" ? y + wh / 2 : y;
-    parts += arrowV(left - 18, markTop + 8, y + wh - 8, "#c0392b", "H");
-    parts += arrowH(left + 10, left + ww - 10, y + wh + 18, "#c0392b", "W");
+    parts += arrowV(left - 22, markTop + 8, y + wh - 8, "#c0392b", "Wall H");
+    parts += arrowH(left + 10, left + ww - 10, y + wh + 22, "#c0392b", "Width");
   }
-  return `<svg class="house-diagram" viewBox="0 0 ${padL + drawW + 28} ${padT + drawH + 42}">${parts}</svg>`;
+  return `<svg class="house-diagram" viewBox="0 0 ${padL + drawW + 40} ${padT + drawH + 48}">${parts}</svg>`;
 }
 
 function wallShapeLabel(shape) {
-  if (shape === "half") return "Half";
-  if (shape === "gable") return "Gable only";
-  if (shape === "both") return "Full";
-  return "Full";
+  if (shape === "half") return "Bottom half of a wall";
+  if (shape === "gable") return "Gable triangle only";
+  if (shape === "both") return "Wall plus gable";
+  return "Rectangle wall";
 }
 
 function wallDimsOk(draft) {
   const shape = draft.shape || "full";
   if (shape !== "gable" && !(val(draft.wallH) > 0 && val(draft.wallW) > 0)) return false;
-  if ((shape === "gable" || shape === "both") && !(val(draft.gableH) > 0 && val(draft.gableW) > 0)) return false;
+  if (shape === "gable" && !(val(draft.gableH) > 0 && val(draft.gableW) > 0)) return false;
+  if (shape === "both" && !(val(draft.gableH) > 0)) return false;
   return true;
 }
 
-function dimBox(kind, title, heightField, widthField, draft) {
-  return `<div class="dim-box ${kind}">
-    <strong>${title}</strong>
-    <div class="dim-row">
-      <label>Height
-        <input data-action="clad-field" data-field="${heightField}" value="${esc(draft[heightField] || "")}" inputmode="decimal" autocomplete="off">
-        <small>Metres</small>
-      </label>
-      <span>×</span>
-      <label>Width
-        <input data-action="clad-field" data-field="${widthField}" value="${esc(draft[widthField] || "")}" inputmode="decimal" autocomplete="off">
-        <small>Metres</small>
-      </label>
-    </div>
-  </div>`;
+function dimField(field, label, help, draft) {
+  const id = `clad_${field}`;
+  return `<label class="field" for="${id}">
+    <span>${esc(label)}</span>
+    <input id="${id}" data-action="clad-field" data-field="${field}" value="${esc(draft[field] || "")}" inputmode="decimal" autocomplete="off">
+    ${help ? `<small>${esc(help)}</small>` : ""}
+  </label>`;
 }
 
 function cladBoardPreview(draft) {
@@ -2637,9 +2631,35 @@ function cladBoardPreview(draft) {
   const colour = jobColours(product).find((item) => item.id === quote.jobVariantId) || jobColours(product)[0];
   const lengthM = Number((colour && colour.lengthM) || product.lengthM) || 0;
   const coverM = Number((colour && colour.coverM) || product.coverM) || 0;
-  const count = wallBoardCount(draft, lengthM, coverM);
+  const vertical = draft.orientation === "vertical";
+  const shape = draft.shape || "full";
+  const gableW = val(draft.gableW) > 0 ? val(draft.gableW) : val(draft.wallW);
+  const wallN = shape === "gable" ? 0 : rectBoardCount(val(draft.wallW), val(draft.wallH), lengthM, coverM, vertical);
+  const gableN = (shape === "gable" || shape === "both")
+    ? gableBoardCount(gableW, val(draft.gableH), lengthM, coverM, vertical)
+    : 0;
+  const count = wallN + gableN;
   if (!(count > 0)) return "";
-  return `<p class="ok">This wall needs <strong>${count} board${count === 1 ? "" : "s"}</strong> before the extra waste is added.</p>`;
+  const bits = [];
+  if (wallN) bits.push(`${wallN} for the wall`);
+  if (gableN) bits.push(`${gableN} for the gable`);
+  return `<p class="ok clad-board-preview">This wall needs <strong>${count} board${count === 1 ? "" : "s"}</strong>${bits.length ? ` (${bits.join(" + ")})` : ""} before extra waste.
+    Each board is ${trimNum(lengthM)} m and covers ${trimNum(coverM * 1000)} mm.</p>`;
+}
+
+function refreshCladMeasure() {
+  const draft = quote.wallDraft || blankWall();
+  const diagram = document.querySelector(".house-diagram");
+  if (diagram) diagram.outerHTML = measureHouseSvg(draft);
+  const html = cladBoardPreview(draft);
+  const old = document.querySelector(".clad-board-preview");
+  if (old) {
+    if (html) old.outerHTML = html;
+    else old.remove();
+  } else if (html) {
+    const nav = document.querySelector("#app .wizard-nav");
+    if (nav) nav.insertAdjacentHTML("beforebegin", html);
+  }
 }
 
 function renderCladWallStep() {
@@ -2665,28 +2685,45 @@ function renderCladWallStep() {
   }
   if (phase === "measure") {
     const shape = draft.shape || "full";
-    const boxes = `${shape === "gable" || shape === "both" ? dimBox("gable", "GABLE", "gableH", "gableW", draft) : ""}
-      ${shape !== "gable" ? dimBox("wall", "WALL", "wallH", "wallW", draft) : ""}`;
-    const halfNote = shape === "half" ? `<p class="muted">Enter the lower part of the wall you are cladding, not the whole house.</p>` : "";
-    return `${error}<h3 class="wizard-title">Now please enter your wall area measurements</h3>
-      <p>Enter height and width in metres. The gable and the wall are measured separately.</p>
-      ${halfNote}
-      <div class="measure-layout">${boxes}${measureHouseSvg(draft)}</div>
+    let title = "Measure this wall";
+    let explain = "A rectangular wall with no triangle on top. Enter width and height in metres.";
+    let boxes = `<div class="dim-box wall">${dimField("wallW", "Width (metres)", "How wide this wall is.", draft)}
+      ${dimField("wallH", "Height (metres)", "Ground up to the top of the wall.", draft)}</div>`;
+    if (shape === "both") {
+      title = "Measure this house end";
+      explain = "Pink is the wall from the ground up to the eaves. Blue is the triangle from the eaves up to the ridge. They share the same width — type it once.";
+      boxes = `<div class="dim-box wall">${dimField("wallW", "Width of this wall (metres)", "The same width for the wall and the gable.", draft)}
+        ${dimField("wallH", "Wall height, ground to eaves (metres)", "The pink rectangle only. Do not include the triangle.", draft)}</div>
+        <div class="dim-box gable">${dimField("gableH", "Gable height, eaves to ridge (metres)", "The blue triangle only. Do not add the wall height again.", draft)}</div>`;
+    } else if (shape === "gable") {
+      title = "Measure the gable triangle";
+      explain = "Only the blue triangle is being clad. Measure the base, then how tall it is from the eaves up to the ridge.";
+      boxes = `<div class="dim-box gable">${dimField("gableW", "Gable width / base (metres)", "The bottom of the triangle.", draft)}
+        ${dimField("gableH", "Gable height, eaves to ridge (metres)", "Do not include the wall below.", draft)}</div>`;
+    } else if (shape === "half") {
+      title = "Measure the part you are cladding";
+      explain = "Only the lower part of the wall. Do not type the full house height.";
+      boxes = `<div class="dim-box wall">${dimField("wallW", "Width (metres)", "", draft)}
+        ${dimField("wallH", "Height of the part you are cladding (metres)", "From the ground up to where the cladding stops.", draft)}</div>`;
+    }
+    return `${error}<h3 class="wizard-title">${esc(title)}</h3>
+      <p>${esc(explain)}</p>
+      <div class="measure-layout"><div>${boxes}</div>${measureHouseSvg(draft)}</div>
       ${cladBoardPreview(draft)}
       <div class="wizard-nav"><button type="button" class="ghost" data-action="clad-back">Back</button><button type="button" class="primary" data-action="clad-next">Next</button></div>`;
   }
   if (phase === "openings") {
     const windows = (draft.windows || []).map((win, index) => `<div class="dim-row window-row">
       <strong>Window ${index + 1}</strong>
-      <label>Height <input data-action="clad-win" data-id="${esc(win.id)}" data-field="h" value="${esc(win.h || "")}" inputmode="decimal" autocomplete="off"> <small>m</small></label>
+      <label>Height <input id="clad_win_${esc(win.id)}_h" data-action="clad-win" data-id="${esc(win.id)}" data-field="h" value="${esc(win.h || "")}" inputmode="decimal" autocomplete="off"> <small>m</small></label>
       <span>×</span>
-      <label>Width <input data-action="clad-win" data-id="${esc(win.id)}" data-field="w" value="${esc(win.w || "")}" inputmode="decimal" autocomplete="off"> <small>m</small></label>
+      <label>Width <input id="clad_win_${esc(win.id)}_w" data-action="clad-win" data-id="${esc(win.id)}" data-field="w" value="${esc(win.w || "")}" inputmode="decimal" autocomplete="off"> <small>m</small></label>
       <button type="button" class="ghost" data-action="clad-window-remove" data-id="${esc(win.id)}">Remove</button>
     </div>`).join("");
     const doorFields = draft.hasDoor ? `<div class="dim-row">
-      <label>Height <input data-action="clad-field" data-field="doorH" value="${esc(draft.doorH || "")}" inputmode="decimal" autocomplete="off"> <small>m</small></label>
+      <label>Height <input id="clad_doorH" data-action="clad-field" data-field="doorH" value="${esc(draft.doorH || "")}" inputmode="decimal" autocomplete="off"> <small>m</small></label>
       <span>×</span>
-      <label>Width <input data-action="clad-field" data-field="doorW" value="${esc(draft.doorW || "")}" inputmode="decimal" autocomplete="off"> <small>m</small></label>
+      <label>Width <input id="clad_doorW" data-action="clad-field" data-field="doorW" value="${esc(draft.doorW || "")}" inputmode="decimal" autocomplete="off"> <small>m</small></label>
     </div>` : "";
     return `${error}<h3 class="wizard-title">Does this wall have a door?</h3>
       <p>Entering a door or window counts fewer boards. Leave them out if you want spare boards for cutting around the opening.</p>
@@ -2703,13 +2740,13 @@ function renderCladWallStep() {
       <div class="wizard-nav"><button type="button" class="ghost" data-action="clad-back">Back</button><button type="button" class="primary" data-action="clad-save">Save wall</button></div>`;
   }
   const shapes = [
-    ["full", "Full standard wall area"],
-    ["half", "Half standard wall area"],
-    ["gable", "Gable end only area"],
-    ["both", "Full wall gable area"],
+    ["full", "Rectangle wall"],
+    ["half", "Bottom half of a wall"],
+    ["gable", "Gable triangle only"],
+    ["both", "Wall plus gable"],
   ];
-  return `${error}<h3 class="wizard-title">What kind of wall area would you like to clad?</h3>
-    <p>Measure each wall you want to clad on its own. The calculator then estimates how many boards that wall needs. Measure the length by the height.</p>
+  return `${error}<h3 class="wizard-title">What shape is this wall?</h3>
+    <p>Add one wall at a time. Pink in the picture is the rectangle. Blue is the triangle on top of a house end.</p>
     <div class="wall-choices">${shapes.map(([id, label]) => `
       <button type="button" class="wall-choice${draft.shape === id ? " is-selected" : ""}" data-action="clad-shape" data-value="${id}">
         ${houseIcon(id, "")}
@@ -2728,12 +2765,13 @@ function renderWallSummary() {
     const doorText = wall.hasDoor && val(wall.doorH) > 0
       ? `Door: ${trimNum(val(wall.doorH))} m × ${trimNum(val(wall.doorW))} m`
       : "There are no doors on this wall.";
+    const gableW = wall.shape === "both" ? val(wall.wallW) : val(wall.gableW);
     const gable = wall.shape === "gable" || wall.shape === "both"
-      ? `<p>Gable area: ${esc(trimNum(val(wall.gableW)))} m × ${esc(trimNum(val(wall.gableH)))} m</p>` : "";
+      ? `<p>Gable triangle: ${esc(trimNum(gableW))} m wide × ${esc(trimNum(val(wall.gableH)))} m high (eaves to ridge)</p>` : "";
     const wallSize = wall.shape !== "gable"
-      ? `<p>Wall area: ${esc(trimNum(val(wall.wallW)))} m × ${esc(trimNum(val(wall.wallH)))} m</p>` : "";
+      ? `<p>Wall: ${esc(trimNum(val(wall.wallW)))} m wide × ${esc(trimNum(val(wall.wallH)))} m high${wall.shape === "both" ? " (ground to eaves)" : ""}</p>` : "";
     return `<article class="wall-card">
-      <h3>WALL AREA ${index + 1}</h3>
+      <h3>Wall ${index + 1}</h3>
       <div class="wall-card-grid">
         ${houseIcon(wall.shape, wall.orientation)}
         <div>
@@ -3921,7 +3959,14 @@ function onClick(event) {
       if (!draft.orientation) { ui.cladError = "Choose vertical or horizontal."; render(); return; }
       ui.cladPhase = "measure";
     } else if (ui.cladPhase === "measure") {
-      if (!wallDimsOk(draft)) { ui.cladError = "Enter the height and width in metres."; render(); return; }
+      if (!wallDimsOk(draft)) {
+        ui.cladError = draft.shape === "both"
+          ? "Enter the wall width, the wall height (ground to eaves), and the gable height (eaves to ridge)."
+          : "Enter the height and width in metres.";
+        render();
+        return;
+      }
+      if (draft.shape === "both") draft.gableW = draft.wallW;
       ui.cladPhase = "openings";
     }
     ui.cladError = "";
@@ -4232,7 +4277,14 @@ function handleField(el) {
   if (action === "clad-field") {
     rememberFocus(el);
     quote.wallDraft[el.dataset.field] = el.value;
+    if (el.dataset.field === "wallW" && quote.wallDraft.shape === "both") {
+      quote.wallDraft.gableW = el.value;
+    }
     ui.added = false;
+    if (ui.cladPhase === "measure") {
+      refreshCladMeasure();
+      return;
+    }
     render();
     return;
   }

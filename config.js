@@ -52,7 +52,7 @@ const QUOTE_CONFIG = {
     { id: "job", kind: "job", title: "Choose a Calculator", hint: "Only products the website sells by the metre, or as pieces you can count from a size.", enabled: true, required: false },
     { id: "size", kind: "size", title: "Enter the Size", hint: "Quantities use the size and price published on the website.", enabled: true, required: false },
     { id: "job-colour", kind: "job-colour", title: "Select Colour", hint: "Swatches are sampled from the product photos on bcmckeown.net.", enabled: true, required: false },
-    { id: "clad-wall", kind: "clad-wall", title: "Enter the wall", hint: "Add each wall on its own. Vertical and horizontal boards are counted differently.", enabled: true, required: false },
+    { id: "clad-wall", kind: "clad-wall", title: "Enter the wall", hint: "Measure one wall at a time. Pink is the rectangle. Blue is the gable triangle on top.", enabled: true, required: false },
     { id: "type", kind: "type", title: "Select Roof Type", hint: "An apex roof or a single slope.", enabled: true, required: false },
     { id: "profile", kind: "profile", title: "Choose Your Sheet", hint: "Metal sheets first, then clear sheets. Thickness is the next step.", enabled: true, required: false },
     { id: "finish", kind: "finish", title: "Choose Thickness", hint: "Prices are per metre, including VAT.", enabled: true, required: false },
