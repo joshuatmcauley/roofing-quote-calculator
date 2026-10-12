@@ -62,7 +62,9 @@
     "text-transform:uppercase;line-height:.92;font-size:clamp(54px,13vw,128px);",
     "letter-spacing:.32em;margin-right:-.32em;opacity:0;",
     "animation:bcWord 1050ms cubic-bezier(.16,.84,.28,1) 120ms forwards}",
-    ".bc-word span{color:#e6b65c}",
+    ".bc-word .bc-bc{color:#8bc24a}",
+    ".bc-word .bc-roof{display:inline-block;height:0.636em;width:0.636em;",
+    "margin:0 0.02em;vertical-align:baseline;color:#fff}",
     ".bc-rule{height:2px;width:min(260px,52vw);margin:18px auto 14px;background:#e6b65c;",
     "transform:scaleX(0);animation:bcRule 760ms cubic-bezier(.16,.84,.28,1) 520ms forwards}",
     ".bc-sub{font-family:Outfit,'Segoe UI',sans-serif;font-size:12px;font-weight:600;",
@@ -125,7 +127,11 @@
 
     var mark = document.createElement("div");
     mark.className = "bc-mark";
-    mark.innerHTML = '<div class="bc-word">B<span>&amp;</span>C McKeown</div>'
+    var roofGlyph = '<svg class="bc-roof" viewBox="0 0 20 20" aria-hidden="true" focusable="false">'
+      + '<path d="M1.6 12.4 L10 2 L18.4 12.4" fill="none" stroke="currentColor" stroke-width="5.6" stroke-linecap="butt" stroke-linejoin="round"/>'
+      + '<rect x="6.9" y="11.6" width="6.2" height="6.2" fill="none" stroke="currentColor" stroke-width="1.55"/>'
+      + '<line x1="10" y1="11.6" x2="10" y2="17.8" stroke="currentColor" stroke-width="1.55"/></svg>';
+    mark.innerHTML = '<div class="bc-word"><span class="bc-bc">B&amp;C</span>MCKE' + roofGlyph + 'WN</div>'
       + '<div class="bc-rule"></div>'
       + '<div class="bc-sub">Downpatrick &middot; County Down</div>';
 

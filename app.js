@@ -1392,11 +1392,11 @@ function slopeHelper(mode) {
   if (open && run > 0 && Number.isFinite(rise) && rise > 0) {
     const c = Math.sqrt(run * run + rise * rise);
     answer = `<p class="ok">That makes <strong>${fmtLen(c)}</strong> from eave to ridge.
-      <button type="button" class="text-btn" data-action="use-slope" data-mode="${esc(mode)}" data-value="${svgNum(fromMetres(c))}">Use this for C</button></p>`;
+      <button type="button" class="text-btn" data-action="use-slope" data-mode="${esc(mode)}" data-value="${svgNum(fromMetres(c))}">Use this for B</button></p>`;
   }
   return `<div class="slope-help">
     <button type="button" class="text-btn" data-action="slope-help" data-mode="${esc(mode)}">
-      ${open ? "Hide" : "Not sure what C is? Work it out"}
+      ${open ? "Hide" : "Not sure what B is? Work it out"}
     </button>
     ${open ? `<div class="slope-help-body">
       <p class="muted">Measure flat on the ground from the bottom edge to under the top edge, then how much higher the top sits.</p>

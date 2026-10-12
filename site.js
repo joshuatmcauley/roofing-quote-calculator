@@ -456,12 +456,40 @@ function setupReveals() {
   });
 
   // Last resort: content must never be left invisible because of a hiccup.
-  window.setTimeout(() => {
-    document.querySelectorAll("[data-rv]:not(.is-in)").forEach((el) => {
+  // A single check shortly after load only protects what is on screen at
+  // that moment — anything scrolled to later would stay invisible forever
+  // if the observer ever misses it. So this keeps checking on scroll, for
+  // as long as any tagged element is still waiting, then gets out of the way.
+  let sweepTicking = false;
+  function sweepStuck() {
+    sweepTicking = false;
+    const stuck = document.querySelectorAll("[data-rv]:not(.is-in)");
+    if (!stuck.length) {
+      window.removeEventListener("scroll", onSweepScroll);
+      return;
+    }
+    stuck.forEach((el) => {
       const rect = el.getBoundingClientRect();
-      if (rect.top < window.innerHeight * 1.4) el.classList.add("is-in");
+      if (rect.top < window.innerHeight * 1.4 && rect.bottom > -200) el.classList.add("is-in");
     });
-  }, 2600);
+  }
+  function onSweepScroll() {
+    if (sweepTicking) return;
+    sweepTicking = true;
+    window.requestAnimationFrame(sweepStuck);
+  }
+  window.setTimeout(sweepStuck, 2600);
+  window.addEventListener("scroll", onSweepScroll, { passive: true });
+  // Belt and braces: a very fast fling-scroll can coalesce into few scroll
+  // events, so a slow interval keeps checking regardless of how scrolling
+  // happened, and clears itself once nothing is left stuck.
+  const sweepInterval = window.setInterval(() => {
+    if (!document.querySelectorAll("[data-rv]:not(.is-in)").length) {
+      window.clearInterval(sweepInterval);
+      return;
+    }
+    sweepStuck();
+  }, 900);
 }
 
 /* ---------- headings that arrive a line at a time ---------- */
