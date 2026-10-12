@@ -1246,16 +1246,24 @@ function renderRoofPreview(mode) {
   if (look.profile) bits.push(look.profile.name);
   if (look.colour) bits.push(look.colour.name);
   if (sheets > 0) bits.push(`${sheets} sheet${sheets === 1 ? "" : "s"}`);
+  // the price for the sheets themselves, read back from the same calculation
+  // that prices the quote, so it can never drift from what Review shows
+  const sheetTotal = (lastCalc && lastCalc.lines || [])
+    .filter((line) => line.section === "Sheets")
+    .reduce((sum, line) => sum + (Number(line.total) || 0), 0);
+  const priceText = sheetTotal > 0 ? incMoney(sheetTotal) : "";
+  const priceBit = priceText ? `<strong class="preview-price">${esc(priceText)}</strong>` : "";
   const caption = bits.join(" · ");
+  const captionForLabel = [caption, priceText].filter(Boolean).join(" · ");
   return `<div class="roof-preview">
-    <svg class="diagram" viewBox="0 0 ${PV.W} ${PV.H}" role="img" aria-label="${esc(caption || "Roof preview")}">
+    <svg class="diagram" viewBox="0 0 ${PV.W} ${PV.H}" role="img" aria-label="${esc(captionForLabel || "Roof preview")}">
       <defs><filter id="pv-blur" x="-30%" y="-80%" width="160%" height="300%"><feGaussianBlur stdDeviation="4"/></filter>
         <marker id="pv-ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
           <path d="M0.5 1.6 L9.4 5 L0.5 8.4 Z" fill="context-stroke"/></marker></defs>
       ${body.join("")}
       ${dims.join("")}
     </svg>
-    ${caption ? `<p class="preview-caption">${esc(caption)}</p>` : ""}
+    ${caption ? `<p class="preview-caption">${esc(caption)}${priceBit ? ` · ${priceBit}` : ""}</p>` : ""}
   </div>`;
 }
 

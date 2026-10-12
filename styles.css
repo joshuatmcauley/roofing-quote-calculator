@@ -624,3 +624,5 @@ input:focus, select:focus, textarea:focus {
 .bnd-colours .swatch .bnd-photos { display: grid; grid-template-columns: 1.4fr 1fr; gap: 3px; background: #fff; }
 .bnd-colours .swatch .bnd-photos img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .bnd-colours .swatch small { color: #7b8697; }
+
+.preview-price { color: var(--accent-dark, #111); font-weight: 700; }
