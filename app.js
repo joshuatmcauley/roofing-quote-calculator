@@ -1247,7 +1247,15 @@ function renderRoofPreview(mode) {
   const bits = [];
   if (look.profile) bits.push(look.profile.name);
   if (look.colour) bits.push(look.colour.name);
-  if (sheets > 0) bits.push(`${sheets} sheet${sheets === 1 ? "" : "s"}`);
+  // Count every sheet the price covers. An apex roof has two slopes, so
+  // counting one side made "6 sheets" sit next to the price of 12.
+  const sheetLines = (lastCalc && lastCalc.lines || []).filter((line) => line.section === "Sheets");
+  const totalSheets = sheetLines.reduce((sum, line) => sum + (Number(line.qty) || 0), 0) || sheets;
+  if (totalSheets > 0) {
+    let sheetText = `${totalSheets} sheet${totalSheets === 1 ? "" : "s"}`;
+    if (apex && quote.apexSame && sheets > 0 && totalSheets === sheets * 2) sheetText += ` (${sheets} each side)`;
+    bits.push(sheetText);
+  }
   // the price for the sheets themselves, read back from the same calculation
   // that prices the quote, so it can never drift from what Review shows
   const sheetTotal = (lastCalc && lastCalc.lines || [])

@@ -79,7 +79,7 @@ const QUOTE_CONFIG = {
     },
     apexC: {
       label: "B — Sheet length, eave to ridge (metres)",
-      help: "How far a sheet travels up the slope, from the bottom edge to the top. This is the length of sheet you buy, so it sets the price. Cut-to-size sheets use it as is; sandwich panels and polycarbonate round up to the next stock length.",
+      help: "Measured from the eave (the bottom edge of the roof) up to the ridge (the top). This is the length of sheet you buy, so it sets the price. Cut-to-size sheets use it as is; sandwich panels and polycarbonate round up to the next stock length.",
     },
     apexD: {
       label: "C — Eaves length, side 2 (metres)",
@@ -95,7 +95,7 @@ const QUOTE_CONFIG = {
     },
     monoC: {
       label: "B — Sheet length, eave to ridge (metres)",
-      help: "How far a sheet travels up the slope, from the bottom edge to the top. This is the length of sheet you buy, so it sets the price. Cut-to-size sheets use it as is; sandwich panels and polycarbonate round up to the next stock length.",
+      help: "Measured from the eave (the bottom edge of the roof) up to the ridge (the top). This is the length of sheet you buy, so it sets the price. Cut-to-size sheets use it as is; sandwich panels and polycarbonate round up to the next stock length.",
     },
   },
   rules: {
