@@ -778,3 +778,9 @@ body.is-leaving { opacity: 0; transition: opacity 240ms var(--ease); }
   [data-parallax] { transform: none !important; }
   body.is-leaving { opacity: 1; }
 }
+
+/* On phones the hero copy sits at the very bottom, where the scroll cue would
+   land on top of the stats, so it only shows on wider screens. */
+@media (max-width: 920px) {
+  .scroll-hint { display: none; }
+}
