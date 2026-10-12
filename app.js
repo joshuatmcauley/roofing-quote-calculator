@@ -1948,15 +1948,12 @@ function draftKey() {
 
 function applyPageMode() {
   if (!quote) return;
-  if (pageMode() === "roof") {
-    quote.jobId = "roof";
-    return;
-  }
-  if (quote.jobId === "roof") quote.jobId = null;
+  quote.jobId = pageMode() === "roof" ? "roof" : "cladding";
 }
 
 function renderJobStep() {
-  const jobs = (config.jobs || []).filter((job) => pageMode() === "roof" || job.id !== "roof");
+  const jobs = (config.jobs || []).filter((job) => job.id === "roof" || job.id === "cladding")
+    .filter((job) => pageMode() === "roof" || job.id !== "roof");
   if (!jobs.length) return `<p class="muted">No calculators are set up yet.</p>`;
   return `<div class="choices">${jobs.map((job) => `
     <button type="button" class="choice${quote.jobId === job.id ? " is-selected" : ""}" data-action="select-job" data-id="${esc(job.id)}">
@@ -2827,7 +2824,7 @@ function visibleSteps() {
   const steps = (config.steps || []).filter((step) => {
     if (step.enabled === false) return false;
     const kind = step.kind || step.id;
-    if (pageMode() === "roof" && kind === "job") return false;
+    if (kind === "job") return false;
     if (ROOF_KINDS.includes(kind)) return jobId === "roof";
     if (kind === "size") return !!jobId && jobId !== "roof";
     if (kind === "job-colour") return jobColours(currentJobProduct()).length > 1;
@@ -3018,13 +3015,13 @@ function renderBanners() {
 
 function renderQuotePage() {
   const roofPage = pageMode() === "roof";
-  const title = roofPage ? "Roofing quote" : "Other calculators";
+  const title = roofPage ? "Roofing quote" : "Wall cladding quote";
   const lede = roofPage
     ? "Choose the roof shape, then the sheet, the thickness, and the colour, then enter the size."
-    : "Decking, cladding, fencing, paving, kerbs, and the other size calculators.";
+    : "Pick the board, the colour, then measure each wall.";
   const otherLink = roofPage
-    ? `<a href="other.html">Other calculators</a>`
-    : `<a href="index.html">Roofing calculator</a>`;
+    ? `<a href="other.html">Wall cladding calculator</a>`
+    : `<a href="calculator.html">Roofing calculator</a>`;
   return `<section class="calc-intro">
       <h1>${esc(title)}</h1>
       <p>${esc(lede)}</p>

@@ -32,7 +32,7 @@ const QUOTE_CONFIG = {
   },
   copy: {
     headline: "Quote Calculator",
-    subheading: "Size roofing, decking, cladding, paving, kerbs, and steps from the B&C McKeown prices.",
+    subheading: "Size roofing sheets and composite wall cladding from the B&C McKeown prices.",
     footer: "B&C McKeown LTD, Cloonagh Road, Downpatrick. Call 02844 615148. Product prices include VAT and match bcmckeown.net. Delivery is extra.",
     measurementNote: "Box profile and tile-effect sheets are priced at the length you enter. Sandwich panels, FRP and polycarbonate sheets round up to the next stock length.",
     sameSide: "Side 2 length matches side 1",
@@ -49,7 +49,7 @@ const QUOTE_CONFIG = {
     emptyProducts: "Nothing here yet.",
   },
   steps: [
-    { id: "job", kind: "job", title: "Choose a Calculator", hint: "Only products the website sells by the metre, or as pieces you can count from a size.", enabled: true, required: false },
+    { id: "job", kind: "job", title: "Choose a Calculator", hint: "Roofing sheets or composite wall cladding.", enabled: true, required: false },
     { id: "size", kind: "size", title: "Enter the Size", hint: "Quantities use the size and price published on the website.", enabled: true, required: false },
     { id: "job-colour", kind: "job-colour", title: "Select Colour", hint: "Swatches are sampled from the product photos on bcmckeown.net.", enabled: true, required: false },
     { id: "clad-wall", kind: "clad-wall", title: "Enter the wall", hint: "Measure one wall at a time. Pink is the rectangle. Blue is the gable triangle on top.", enabled: true, required: false },
