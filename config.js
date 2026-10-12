@@ -332,53 +332,58 @@ const QUOTE_CONFIG = {
     },
   ],
   fixings: [],
-  /* Roofing extras: screws and screw caps. The shop does not list these
-     online, so they have no website price yet. A variant with price: null is
-     added to the quote as "price in store" and left out of the total. When a
-     price is agreed, replace the null with the number (inc VAT) and it prices
-     like any other line. */
+  /* Roofing extras: screws and screw caps, all sold in packs of 100.
+     Prices here are EX VAT, like every other price in this file; the calculator
+     adds the VAT on top. Customers see them including VAT:
+       screws       £15.00 inc VAT  ->  12.5 here
+       screw caps   £7.00  inc VAT  ->  5.833333 here
+     A variant with price: null is not free. It goes on the quote as "price in
+     store" and is left out of the total. */
   extras: [
     {
       id: "extra-screw-55x38",
       name: "Self-drilling screws, heavy steel, 5.5 × 38mm",
-      note: "Hex head with 16mm bonded washer, BZP finish. Bag of 100.",
+      note: "Hex head with 16mm bonded washer, BZP finish. Pack of 100.",
       image: "extras/screw-5-5x38.jpg",
       profileIds: [],
       recommend: "fixings",
-      variants: [{ id: "screw-55x38-bag", name: "Bag of 100", price: null, packSize: 100 }],
+      variants: [{ id: "screw-55x38-bag", name: "Pack of 100", price: 12.5, packSize: 100 }],
     },
     {
       id: "extra-screw-63x60",
       name: "Self-drilling screws, gash point, 6.3 × 60mm",
-      note: "Hex head with 16mm bonded washer, BZP finish. Bag of 100.",
+      note: "Hex head with 16mm bonded washer, BZP finish. Pack of 100.",
       image: "extras/screw-6-3x60.jpg",
       profileIds: [],
       recommend: "fixings",
-      variants: [{ id: "screw-63x60-bag", name: "Bag of 100", price: null, packSize: 100 }],
+      variants: [{ id: "screw-63x60-bag", name: "Pack of 100", price: 12.5, packSize: 100 }],
     },
     {
       id: "extra-screw-boxed",
       name: "Self-drilling screws with bonded washer, boxed",
-      note: "Hex head, large bonded washer. Sold by the box.",
+      note: "Hex head, large bonded washer. Box of 100.",
       image: "extras/screw-boxed.jpg",
       profileIds: [],
-      variants: [{ id: "screw-boxed-box", name: "Box", price: null, packSize: 1 }],
+      recommend: "fixings",
+      variants: [{ id: "screw-boxed-box", name: "Box of 100", price: 12.5, packSize: 100 }],
     },
     {
       id: "extra-cap-black",
-      name: "Screw cap, black",
-      note: "Covers the screw head. Use one cap per screw.",
+      name: "Screw caps, black",
+      note: "Covers the screw head. Use one cap per screw. Pack of 100.",
       image: "extras/cap-black.jpg",
       profileIds: [],
-      variants: [{ id: "cap-black-each", name: "Each", price: null, packSize: 1 }],
+      recommend: "fixings",
+      variants: [{ id: "cap-black-pack", name: "Pack of 100", price: 5.833333, packSize: 100 }],
     },
     {
       id: "extra-cap-dark-green",
-      name: "Screw cap, dark green",
-      note: "Covers the screw head. Use one cap per screw.",
+      name: "Screw caps, dark green",
+      note: "Covers the screw head. Use one cap per screw. Pack of 100.",
       image: "extras/cap-dark-green.jpg",
       profileIds: [],
-      variants: [{ id: "cap-green-each", name: "Each", price: null, packSize: 1 }],
+      recommend: "fixings",
+      variants: [{ id: "cap-green-pack", name: "Pack of 100", price: 5.833333, packSize: 100 }],
     },
   ],
 };
