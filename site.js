@@ -78,12 +78,32 @@ const NAV = [
   ["contact.html", "Contact"],
 ];
 
+/* The real B&C McKeown logo is a styled wordmark, not an image file: "B&C"
+   in their brand green, "McKeown" in black, with a small roof glyph standing
+   in for the O (fitting, for a roofing supplier). Rebuilt here as inline
+   markup so it stays crisp at any size and themes with the page. */
+const BRAND_GREEN = "#2e5e06";
+
+const ROOF_GLYPH = `<svg class="brand-roof" viewBox="0 0 23 20" aria-hidden="true" focusable="false">
+  <path d="M1.2 15.6 L11 1.8 L20.8 15.6" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+  <rect x="9" y="17.4" width="2.4" height="2.4" fill="currentColor"/>
+  <rect x="12.6" y="17.4" width="2.4" height="2.4" fill="currentColor"/>
+</svg>`;
+
+const BRAND_MARK = `<span class="brand-mark">
+  <span class="brand-bc" style="color:${BRAND_GREEN}">B&amp;C</span><span class="brand-word">MCKE${ROOF_GLYPH}WN</span>
+</span>`;
+
+const BRAND_MARK_LIGHT = `<span class="brand-mark">
+  <span class="brand-bc" style="color:#8bc24a">B&amp;C</span><span class="brand-word">MCKE${ROOF_GLYPH}WN</span>
+</span>`;
+
 function renderChrome() {
   const here = (location.pathname.split("/").pop() || "index.html").toLowerCase();
   const head = document.querySelector("[data-site-head]");
   if (head) {
     head.innerHTML = `<div class="shell head-row">
-      <a class="brand" href="index.html">B&amp;C McKeown <span>Downpatrick</span></a>
+      <a class="brand" href="index.html" aria-label="B&amp;C McKeown, home">${BRAND_MARK}<span class="brand-sub">Downpatrick</span></a>
       <nav class="nav" data-nav>
         ${NAV.map(([href, label]) => `<a href="${href}"${href.toLowerCase() === here ? ' aria-current="page"' : ""}>${esc(label)}</a>`).join("")}
         <a class="nav-tel" href="${SITE.telHref}">${esc(SITE.tel)}</a>
@@ -103,7 +123,7 @@ function renderChrome() {
     foot.innerHTML = `<div class="shell">
       <div class="foot-grid">
         <div>
-          <div class="foot-brand">B&amp;C McKeown</div>
+          <div class="foot-brand">${BRAND_MARK_LIGHT}</div>
           <p class="foot-note">Composite building products, roofing sheets and landscaping
             supplies, stocked and cut to size in ${esc(SITE.town)}.</p>
         </div>
@@ -173,6 +193,11 @@ function productCard(product) {
         <span class="price">${price != null ? money(price) : "POA"}${price != null ? " <small>from</small>" : ""}</span>
         <span class="stock${stocked ? "" : " out"}">${stocked ? "In stock" : "Ask us"}</span>
       </div>
+      <button type="button" class="paypal-btn" data-action="paypal-placeholder" data-id="${esc(product.id)}">
+        <span class="paypal-label">Buy with <b>Pay</b><b class="pp-pal">Pal</b></span>
+        <span class="paypal-soon">Coming soon</span>
+      </button>
+      <p class="paypal-note" data-note hidden>Online payment isn\u2019t switched on yet \u2014 ring <a href="tel:${esc(SITE.telHref.replace('tel:', ''))}">${esc(SITE.tel)}</a> to order this.</p>
     </div>
   </article>`;
 }
@@ -325,7 +350,25 @@ document.addEventListener("DOMContentLoaded", () => {
   renderProducts();
   wireContact();
   startMotion();
+  wirePaypalPlaceholders();
 });
+
+/* Not wired to real PayPal yet \u2014 this is a visible placeholder so the
+   layout and flow can be reviewed before the real buttons go in. Clicking it
+   is honest about that and still gives the person a way to actually order. */
+function wirePaypalPlaceholders() {
+  document.addEventListener("click", (event) => {
+    const btn = event.target.closest('[data-action="paypal-placeholder"]');
+    if (!btn) return;
+    event.preventDefault();
+    const card = btn.closest(".prod");
+    const note = card && card.querySelector("[data-note]");
+    if (!note) return;
+    const open = !note.hidden;
+    card.querySelectorAll("[data-note]").forEach((el) => { el.hidden = true; });
+    note.hidden = open;
+  });
+}
 
 /* =========================================================================
    Motion
