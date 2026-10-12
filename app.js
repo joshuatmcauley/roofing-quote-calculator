@@ -1229,8 +1229,9 @@ function renderRoofPreview(mode) {
   }
   const fA = apex ? "apexA" : "monoA";
   const fC = apex ? "apexC" : "monoC";
-  // A: along the front eaves, measured at the base so it clears the wall
-  dim([0, -over, 0], [A, -over, 0], "A", fA, [0, -1, 0]);
+  // A: along the bottom edge of the roof, at eave height. That is where the
+  // eaves length is measured, so the arrow sits on it rather than on the ground.
+  dim([0, -over, eaveZ2 - fth / 2], [A, -over, eaveZ2 - fth / 2], "A", fA, [0, -1, -0.35], false, 0.55);
 
   // C: up the visible slope, on the left-hand gable edge
   if (apex) {
