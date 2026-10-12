@@ -64,7 +64,7 @@ const QUOTE_CONFIG = {
     { id: "ridge", kind: "ridge", title: "Add Ridge Flashing", hint: "", enabled: false, required: false },
     { id: "abutment", kind: "abutment", title: "Add Abutment Flashings", hint: "", enabled: false, required: false },
     { id: "fixings", kind: "fixings", title: "Fixings", hint: "", enabled: false, required: false },
-    { id: "extras", kind: "extras", title: "Add Extras", hint: "Screws, fixings and other small items for this job. Optional.", enabled: true, required: false },
+    { id: "extras", kind: "extras", title: "Add Extras", hint: "Screws and screw caps for your roof. Optional.", enabled: true, required: false },
     { id: "review", kind: "review", title: "Review and Add to Basket", hint: "", enabled: true, required: true },
     { id: "export", kind: "export", title: "Export", hint: "Download this quote and the full catalogue as an Excel file.", enabled: true, required: false },
   ],
@@ -332,27 +332,53 @@ const QUOTE_CONFIG = {
     },
   ],
   fixings: [],
+  /* Roofing extras: screws and screw caps. The shop does not list these
+     online, so they have no website price yet. A variant with price: null is
+     added to the quote as "price in store" and left out of the total. When a
+     price is agreed, replace the null with the number (inc VAT) and it prices
+     like any other line. */
   extras: [
     {
-      id: "extra-purlin",
-      name: "Multibeam C purlin 210x65x1.5mm",
-      image: "",
+      id: "extra-screw-55x38",
+      name: "Self-drilling screws, heavy steel, 5.5 × 38mm",
+      note: "Hex head with 16mm bonded washer, BZP finish. Bag of 100.",
+      image: "extras/screw-5-5x38.jpg",
       profileIds: [],
-      variants: [
-        { id: "purlin-m", name: "Per metre, cut to length", price: 5, packSize: 1 },
-      ],
+      recommend: "fixings",
+      variants: [{ id: "screw-55x38-bag", name: "Bag of 100", price: null, packSize: 100 }],
     },
     {
-      id: "extra-corr-clear",
-      name: "Corrugated polycarbonate sheet",
-      image: "",
+      id: "extra-screw-63x60",
+      name: "Self-drilling screws, gash point, 6.3 × 60mm",
+      note: "Hex head with 16mm bonded washer, BZP finish. Bag of 100.",
+      image: "extras/screw-6-3x60.jpg",
       profileIds: [],
-      variants: [
-        { id: "corr-28", name: "2.8m", price: 29.166667, packSize: 1 },
-        { id: "corr-40", name: "4m", price: 41.666667, packSize: 1 },
-        { id: "corr-50", name: "5m", price: 52.083333, packSize: 1 },
-        { id: "corr-58", name: "5.8m", price: 60.416667, packSize: 1 },
-      ],
+      recommend: "fixings",
+      variants: [{ id: "screw-63x60-bag", name: "Bag of 100", price: null, packSize: 100 }],
+    },
+    {
+      id: "extra-screw-boxed",
+      name: "Self-drilling screws with bonded washer, boxed",
+      note: "Hex head, large bonded washer. Sold by the box.",
+      image: "extras/screw-boxed.jpg",
+      profileIds: [],
+      variants: [{ id: "screw-boxed-box", name: "Box", price: null, packSize: 1 }],
+    },
+    {
+      id: "extra-cap-black",
+      name: "Screw cap, black",
+      note: "Covers the screw head. Use one cap per screw.",
+      image: "extras/cap-black.jpg",
+      profileIds: [],
+      variants: [{ id: "cap-black-each", name: "Each", price: null, packSize: 1 }],
+    },
+    {
+      id: "extra-cap-dark-green",
+      name: "Screw cap, dark green",
+      note: "Covers the screw head. Use one cap per screw.",
+      image: "extras/cap-dark-green.jpg",
+      profileIds: [],
+      variants: [{ id: "cap-green-each", name: "Each", price: null, packSize: 1 }],
     },
   ],
 };

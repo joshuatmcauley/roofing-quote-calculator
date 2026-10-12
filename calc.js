@@ -835,7 +835,10 @@ function calculate(quote, config) {
     if (!variant) return;
     const qty = Math.max(0, Math.round(Number(pick.qty)));
     if (!qty) return;
-    const unitPrice = round2(Number(variant.price) || 0);
+    // A variant with no price (null or blank) is not free. It goes on the quote
+    // as "price in store" and is left out of the total.
+    const noPrice = variant.price == null || variant.price === "" || !Number.isFinite(Number(variant.price));
+    const unitPrice = noPrice ? 0 : round2(Number(variant.price));
     lines.push({
       id: product.id,
       section,
@@ -845,6 +848,7 @@ function calculate(quote, config) {
       qtyLabel: `${qty} × ${variant.name}`,
       unitPrice,
       total: round2(unitPrice * qty),
+      onRequest: noPrice,
     });
   }
 
@@ -855,6 +859,13 @@ function calculate(quote, config) {
 
   (cfg.fixings || []).forEach((product) => addPicked(product, "Fixings"));
   (cfg.extras || []).forEach((product) => addPicked(product, "Extras"));
+
+  const unpricedLines = lines.filter((line) => line.onRequest).length;
+  if (unpricedLines) {
+    const message = `${unpricedLines === 1 ? "One item is" : `${unpricedLines} items are`} priced in store, so ${unpricedLines === 1 ? "it is" : "they are"} not in the total. Call us or pop in and we will confirm the price.`;
+    warnings.push({ step: "extras", message });
+    warnings.push({ step: "review", message });
+  }
 
   const exVat = round2(lines.reduce((sum, line) => sum + line.total, 0));
   const vat = round2(exVat * (vatPercent / 100));

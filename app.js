@@ -1727,6 +1727,10 @@ function visibleProducts(products) {
   return (products || []).filter((item) => !item.profileIds || !item.profileIds.length || (profile && item.profileIds.includes(profile.id)));
 }
 
+function noOnlinePrice(variant) {
+  return !variant || variant.price == null || variant.price === "" || !Number.isFinite(Number(variant.price));
+}
+
 function renderPick(product) {
   const variants = product.variants || [];
   if (!variants.length) return "";
@@ -1734,22 +1738,23 @@ function renderPick(product) {
   const variant = variants.find((item) => item.id === pick.variantId) || variants[0];
   const qty = Number(pick.qty) || 0;
   const suggested = suggestionFor(product, variant);
-  const options = variants.map((item) => `<option value="${esc(item.id)}"${item.id === variant.id ? " selected" : ""}>${esc(item.name)} — ${incMoney(item.price)}</option>`).join("");
+  const options = variants.map((item) => `<option value="${esc(item.id)}"${item.id === variant.id ? " selected" : ""}>${esc(item.name)} — ${noOnlinePrice(item) ? "price in store" : incMoney(item.price)}</option>`).join("");
   const chooser = variants.length > 1
     ? `<label class="field"><span>Option</span><select id="var_${esc(product.id)}" data-action="variant" data-id="${esc(product.id)}">${options}</select></label>`
-    : `<p><strong>${incMoney(variant.price)}</strong></p>`;
+    : `<p><strong>${noOnlinePrice(variant) ? "Price in store" : incMoney(variant.price)}</strong></p>`;
   const stockNote = Number(variant.stock) === 0 ? `<p class="muted">Out of stock on bcmckeown.net when this list was exported.</p>` : "";
   let suggestText = "";
   if (suggested) {
     const pack = Number(variant.packSize) > 0 ? Number(variant.packSize) : 1;
     suggestText = pack > 1
-      ? `<p class="muted">Suggested: ${suggested} packs (${rawRecommendation(product)} items, ${trimNum(pack)} per pack).</p>`
+      ? `<p class="muted">Suggested: ${suggested} ${suggested === 1 ? "pack" : "packs"} (${rawRecommendation(product)} items, ${trimNum(pack)} per pack).</p>`
       : `<p class="muted">Suggested: ${suggested}.</p>`;
   }
   return `<article class="pick${qty > 0 ? " is-on" : ""}">
     ${thumb(product.image, product.name)}
     <div>
       <strong>${esc(product.name)}</strong>
+      ${product.note ? `<p class="muted">${esc(product.note)}</p>` : ""}
       ${chooser}
       ${stockNote}
       ${suggestText}
@@ -1761,7 +1766,7 @@ function renderPick(product) {
       ${qty > 0
         ? `<button type="button" class="text-btn" data-action="remove-pick" data-id="${esc(product.id)}">Remove</button>`
         : `<button type="button" class="text-btn" data-action="add-pick" data-id="${esc(product.id)}">${suggested ? "Add suggested" : "Add"}</button>`}
-      <p>${qty > 0 ? `${qty} added · ${incMoney((Number(variant.price) || 0) * qty)}` : "Not yet added to quote"}</p>
+      <p>${qty > 0 ? `${qty} added · ${noOnlinePrice(variant) ? "price in store" : incMoney((Number(variant.price) || 0) * qty)}` : "Not yet added to quote"}</p>
     </div>
   </article>`;
 }
@@ -1840,7 +1845,7 @@ function renderLines(lines) {
       section = line.section;
       html += `<h3 class="line-section">${esc(section)}</h3>`;
     }
-    html += `<div class="line"><div><strong>${esc(line.name)}</strong><p class="detail">${esc(line.detail || "")}</p></div><div class="line-price"><span>${esc(line.qtyLabel)} × ${incMoney(line.unitPrice)}</span><strong>${incMoney(line.total)}</strong></div></div>`;
+    html += `<div class="line"><div><strong>${esc(line.name)}</strong><p class="detail">${esc(line.detail || "")}</p></div><div class="line-price"><span>${esc(line.qtyLabel)}${line.onRequest ? "" : ` × ${incMoney(line.unitPrice)}`}</span><strong>${line.onRequest ? "Price in store" : incMoney(line.total)}</strong></div></div>`;
   });
   return html;
 }
@@ -1855,7 +1860,9 @@ function totalsHtml() {
 }
 
 function renderExtrasStep() {
-  return `<p class="note">Add any small items this job needs. These are not worked out from your measurements, so set the quantity yourself.</p>
+  const rate = Number(config.rules && config.rules.fixingsPerM2);
+  const basis = rate > 0 ? ` Suggested screw quantities allow ${trimNum(rate)} per m² of roofing.` : "";
+  return `<p class="note">Choose the screw you want, and use one cap per screw.${basis}</p>
     ${renderSellables(config.extras)}`;
 }
 
@@ -1873,7 +1880,7 @@ function renderReviewStep() {
     <button type="button" class="ghost" data-action="open-email">Email quote</button>`;
 }
 
-const ROOF_KINDS = ["type", "measure", "profile", "finish", "colour", "dripstop", "rooflight", "barge", "ridge", "abutment", "fixings"];
+const ROOF_KINDS = ["type", "measure", "profile", "finish", "colour", "dripstop", "rooflight", "barge", "ridge", "abutment", "fixings", "extras"];
 
 function currentJob() {
   return (config.jobs || []).find((item) => item.id === quote.jobId) || null;
@@ -3550,7 +3557,7 @@ function buildQuoteText() {
   lines.push("");
   if (!result.lines.length) lines.push("No materials yet.");
   result.lines.forEach((line) => {
-    lines.push(`${line.qtyLabel} × ${money(line.unitPrice)} = ${money(line.total)}`);
+    lines.push(line.onRequest ? `${line.qtyLabel} (price in store, not in the total)` : `${line.qtyLabel} × ${money(line.unitPrice)} = ${money(line.total)}`);
     lines.push(line.name);
     if (line.detail) lines.push(line.detail);
     lines.push("");
@@ -3711,7 +3718,7 @@ function downloadExcel() {
   const materials = [["Section", "Item", "Detail", "Quantity", "Unit price", "Line total"]];
   if (!result.lines.length) materials.push(["", "No materials yet", "", "", "", ""]);
   result.lines.forEach((line) => {
-    materials.push([line.section || "", line.name || "", line.detail || "", line.qtyLabel || "", line.unitPrice, line.total]);
+    materials.push([line.section || "", line.name || "", line.detail || "", line.qtyLabel || "", line.onRequest ? "Price in store" : line.unitPrice, line.onRequest ? "" : line.total]);
   });
   sheets.push(excelSheet("Materials", materials));
 
@@ -3781,7 +3788,7 @@ function downloadExcel() {
         rows.push([
           product.name || "",
           variant.name || "",
-          Number(variant.price) || 0,
+          noOnlinePrice(variant) ? "" : Number(variant.price),
           Number(variant.packSize) || 1,
           product.recommend || "",
           limit,
@@ -4552,9 +4559,9 @@ function onSubmit(event) {
 
 function init() {
   originalConfig = clone(QUOTE_CONFIG);
-  if (typeof RANGE_EXTRAS !== "undefined" && RANGE_EXTRAS.length) {
-    originalConfig.extras = RANGE_EXTRAS;
-  }
+  // config.extras is the short roofing list in config.js (screws and caps).
+  // It used to be replaced by the shop's whole range here, which is why every
+  // product showed up in the roof calculator.
   if (typeof JOBS !== "undefined" && JOBS.length) {
     originalConfig.jobs = JOBS;
   }
