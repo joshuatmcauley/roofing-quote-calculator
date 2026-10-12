@@ -1836,6 +1836,11 @@ function totalsHtml() {
   </div>`;
 }
 
+function renderExtrasStep() {
+  return `<p class="note">Add any small items this job needs. These are not worked out from your measurements, so set the quantity yourself.</p>
+    ${renderSellables(config.extras)}`;
+}
+
 function renderReviewStep() {
   const missing = ui.showErrors
     ? `<ul class="err">${allErrors().map((error) => `<li>${esc(error.message)}</li>`).join("")}</ul>`
@@ -2768,6 +2773,7 @@ const STEP_VIEWS = {
   fixings: renderFixingsStep,
   extras: () => renderCatalogue(config.extras),
   review: renderReviewStep,
+  extras: renderExtrasStep,
 };
 
 function visibleSteps() {
@@ -2775,7 +2781,6 @@ function visibleSteps() {
   const steps = (config.steps || []).filter((step) => {
     if (step.enabled === false) return false;
     const kind = step.kind || step.id;
-    if (kind === "extras") return false;
     if (pageMode() === "roof" && kind === "job") return false;
     if (ROOF_KINDS.includes(kind)) return jobId === "roof";
     if (kind === "size") return !!jobId && jobId !== "roof";
@@ -2942,23 +2947,15 @@ function renderSummary() {
   </aside>`;
 }
 
+// The calculator pages carry the real site header (site.js, data-site-head),
+// so this no longer builds a second navbar. The catalogue editor, which has
+// no header of its own, gets a plain link back to the calculator instead.
 function renderHeader() {
-  const shop = "https://bcmckeown.net";
-  const roof = pageMode() === "roof";
-  const logo = "https://bcmckeown.net/cdn/shop/files/Untitled_design_76_6a5283c2-c78c-4027-9a25-b7819b59d6af.png?v=1750868402";
-  return `<div class="site-chrome no-print">
-    <header class="site-head">
-      <a class="site-logo" href="${shop}/"><img src="${logo}" alt="B&amp;C McKeown"></a>
-      <nav class="site-nav" aria-label="Shop">
-        <a href="${shop}/">Home</a>
-        <a href="${shop}/collections/composite-decking">Composites</a>
-        <a href="${shop}/collections/granite">Granite / Landscaping</a>
-        <a href="index.html"${roof ? ' class="is-current"' : ""}>Roofing</a>
-        <a href="${shop}/collections/security-fencing-v-mesh-kits">V Mesh Fencing / Gates</a>
-        <a href="tel:02844615148">Call 02844 615148</a>
-      </nav>
-    </header>
-  </div>`;
+  return "";
+}
+
+function renderEditorBackLink() {
+  return `<div class="no-print" style="padding:14px 0 0"><a href="calculator.html">&larr; Back to the calculator</a></div>`;
 }
 
 function renderBanners() {
@@ -2982,8 +2979,7 @@ function renderQuotePage() {
   const otherLink = roofPage
     ? `<a href="other.html">Other calculators</a>`
     : `<a href="index.html">Roofing calculator</a>`;
-  return `${renderHeader()}
-    <section class="calc-intro">
+  return `<section class="calc-intro">
       <h1>${esc(title)}</h1>
       <p>${esc(lede)}</p>
       <p class="proto-links no-print">${otherLink}</p>
@@ -3176,7 +3172,7 @@ function renderEditorPage() {
       ${flashingEditorList(`profiles.${index}.abutments`, profile.abutments, "abutment")}
     </article>`).join("");
 
-  return `${renderHeader()}
+  return `${renderEditorBackLink()}
     <div class="wrap editor-page">
       <div class="editor-bar">
         <strong>Catalogue</strong>

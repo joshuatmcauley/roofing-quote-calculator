@@ -46,44 +46,8 @@ img { max-width: 100%; display: block; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 .wrap { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
-.site-chrome {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: #fff;
-  border-bottom: 1px solid #f0f0f0;
-}
-.site-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 52px;
-  padding: 6px 18px;
-}
-.site-logo { display: flex; flex: 0 0 auto; }
-.site-logo img { height: 28px; width: auto; }
-.head-icons { display: none; }
-.head-icon {
-  display: none;
-}
-.site-nav {
-  display: flex;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 4px 18px;
-  padding: 0;
-}
-.site-nav a {
-  color: #222;
-  text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 13px;
-  font-weight: 400;
-}
-.site-nav a.is-current { box-shadow: inset 0 -1px 0 #222; }
-.ticker, .announce { display: none; }
+/* The real header and its nav live in site.css now (site.js builds it).
+   .ticker/.announce never existed as markup on these pages. */
 .hero-inner, .layout { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
 .row-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .ghost {
@@ -435,15 +399,10 @@ input:disabled { background: #f4f6f8; color: var(--muted); }
   .summary { position: static; max-height: none; }
   .mobile-total { display: none; }
   body.is-quote { padding-bottom: 12px; }
-  .site-head { flex-wrap: wrap; gap: 6px 12px; padding: 6px 12px; min-height: 0; }
-  .site-logo img { height: 24px; max-width: 100%; }
-  .site-nav { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; gap: 14px; padding: 0; scrollbar-width: none; }
-  .site-nav::-webkit-scrollbar { display: none; }
-  .site-nav a { white-space: nowrap; }
   :root { --chrome: 84px; }
 }
 @media print {
-  .no-print, .site-chrome, .top, .hero, .calc-intro, .howto, .step-nav, .mobile-total, .editor-page { display: none !important; }
+  .no-print, .site-head, .top, .hero, .calc-intro, .howto, .step-nav, .mobile-total, .editor-page { display: none !important; }
   body, .summary, .step { background: white; }
   .layout { display: block; width: auto; }
   .step { box-shadow: none; border: 1px solid #ddd; }
