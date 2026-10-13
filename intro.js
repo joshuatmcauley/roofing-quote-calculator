@@ -74,6 +74,9 @@
     "@keyframes bcDrift{from{transform:rotate(-6deg) scale(1.12)}to{transform:rotate(-6deg) scale(1)}}",
     "@keyframes bcTile{from{opacity:0;transform:translateY(18px)}to{opacity:.32;transform:none}}",
     "@keyframes bcWord{from{opacity:0;letter-spacing:.32em}to{opacity:1;letter-spacing:.04em}}",
+    ".bc-logo{display:block;width:min(680px,78vw);height:auto;margin:0 auto;opacity:0;",
+    "transform:scale(1.04);animation:bcLogo 1050ms cubic-bezier(.16,.84,.28,1) 120ms forwards}",
+    "@keyframes bcLogo{to{opacity:1;transform:none}}",
     "@keyframes bcRule{to{transform:scaleX(1)}}",
     "@keyframes bcFade{to{opacity:1}}"
   ].join("");
@@ -127,11 +130,7 @@
 
     var mark = document.createElement("div");
     mark.className = "bc-mark";
-    var roofGlyph = '<svg class="bc-roof" viewBox="0 0 20 20" aria-hidden="true" focusable="false">'
-      + '<path d="M1.6 12.4 L10 2 L18.4 12.4" fill="none" stroke="currentColor" stroke-width="5.6" stroke-linecap="butt" stroke-linejoin="round"/>'
-      + '<rect x="6.9" y="11.6" width="6.2" height="6.2" fill="none" stroke="currentColor" stroke-width="1.55"/>'
-      + '<line x1="10" y1="11.6" x2="10" y2="17.8" stroke="currentColor" stroke-width="1.55"/></svg>';
-    mark.innerHTML = '<div class="bc-word"><span class="bc-bc">B&amp;C</span>MCKE' + roofGlyph + 'WN</div>'
+    mark.innerHTML = '<img class="bc-logo" src="logo-light.svg" alt="">'
       + '<div class="bc-rule"></div>'
       + '<div class="bc-sub">Downpatrick &middot; County Down</div>';
 

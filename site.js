@@ -78,25 +78,10 @@ const NAV = [
   ["contact.html", "Contact"],
 ];
 
-/* The real B&C McKeown logo is a styled wordmark, not an image file: "B&C"
-   in their brand green, "McKeown" in black, with a small roof glyph standing
-   in for the O (fitting, for a roofing supplier). Rebuilt here as inline
-   markup so it stays crisp at any size and themes with the page. */
-const BRAND_GREEN = "#2e5e06";
-
-const ROOF_GLYPH = `<svg class="brand-roof" viewBox="0 0 23 20" aria-hidden="true" focusable="false">
-  <path d="M1.2 15.6 L11 1.8 L20.8 15.6" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="9" y="17.4" width="2.4" height="2.4" fill="currentColor"/>
-  <rect x="12.6" y="17.4" width="2.4" height="2.4" fill="currentColor"/>
-</svg>`;
-
-const BRAND_MARK = `<span class="brand-mark">
-  <span class="brand-bc" style="color:${BRAND_GREEN}">B&amp;C</span><span class="brand-word">MCKE${ROOF_GLYPH}WN</span>
-</span>`;
-
-const BRAND_MARK_LIGHT = `<span class="brand-mark">
-  <span class="brand-bc" style="color:#8bc24a">B&amp;C</span><span class="brand-word">MCKE${ROOF_GLYPH}WN</span>
-</span>`;
+/* The real B&C McKeown wordmark, rebuilt as vector files from the shop's logo:
+   logo.svg for light backgrounds, logo-light.svg (white lettering) for dark. */
+const BRAND_MARK = `<img class="brand-logo" src="logo.svg" alt="B&amp;C McKeown" width="230" height="24">`;
+const BRAND_MARK_LIGHT = `<img class="brand-logo" src="logo-light.svg" alt="B&amp;C McKeown" width="230" height="24">`;
 
 function renderChrome() {
   const here = (location.pathname.split("/").pop() || "index.html").toLowerCase();
@@ -184,11 +169,12 @@ function productCard(product) {
   const img = product.image
     ? `<img src="${esc(product.image)}" alt="${esc(product.name)}" loading="lazy" decoding="async">`
     : "";
+  const page = `product/${encodeURIComponent(product.id)}.html`;
   return `<article class="prod">
-    <div class="prod-img">${img}</div>
+    <a class="prod-img" href="${page}" tabindex="-1" aria-hidden="true">${img}</a>
     <div class="prod-body">
       <div class="prod-cat">${esc(product.category || "")}</div>
-      <h4>${esc(product.name)}</h4>
+      <h4><a class="prod-title" href="${page}">${esc(product.name)}</a></h4>
       <div class="prod-foot">
         <span class="price">${price != null ? money(price) : "POA"}${price != null ? " <small>from</small>" : ""}</span>
         <span class="stock${stocked ? "" : " out"}">${stocked ? "In stock" : "Ask us"}</span>
@@ -351,6 +337,8 @@ document.addEventListener("DOMContentLoaded", () => {
   wireContact();
   startMotion();
   wirePaypalPlaceholders();
+  setupProductPage();
+  setupLightbox();
 });
 
 /* Not wired to real PayPal yet \u2014 this is a visible placeholder so the
@@ -361,7 +349,7 @@ function wirePaypalPlaceholders() {
     const btn = event.target.closest('[data-action="paypal-placeholder"]');
     if (!btn) return;
     event.preventDefault();
-    const card = btn.closest(".prod");
+    const card = btn.closest(".prod, .pdp-info");
     const note = card && card.querySelector("[data-note]");
     if (!note) return;
     const open = !note.hidden;
@@ -623,4 +611,126 @@ function startMotion() {
   setupCounters();
   setupAnchors();
   setupPageFade();
+}
+
+/* ---------- product pages ----------
+   Each page is static HTML built from the shop export; this only handles the
+   option buttons, the thumbnail strip and the stock line. */
+function setupProductPage() {
+  const root = document.querySelector("[data-product]");
+  const dataEl = document.getElementById("product-data");
+  if (!root || !dataEl) return;
+  let data;
+  try { data = JSON.parse(dataEl.textContent); } catch (err) { return; }
+  const mainImg = root.querySelector(".pdp-main img");
+  const sized = (url, w) => url ? url + (url.includes("?") ? "&" : "?") + "width=" + w : "";
+  let current = 0;
+
+  function showImage(index) {
+    if (!mainImg || !data.images[index]) return;
+    current = index;
+    mainImg.src = sized(data.images[index], 1000);
+    root.querySelectorAll("[data-thumb]").forEach((b) => b.classList.toggle("is-on", Number(b.dataset.thumb) === index));
+  }
+  root.querySelectorAll("[data-thumb]").forEach((b) => {
+    b.addEventListener("click", () => showImage(Number(b.dataset.thumb)));
+  });
+
+  const priceEl = root.querySelector("[data-price]");
+  const stockEl = root.querySelector("[data-stock]");
+  root.querySelectorAll("[data-variant]").forEach((b) => {
+    b.addEventListener("click", () => {
+      const v = data.variants[Number(b.dataset.variant)];
+      if (!v) return;
+      root.querySelectorAll("[data-variant]").forEach((x) => {
+        const on = x === b;
+        x.classList.toggle("is-on", on);
+        x.setAttribute("aria-pressed", on ? "true" : "false");
+      });
+      if (priceEl) priceEl.textContent = v.price > 0 ? money(v.price) : "Price on request";
+      if (stockEl) {
+        const s = Number(v.stock) || 0;
+        stockEl.className = "pdp-stock is-" + (s > 5 ? "in" : s > 0 ? "low" : "out");
+        stockEl.textContent = s > 5 ? "In stock" : s > 0 ? `Only ${s} left` : "Out of stock online, call us for availability";
+      }
+      if (v.image) {
+        const i = data.images.indexOf(v.image);
+        if (i >= 0) showImage(i);
+      }
+    });
+  });
+
+  const opener = root.querySelector("[data-open-gallery]");
+  if (opener) opener.addEventListener("click", () => openLightbox("gallery", current));
+}
+
+/* ---------- lightbox ----------
+   Any link marked data-lightbox="group" opens full screen, with arrows,
+   swipe, Escape to close, and focus returned to where it came from. */
+let lightboxEl = null;
+function setupLightbox() {
+  document.addEventListener("click", (event) => {
+    const link = event.target.closest("a[data-lightbox]");
+    if (!link) return;
+    event.preventDefault();
+    const group = [...document.querySelectorAll(`a[data-lightbox="${link.dataset.lightbox}"]`)];
+    openLightbox(link.dataset.lightbox, group.indexOf(link));
+  });
+}
+function openLightbox(groupName, index) {
+  const items = [...document.querySelectorAll(`a[data-lightbox="${groupName}"]`)];
+  if (!items.length) return;
+  const back = document.activeElement;
+  let i = Math.max(0, Math.min(index || 0, items.length - 1));
+  if (!lightboxEl) {
+    lightboxEl = document.createElement("div");
+    lightboxEl.className = "lightbox";
+    lightboxEl.setAttribute("role", "dialog");
+    lightboxEl.setAttribute("aria-modal", "true");
+    lightboxEl.innerHTML = `<button type="button" class="lb-close" aria-label="Close">×</button>
+      <button type="button" class="lb-prev" aria-label="Previous photo">‹</button>
+      <figure class="lb-fig"><img alt=""><figcaption></figcaption></figure>
+      <button type="button" class="lb-next" aria-label="Next photo">›</button>`;
+    document.body.appendChild(lightboxEl);
+  }
+  const img = lightboxEl.querySelector("img");
+  const cap = lightboxEl.querySelector("figcaption");
+  const prev = lightboxEl.querySelector(".lb-prev");
+  const next = lightboxEl.querySelector(".lb-next");
+  function show() {
+    const a = items[i];
+    img.src = a.getAttribute("href");
+    img.alt = a.dataset.caption || "";
+    cap.textContent = items.length > 1 ? `${a.dataset.caption || ""}  ·  ${i + 1} of ${items.length}` : (a.dataset.caption || "");
+    prev.hidden = next.hidden = items.length < 2;
+  }
+  const step = (d) => { i = (i + d + items.length) % items.length; show(); };
+  function close() {
+    lightboxEl.classList.remove("is-open");
+    document.body.style.overflow = "";
+    document.removeEventListener("keydown", onKey);
+    if (back && back.focus) back.focus();
+  }
+  function onKey(e) {
+    if (e.key === "Escape") close();
+    else if (e.key === "ArrowRight") step(1);
+    else if (e.key === "ArrowLeft") step(-1);
+  }
+  lightboxEl.querySelector(".lb-close").onclick = close;
+  prev.onclick = () => step(-1);
+  next.onclick = () => step(1);
+  lightboxEl.onclick = (e) => { if (e.target === lightboxEl) close(); };
+  let x0 = null;
+  lightboxEl.ontouchstart = (e) => { x0 = e.touches[0].clientX; };
+  lightboxEl.ontouchend = (e) => {
+    if (x0 == null) return;
+    const dx = e.changedTouches[0].clientX - x0;
+    if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+    x0 = null;
+  };
+  document.addEventListener("keydown", onKey);
+  show();
+  lightboxEl.classList.add("is-open");
+  document.body.style.overflow = "hidden";
+  lightboxEl.querySelector(".lb-close").focus();
 }
