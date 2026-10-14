@@ -1866,6 +1866,166 @@ function renderExtrasStep() {
     ${renderSellables(config.extras)}`;
 }
 
+/* ---- Send a quote to the Shopify basket --------------------------------------
+   Each calculator sheet maps to a Shopify product and option. Cut-to-size
+   sheets are sold by the metre in Shopify, which only takes whole numbers, so
+   their metres round up and the exact cut list goes on the basket line. */
+const SHOP_ROOF = {
+  "profile-box": {
+    handle: "roof-cladding-sheets-cut-to-size-0-5mm-non-drip-black-green-and-white",
+    perMetre: true, cut: true,
+    variant: (finish, colour) => {
+      const c = { "Black": "black", "Juniper Green": "green", "Grey": "gray-1" }[colour.name];
+      const t = /06/.test(finish.id) ? "0.6mm" : "0.5mm";
+      const d = /-nd$/.test(finish.id) ? "With Non Drip" : "Standard without Non Drip";
+      return c ? `${c} / ${t} / ${d}` : null;
+    },
+  },
+  "profile-tile": { handle: "roofing-sheets-tile-effect-metre-coverage-cut-to-size", perMetre: true, cut: true,
+    variant: (finish) => finish.name, colourOnLine: true },
+  "profile-sandwich": { handle: "50mm-sandwich-panel-roofing-sheets-various-lengths-4-5-6-and-7-metres", perMetre: true },
+  "profile-poly": { handle: "patio-lean-to-car-port-3mm-polycarbonate-roof-sheeting-5-metre-length-688mm-wide", byLength: true,
+    colourWord: (colour) => (/bronze/i.test(colour.name) ? "tinted" : "clear") },
+  "profile-corr-clear": { handle: "polycarbonate-corrugated-clear-tinted-sheets", byLength: true },
+  "profile-corr-bronze": { handle: "polycarbonate-corrugated-clear-roofing-sheets-copy", byLength: true },
+  "profile-frp": { handle: "clear-frp-fiber-reinforced-plastic-roofing-sheets-box-profile", byLength: true },
+  "profile-clear-box": { handle: "clear-polycarbonate-box-profile-sheets" },
+  "profile-diamond": { handle: "diamond-embossed-corrugated-polycarbonate-sheet-5-metre-long" },
+};
+
+// Plain description of what will go in the basket. No network calls.
+function shopPlan() {
+  const plan = { items: [], notSold: [], problems: [], roundsUp: false };
+  const mq = metricQuote();
+  if (mq.jobId === "roof") {
+    const profile = (config.profiles || []).find((p) => p.id === mq.profileId);
+    const finish = profile && profile.finishes.find((f) => f.id === mq.finishId);
+    const colour = profile && profile.colours.find((c) => c.id === mq.colourId);
+    const map = profile && SHOP_ROOF[profile.id];
+    if (!map || !finish || !colour) {
+      plan.problems.push("This sheet isn't linked to the online shop yet.");
+    } else {
+      // count sheets per length across every slope
+      const byLen = new Map();
+      (lastCalc.slopes || []).forEach((s) => {
+        const n = Number(s.metal != null ? s.metal : s.sheets) || 0;
+        const len = Number(s.ordered) || 0;
+        if (n > 0 && len > 0) byLen.set(len, (byLen.get(len) || 0) + n);
+      });
+      const label = `${profile.name}, ${finish.name}, ${colour.name}`;
+      const cutList = [...byLen.entries()].map(([len, n]) => `${n} × ${trimNum(len)} m`).join(", ");
+      if (map.perMetre) {
+        const metres = [...byLen.entries()].reduce((t, [len, n]) => t + len * n, 0);
+        const qty = Math.ceil(metres - 1e-6);
+        if (qty > metres + 1e-6) plan.roundsUp = true;
+        const attrs = [{ key: map.cut ? "Cut list" : "Panels", value: cutList }];
+        if (map.colourOnLine) attrs.push({ key: "Colour", value: colour.name });
+        plan.items.push({
+          handle: map.handle, match: map.variant ? map.variant(finish, colour) : null, qty, attrs, label,
+          explain: qty > metres + 1e-6
+            ? `${trimNum(metres)} m of ${label} is sold online by the whole metre, so the basket has ${qty} m. Your cut list (${cutList}) goes with the order.`
+            : "",
+        });
+      } else {
+        [...byLen.entries()].forEach(([len, n]) => {
+          plan.items.push({ handle: map.handle, qty: n, label: `${label}, ${trimNum(len)} m`,
+            length: map.byLength ? len : null, colourWord: map.colourWord ? map.colourWord(colour) : null, attrs: [] });
+        });
+      }
+    }
+  } else if (mq.jobId === "cladding") {
+    const product = currentJobProduct();
+    const colour = product && jobColours(product).find((c) => c.id === quote.jobVariantId);
+    const line = (lastCalc.lines || []).find((l) => l.section === "Calculated");
+    if (!colour || !colour.shopifyHandle || !line) plan.problems.push("This cladding isn't linked to the online shop yet.");
+    else plan.items.push({ handle: colour.shopifyHandle, qty: Number(line.qty) || 0, label: line.name, attrs: [] });
+  } else {
+    plan.problems.push("This calculator isn't linked to the online shop yet.");
+  }
+  // extras the shop doesn't sell online
+  (config.extras || []).forEach((product) => {
+    const pick = quote.picks && quote.picks[product.id];
+    const qty = pick ? Number(pick.qty) || 0 : 0;
+    if (qty > 0) {
+      const v = (product.variants || []).find((x) => x.id === pick.variantId) || product.variants[0];
+      plan.notSold.push(`${qty} × ${product.name} (${v ? v.name : ""})`);
+    }
+  });
+  return plan;
+}
+
+// Pick the Shopify option for one plan item from the live product.
+function pickVariant(item, product) {
+  const nodes = (product && product.variants && product.variants.nodes) || [];
+  const norm = (s) => String(s || "").toLowerCase().replace(/\s+/g, " ").trim();
+  if (item.match) return nodes.find((n) => norm(n.title) === norm(item.match)) || null;
+  if (item.length != null) {
+    return nodes.find((n) => {
+      const len = parseFloat(n.title);
+      if (!(Math.abs(len - item.length) < 0.01)) return false;
+      return !item.colourWord || norm(n.title).includes(item.colourWord);
+    }) || null;
+  }
+  return nodes.length === 1 ? nodes[0] : null;
+}
+
+async function sendQuoteToShop() {
+  const shop = window.BCShop;
+  const plan = shopPlan();
+  if (!shop) {
+    ui.notice = "The online basket isn't available right now. Your quote is saved here: ring 02844 615148 to order.";
+    render();
+    return;
+  }
+  ui.shopBusy = true;
+  render();
+  const added = [], skipped = [...plan.problems];
+  try {
+    const handles = [...new Set(plan.items.map((i) => i.handle))];
+    const products = {};
+    for (const h of handles) products[h] = await shop.fetchProduct(h);
+    const lines = [];
+    plan.items.forEach((item) => {
+      const v = pickVariant(item, products[item.handle]);
+      if (!products[item.handle]) skipped.push(`${item.label}: not available in the online shop`);
+      else if (!v) skipped.push(`${item.label}: that option isn't in the online shop`);
+      else if (!v.availableForSale) skipped.push(`${item.label}: out of stock online`);
+      else if (item.qty > 0) {
+        lines.push({ merchandiseId: v.id, quantity: item.qty, attributes: item.attrs.length ? item.attrs : undefined });
+        added.push(item);
+      }
+    });
+    if (lines.length) await shop.addLines(lines.map((l) => (l.attributes ? l : { merchandiseId: l.merchandiseId, quantity: l.quantity })));
+    const note = [`Quote ${quote.ref || ""}`.trim()];
+    added.filter((i) => i.attrs.length).forEach((i) => note.push(`${i.label}: ${i.attrs.map((a) => `${a.key} ${a.value}`).join("; ")}`));
+    if (plan.notSold.length) note.push(`Also wanted (not sold online yet): ${plan.notSold.join(", ")}`);
+    if (lines.length && note.length > 1) await shop.appendNote(note.join("\n"));
+    const parts = [];
+    if (added.length) parts.push(`Added to your basket.`);
+    added.forEach((i) => { if (i.explain) parts.push(i.explain); });
+    if (plan.notSold.length) parts.push(`Screws and caps aren't sold online yet, so they're not in the basket. They're noted on your order; ring 02844 615148 to add them.`);
+    if (skipped.length) parts.push(`Not added: ${skipped.join("; ")}.`);
+    ui.notice = parts.join(" ");
+    if (lines.length) shop.openBasket();
+  } catch (err) {
+    if (shop.log) shop.log("Quote to basket failed: " + err.message, true);
+    ui.notice = "Couldn't reach the online shop just now. Please try again, or ring 02844 615148 with your quote.";
+  }
+  ui.shopBusy = false;
+  render();
+}
+
+// Said before they press the button, not only after.
+function shopRoundingNote() {
+  if (!lastCalc || !lastCalc.quoteReady) return "";
+  let plan;
+  try { plan = shopPlan(); } catch (err) { return ""; }
+  const bits = [];
+  if (plan.roundsUp) bits.push("Cut-to-size sheets are sold online by the whole metre, so the basket rounds up to the next metre. Your exact cut list goes with the order.");
+  if (plan.notSold.length) bits.push("Screws and caps can't be bought online yet, so they won't go in the basket.");
+  return bits.length ? `<p class="muted">${esc(bits.join(" "))}</p>` : "";
+}
+
 function renderReviewStep() {
   const missing = ui.showErrors
     ? `<ul class="err">${allErrors().map((error) => `<li>${esc(error.message)}</li>`).join("")}</ul>`
@@ -1876,7 +2036,7 @@ function renderReviewStep() {
     ${renderLines(lastCalc.lines)}
     ${totalsHtml()}
     <label class="field" for="notes"><span>Notes on the quote</span><textarea id="notes" data-action="notes">${esc(quote.notes)}</textarea></label>
-    <button type="button" class="primary" data-action="add-basket">Add all to basket</button>
+    ${shopRoundingNote()}<button type="button" class="primary" data-action="add-basket"${ui.shopBusy ? " disabled" : ""}>${ui.shopBusy ? "Adding…" : "Add all to basket"}</button>
     <button type="button" class="ghost" data-action="open-email">Email quote</button>`;
 }
 
@@ -2998,7 +3158,7 @@ function renderSummary() {
     ${totalsHtml()}
     ${quote.notes.trim() ? `<p><strong>Notes</strong><br>${esc(quote.notes.trim())}</p>` : ""}
     <p class="muted">${esc(config.copy.disclaimer)}</p>
-    <button type="button" class="primary no-print" data-action="add-basket">Add all to basket</button>
+    <button type="button" class="primary no-print" data-action="add-basket"${ui.shopBusy ? " disabled" : ""}>${ui.shopBusy ? "Adding…" : "Add all to basket"}</button>
     <button type="button" class="ghost no-print" data-action="print-quote">Print / Save PDF</button>
     <button type="button" class="ghost no-print" data-action="copy-quote">Copy quote</button>
     <button type="button" class="ghost no-print" data-action="open-email">Email quote</button>
@@ -4122,11 +4282,11 @@ function onClick(event) {
   }
   if (action === "add-basket") {
     if (!requireReady()) return;
+    if (ui.shopBusy) return;
     if (!quote.ref) quote.ref = makeRef();
     ui.added = true;
     ui.closed.review = false;
-    pendingScroll = "summary";
-    render();
+    sendQuoteToShop();
     return;
   }
   if (action === "print-quote") {

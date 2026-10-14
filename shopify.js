@@ -95,7 +95,7 @@
     }).then(function (data) { return data && data.product; });
   }
 
-  var CART_FIELDS = "id checkoutUrl totalQuantity cost { subtotalAmount { amount currencyCode } } " +
+  var CART_FIELDS = "id checkoutUrl totalQuantity note cost { subtotalAmount { amount currencyCode } } " +
     "lines(first: 100) { nodes { id quantity cost { totalAmount { amount } } merchandise { ... on ProductVariant { " +
     "id title price { amount } product { title handle featuredImage { url } } } } } }";
   var IN_GB = "@inContext(country: " + SHOP.country + ")";
@@ -136,6 +136,16 @@
     }
     return gql("mutation U($id: ID!, $lines: [CartLineUpdateInput!]!) " + IN_GB + " { cartLinesUpdate(cartId: $id, lines: $lines) { cart { " +
       CART_FIELDS + " } userErrors { message } } }", { id: id, lines: [{ id: lineId, quantity: qty }] }).then(function (d) { return userErrors(d.cartLinesUpdate); });
+  }
+
+  // Adds to the cart note (shown on the order in Shopify admin), keeping what is there.
+  function appendNote(text) {
+    return getCart().then(function (cart) {
+      if (!cart) return null;
+      var note = cart.note ? cart.note + "\n\n" + text : text;
+      return gql("mutation N($id: ID!, $note: String!) " + IN_GB + " { cartNoteUpdate(cartId: $id, note: $note) { cart { " +
+        CART_FIELDS + " } userErrors { message } } }", { id: cart.id, note: note }).then(function (d) { return userErrors(d.cartNoteUpdate); });
+    });
   }
 
   /* ---------- basket button + drawer ---------- */
@@ -319,6 +329,15 @@
       log("Could not reach Shopify: " + err.message + ". Showing saved prices instead.", true);
     });
   }
+
+  // What the calculators use to send a whole quote to the basket.
+  window.BCShop = {
+    fetchProduct: fetchProduct,
+    addLines: function (lines) { return addLines(lines).then(function (c) { render(c); return c; }); },
+    appendNote: function (t) { return appendNote(t).then(function (c) { if (c) render(c); return c; }); },
+    openBasket: function () { openDrawer(); },
+    log: log
+  };
 
   function start() {
     mountBasket();
