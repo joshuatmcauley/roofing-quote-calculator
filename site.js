@@ -339,6 +339,12 @@ document.addEventListener("DOMContentLoaded", () => {
   wirePaypalPlaceholders();
   setupProductPage();
   setupLightbox();
+  // Shopify connection (live prices, stock, basket, checkout). It lives in its
+  // own file so deleting shopify.js turns all of it off without touching this one.
+  const shop = document.createElement("script");
+  shop.src = "shopify.js";
+  shop.async = true;
+  document.body.appendChild(shop);
 });
 
 /* Not wired to real PayPal yet \u2014 this is a visible placeholder so the
