@@ -1014,3 +1014,7 @@ a.prod-img { display: block; }
 .pdp-add-btn[disabled] { opacity: .6; cursor: not-allowed; transform: none; }
 .pdp-variant.is-soldout { color: var(--muted); text-decoration: line-through; }
 .pdp-actions [hidden] { display: none !important; }
+
+/* The PayPal placeholder is retired: Shopify's checkout takes PayPal for real.
+   Hidden here so the existing product pages don't need re-uploading. */
+.paypal-btn, .paypal-note { display: none !important; }

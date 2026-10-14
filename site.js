@@ -179,11 +179,6 @@ function productCard(product) {
         <span class="price">${price != null ? money(price) : "POA"}${price != null ? " <small>from</small>" : ""}</span>
         <span class="stock${stocked ? "" : " out"}">${stocked ? "In stock" : "Ask us"}</span>
       </div>
-      <button type="button" class="paypal-btn" data-action="paypal-placeholder" data-id="${esc(product.id)}">
-        <span class="paypal-label">Buy with <b>Pay</b><b class="pp-pal">Pal</b></span>
-        <span class="paypal-soon">Coming soon</span>
-      </button>
-      <p class="paypal-note" data-note hidden>Online payment isn\u2019t switched on yet \u2014 ring <a href="tel:${esc(SITE.telHref.replace('tel:', ''))}">${esc(SITE.tel)}</a> to order this.</p>
     </div>
   </article>`;
 }
