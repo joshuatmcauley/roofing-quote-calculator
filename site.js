@@ -8,7 +8,7 @@ const SITE = {
   tel: "02844 615148",
   telHref: "tel:+442844615148",
   town: "Downpatrick, County Down",
-  shop: "https://bcmckeown.net",
+  shop: "https://shop.bcmckeown.net",
 };
 
 /* The four pillars the range sorts into. Each maps to categories in range.js. */
