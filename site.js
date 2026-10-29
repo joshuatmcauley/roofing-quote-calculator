@@ -11,29 +11,63 @@ const SITE = {
   shop: "https://shop.bcmckeown.net",
 };
 
-/* Every category in the range, for the homepage grid. `cat` must match the
-   category strings in range.js; `photo` is either a local image base name
-   (we serve .webp + .jpg) or a full URL from the Shopify CDN. */
+/* The nine sections the homepage leads with. `cats` lists the range.js
+   categories each one pulls in; `nameRe` narrows that further where one
+   category covers two sections (garden rooms vs sheds). `photo` is a local
+   image base name (we serve .webp + .jpg) unless `cdn` is set. */
 const CATEGORIES = [
-  { cat: "Metal roofing",                  title: "Roofing Sheets",        blurb: "Box profile, tile effect and insulated panels, cut to your length.", photo: "tile-roofing", local: true },
-  { cat: "Clear roofing and flat sheets",  title: "Polycarbonate & Clear", blurb: "Corrugated, box profile, tinted and flat acrylic sheets.",         photo: "tile-poly", local: true,  local: true },
-  { cat: "Purlins",                        title: "Purlins & Beams",   blurb: "Galvanised multibeam C purlins for the frame underneath.",          photo: "feat-purlin", local: true },
-  { cat: "Composite decking",              title: "Composite Decking",     blurb: "Hollow woodgrain boards in teak, grey and dark grey, plus trims.",  photo: "tile-decking", local: true },
-  { cat: "Composite wall cladding",        title: "Wall Panels",           blurb: "Slatted and woodgrain composite cladding for walls and gables.",    photo: "tile-cladding", local: true },
-  { cat: "Stone wall cladding",            title: "Stone Cladding",        blurb: "Rustic split slate panels for feature walls and piers.",            photo: "tile-stone", local: true },
-  { cat: "Composite fencing",              title: "Composite Fencing",     blurb: "Slatted panels and tongue and groove boards that never need stained.", photo: "tile-fencing", local: true },
-  { cat: "V mesh fencing",                 title: "V Mesh Fencing",        blurb: "Security fencing kits from 4ft to 8ft in black and green.",         photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/8ft_security_fencing.jpg?v=1745596199" },
-  { cat: "Gates",                          title: "Gates & Posts",     blurb: "Pedestrian gate kits with posts and locks, plus granite gate posts.", photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/black_metal_gate.jpg?v=1745827687" },
-  { cat: "Porcelain paving",               title: "Porcelain Paving",      blurb: "20mm outdoor porcelain in light and dark grey, 400x800mm.",         photo: "tile-paving", local: true },
-  { cat: "Granite and landscaping",        title: "Granite Paving",        blurb: "Silver, snow grey and yellow granite paving, cobbles and setts.",   photo: "tile-granite", local: true },
-  { cat: "Granite kerbs",                  title: "Granite Kerbs",         blurb: "Straight, radius and natural split kerb stone.",                    photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Natural_Split_Granite_Kerb.jpg?v=1737123194" },
-  { cat: "Granite steps",                  title: "Granite Steps",         blurb: "Solid flamed steps, bullnose steps, corners and risers.",           photo: "tile-steps", local: true },
-  { cat: "Composite sheds and garden rooms", title: "Sheds & Garden Rooms", blurb: "Composite garden sheds and insulated garden rooms.",           photo: "tile-sheds", local: true },
+  {
+    slug: "composite-decking", title: "Composite Decking",
+    blurb: "Hollow woodgrain boards in teak, grey and dark grey, plus step boards and trims.",
+    cats: ["Composite decking"], photo: "tile-decking",
+  },
+  {
+    slug: "composite-wall-panel", title: "Composite Wall Panel",
+    blurb: "Slatted and woodgrain cladding for walls and gables, plus rustic stone panels.",
+    cats: ["Composite wall cladding", "Stone wall cladding"], photo: "tile-cladding",
+  },
+  {
+    slug: "composite-fencing", title: "Composite Fencing",
+    blurb: "Slatted panels and tongue and groove boards that never need stained.",
+    cats: ["Composite fencing"], photo: "tile-fencing",
+  },
+  {
+    slug: "composite-garden-room", title: "Composite Garden Room",
+    blurb: "Insulated WPC garden rooms, glazed and ready to work from all year.",
+    cats: ["Composite sheds and garden rooms"], nameRe: /garden room/i, photo: "tile-gardenroom",
+  },
+  {
+    slug: "roof-cladding", title: "Roof Cladding",
+    blurb: "Box profile, tile effect and insulated panels, cut to your length, plus purlins.",
+    cats: ["Metal roofing", "Purlins"], photo: "tile-roofing",
+  },
+  {
+    slug: "composite-sheds", title: "Composite Sheds",
+    blurb: "Composite garden sheds in pent and skylight designs, built to sit out the weather.",
+    cats: ["Composite sheds and garden rooms"], nameRe: /shed/i, photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Untitled_design_17.png?v=1768924246", cdn: true,
+  },
+  {
+    slug: "landscaping-paving", title: "Landscaping / Paving",
+    blurb: "Porcelain and granite paving, cobbles, setts, kerbs and solid granite steps.",
+    cats: ["Porcelain paving", "Granite and landscaping", "Granite kerbs", "Granite steps"], photo: "tile-granite",
+  },
+  {
+    slug: "clear-roofing", title: "Clear Roofing",
+    blurb: "Corrugated and box profile polycarbonate, tinted sheets and flat acrylic.",
+    cats: ["Clear roofing and flat sheets"], photo: "tile-poly",
+  },
+  {
+    slug: "v-mesh-fencing-gates", title: "V Mesh Fencing & Gates",
+    blurb: "Security mesh fencing kits from 4ft to 8ft, with matching gate kits and posts.",
+    cats: ["V mesh fencing", "Gates"], photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/8ft_security_fencing.jpg?v=1745596199", cdn: true,
+  },
 ];
 
-function catSlug(name) {
-  return "cat-" + String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+function catItems(section, products) {
+  return products.filter((item) => section.cats.indexOf(item.category) !== -1
+    && (!section.nameRe || section.nameRe.test(item.name || "")));
 }
+
 
 /* The four pillars the range sorts into. Each maps to categories in range.js. */
 const PILLARS = [
@@ -228,15 +262,9 @@ function renderProducts() {
     let shown;
     if (filter === "all") {
       shown = groups;
-    } else if (filter.indexOf("cat:") === 0) {
-      const name = filter.slice(4);
-      const meta = CATEGORIES.find((c) => c.cat === name);
-      shown = [{
-        id: catSlug(name),
-        title: meta ? meta.title : name,
-        blurb: meta ? meta.blurb : "",
-        items: products.filter((item) => item.category === name),
-      }];
+    } else if (filter.indexOf("sec:") === 0) {
+      const sec = CATEGORIES.find((c) => c.slug === filter.slice(4));
+      shown = sec ? [{ id: sec.slug, title: sec.title, blurb: sec.blurb, items: catItems(sec, products) }] : [];
     } else {
       shown = groups.filter((g) => g.id === filter);
     }
@@ -267,14 +295,14 @@ function renderProducts() {
   // land on the right section when arriving from a footer or card link
   const hash = location.hash.replace("#", "");
   if (hash) {
-    const cat = CATEGORIES.find((c) => catSlug(c.cat) === hash);
-    if (cat) {
-      // arrived from a category tile on the homepage: show just that category
-      const parent = pillarFor(cat.cat);
+    const sec = CATEGORIES.find((c) => c.slug === hash);
+    if (sec) {
+      // arrived from a section tile on the homepage: show just that section
+      const parent = pillarFor(sec.cats[0]);
       if (filterBar && parent) {
         filterBar.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.filter === parent.id));
       }
-      paint("cat:" + cat.cat);
+      paint("sec:" + sec.slug);
     } else {
       const btn = filterBar && filterBar.querySelector(`[data-filter="${CSS.escape(hash)}"]`);
       if (btn) btn.click();
@@ -282,17 +310,17 @@ function renderProducts() {
   }
 }
 
-/* ---------- homepage: every category in the range ---------- */
+/* ---------- homepage: the nine sections ---------- */
 function renderRange() {
   const mount = document.querySelector("[data-range-grid]");
   if (!mount) return;
   const products = allProducts();
   mount.innerHTML = CATEGORIES.map((c) => {
-    const n = products.filter((item) => item.category === c.cat).length;
-    const media = c.local
-      ? `<picture><source srcset="${esc(c.photo)}.webp" type="image/webp"><img src="${esc(c.photo)}.jpg" alt="" loading="lazy" decoding="async"></picture>`
-      : `<img src="${esc(c.photo)}" alt="" loading="lazy" decoding="async">`;
-    return `<a class="range-tile" href="products.html#${esc(catSlug(c.cat))}">
+    const n = catItems(c, products).length;
+    const media = c.cdn
+      ? `<img src="${esc(c.photo)}" alt="" loading="lazy" decoding="async">`
+      : `<picture><source srcset="${esc(c.photo)}.webp" type="image/webp"><img src="${esc(c.photo)}.jpg" alt="" loading="lazy" decoding="async"></picture>`;
+    return `<a class="range-tile" href="products.html#${esc(c.slug)}">
       ${media}
       <span class="range-body">
         <h3>${esc(c.title)}</h3>
