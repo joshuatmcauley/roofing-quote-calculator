@@ -531,6 +531,7 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   inset: 0;
   z-index: 1;
   background:
+    linear-gradient(to right, rgba(10, 12, 14, 0.6) 0%, rgba(10, 12, 14, 0.34) 36%, rgba(10, 12, 14, 0.06) 66%, rgba(10, 12, 14, 0) 100%),
     linear-gradient(to top, rgba(10, 12, 14, 0.92) 0%, rgba(10, 12, 14, 0.55) 38%, rgba(10, 12, 14, 0.18) 68%, rgba(10, 12, 14, 0.34) 100%);
 }
 .hero-photo .shell { position: relative; z-index: 2; padding-block: clamp(44px, 7vw, 86px); width: 100%; }

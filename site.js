@@ -582,12 +582,41 @@ function setupReveals() {
 /* ---------- headings that arrive a line at a time ---------- */
 function setupHeadlines() {
   if (REDUCED) return;
+  const heads = [];
   document.querySelectorAll("[data-lines]").forEach((h) => {
     const parts = h.innerHTML.split(/<br\s*\/?>/i);
     h.innerHTML = parts
       .map((part, i) => `<span class="line-mask"><span style="--rv-delay:${i * 110}ms">${part}</span></span>`)
       .join("");
+    heads.push(h);
   });
+
+  // A heading only slides in once something above it carries .is-in. Headings
+  // that sit outside a revealed block (the hero h1) would otherwise stay
+  // hidden for good, so reveal each one on its own.
+  const show = (h) => h.classList.add("is-in");
+  if (!("IntersectionObserver" in window)) {
+    heads.forEach(show);
+    return;
+  }
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      show(entry.target);
+      io.unobserve(entry.target);
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.1 });
+  heads.forEach((h) => io.observe(h));
+
+  // and anything already on screen should not wait for a scroll
+  requestAnimationFrame(() => {
+    heads.forEach((h) => {
+      const rect = h.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) { show(h); io.unobserve(h); }
+    });
+  });
+  // last resort, so a heading is never left invisible
+  setTimeout(() => heads.forEach(show), 2600);
 }
 
 /* ---------- sticky header: hide going down, show coming up ---------- */
