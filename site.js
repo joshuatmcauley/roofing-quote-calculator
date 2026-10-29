@@ -15,20 +15,20 @@ const SITE = {
    category strings in range.js; `photo` is either a local image base name
    (we serve .webp + .jpg) or a full URL from the Shopify CDN. */
 const CATEGORIES = [
-  { cat: "Metal roofing",                  title: "Roofing Sheets",        blurb: "Box profile, tile effect and insulated panels, cut to your length.", photo: "g-box-trio", local: true },
-  { cat: "Clear roofing and flat sheets",  title: "Polycarbonate & Clear", blurb: "Corrugated, box profile, tinted and flat acrylic sheets.",         photo: "feat-poly",  local: true },
+  { cat: "Metal roofing",                  title: "Roofing Sheets",        blurb: "Box profile, tile effect and insulated panels, cut to your length.", photo: "tile-roofing", local: true },
+  { cat: "Clear roofing and flat sheets",  title: "Polycarbonate & Clear", blurb: "Corrugated, box profile, tinted and flat acrylic sheets.",         photo: "tile-poly", local: true,  local: true },
   { cat: "Purlins",                        title: "Purlins & Beams",   blurb: "Galvanised multibeam C purlins for the frame underneath.",          photo: "feat-purlin", local: true },
-  { cat: "Composite decking",              title: "Composite Decking",     blurb: "Hollow woodgrain boards in teak, grey and dark grey, plus trims.",  photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Composite_Decking_Downpatrick_main_image.jpg?v=1741357754" },
-  { cat: "Composite wall cladding",        title: "Wall Panels",           blurb: "Slatted and woodgrain composite cladding for walls and gables.",    photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Black_Slotted_wall_panel.jpg?v=1739802879" },
-  { cat: "Stone wall cladding",            title: "Stone Cladding",        blurb: "Rustic split slate panels for feature walls and piers.",            photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/IMG_1861_f0a70774-09c5-4faa-909f-06f439479741.jpg?v=1732897182" },
-  { cat: "Composite fencing",              title: "Composite Fencing",     blurb: "Slatted panels and tongue and groove boards that never need stained.", photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/COMPOSITE_FENCE.jpg?v=1780391443" },
+  { cat: "Composite decking",              title: "Composite Decking",     blurb: "Hollow woodgrain boards in teak, grey and dark grey, plus trims.",  photo: "tile-decking", local: true },
+  { cat: "Composite wall cladding",        title: "Wall Panels",           blurb: "Slatted and woodgrain composite cladding for walls and gables.",    photo: "tile-cladding", local: true },
+  { cat: "Stone wall cladding",            title: "Stone Cladding",        blurb: "Rustic split slate panels for feature walls and piers.",            photo: "tile-stone", local: true },
+  { cat: "Composite fencing",              title: "Composite Fencing",     blurb: "Slatted panels and tongue and groove boards that never need stained.", photo: "tile-fencing", local: true },
   { cat: "V mesh fencing",                 title: "V Mesh Fencing",        blurb: "Security fencing kits from 4ft to 8ft in black and green.",         photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/8ft_security_fencing.jpg?v=1745596199" },
   { cat: "Gates",                          title: "Gates & Posts",     blurb: "Pedestrian gate kits with posts and locks, plus granite gate posts.", photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/black_metal_gate.jpg?v=1745827687" },
-  { cat: "Porcelain paving",               title: "Porcelain Paving",      blurb: "20mm outdoor porcelain in light and dark grey, 400x800mm.",         photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Light_Grey_Tiles.jpg?v=1780393246" },
-  { cat: "Granite and landscaping",        title: "Granite Paving",        blurb: "Silver, snow grey and yellow granite paving, cobbles and setts.",   photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Silver_Grey_Granite_Paving.png?v=1762181407" },
+  { cat: "Porcelain paving",               title: "Porcelain Paving",      blurb: "20mm outdoor porcelain in light and dark grey, 400x800mm.",         photo: "tile-paving", local: true },
+  { cat: "Granite and landscaping",        title: "Granite Paving",        blurb: "Silver, snow grey and yellow granite paving, cobbles and setts.",   photo: "tile-granite", local: true },
   { cat: "Granite kerbs",                  title: "Granite Kerbs",         blurb: "Straight, radius and natural split kerb stone.",                    photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Natural_Split_Granite_Kerb.jpg?v=1737123194" },
-  { cat: "Granite steps",                  title: "Granite Steps",         blurb: "Solid flamed steps, bullnose steps, corners and risers.",           photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/GraniteStepsbullnose.jpg?v=1732896000" },
-  { cat: "Composite sheds and garden rooms", title: "Sheds & Garden Rooms", blurb: "Composite garden sheds and insulated garden rooms.",           photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/GARDEN_ROOM_4X3M.jpg?v=1780391602" },
+  { cat: "Granite steps",                  title: "Granite Steps",         blurb: "Solid flamed steps, bullnose steps, corners and risers.",           photo: "tile-steps", local: true },
+  { cat: "Composite sheds and garden rooms", title: "Sheds & Garden Rooms", blurb: "Composite garden sheds and insulated garden rooms.",           photo: "tile-sheds", local: true },
 ];
 
 function catSlug(name) {
