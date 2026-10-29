@@ -448,6 +448,8 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px;
   padding-top: 24px; font-size: 13.5px; color: #8e8e8e;
 }
+.foot-credit a { color: #c9cdd1; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.28); }
+.foot-credit a:hover { color: #fff; border-bottom-color: #fff; }
 
 /* ---------- page header ---------- */
 .page-head {

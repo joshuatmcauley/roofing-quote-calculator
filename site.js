@@ -196,6 +196,8 @@ function renderChrome() {
       <div class="foot-base">
         <span>&copy; ${new Date().getFullYear()} ${esc(SITE.legal)}. All rights reserved.</span>
         <span>Prices include VAT. Delivery charged separately.</span>
+        <span class="foot-credit">Website built by
+          <a href="https://www.kipaxe.co.uk" target="_blank" rel="noopener">Kipaxe</a></span>
       </div>
     </div>`;
   }
