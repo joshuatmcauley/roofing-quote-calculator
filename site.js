@@ -11,6 +11,30 @@ const SITE = {
   shop: "https://shop.bcmckeown.net",
 };
 
+/* Every category in the range, for the homepage grid. `cat` must match the
+   category strings in range.js; `photo` is either a local image base name
+   (we serve .webp + .jpg) or a full URL from the Shopify CDN. */
+const CATEGORIES = [
+  { cat: "Metal roofing",                  title: "Roofing Sheets",        blurb: "Box profile, tile effect and insulated panels, cut to your length.", photo: "g-box-trio", local: true },
+  { cat: "Clear roofing and flat sheets",  title: "Polycarbonate & Clear", blurb: "Corrugated, box profile, tinted and flat acrylic sheets.",         photo: "feat-poly",  local: true },
+  { cat: "Purlins",                        title: "Purlins & Beams",   blurb: "Galvanised multibeam C purlins for the frame underneath.",          photo: "feat-purlin", local: true },
+  { cat: "Composite decking",              title: "Composite Decking",     blurb: "Hollow woodgrain boards in teak, grey and dark grey, plus trims.",  photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Composite_Decking_Downpatrick_main_image.jpg?v=1741357754" },
+  { cat: "Composite wall cladding",        title: "Wall Panels",           blurb: "Slatted and woodgrain composite cladding for walls and gables.",    photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Black_Slotted_wall_panel.jpg?v=1739802879" },
+  { cat: "Stone wall cladding",            title: "Stone Cladding",        blurb: "Rustic split slate panels for feature walls and piers.",            photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/IMG_1861_f0a70774-09c5-4faa-909f-06f439479741.jpg?v=1732897182" },
+  { cat: "Composite fencing",              title: "Composite Fencing",     blurb: "Slatted panels and tongue and groove boards that never need stained.", photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/COMPOSITE_FENCE.jpg?v=1780391443" },
+  { cat: "V mesh fencing",                 title: "V Mesh Fencing",        blurb: "Security fencing kits from 4ft to 8ft in black and green.",         photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/8ft_security_fencing.jpg?v=1745596199" },
+  { cat: "Gates",                          title: "Gates & Posts",     blurb: "Pedestrian gate kits with posts and locks, plus granite gate posts.", photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/black_metal_gate.jpg?v=1745827687" },
+  { cat: "Porcelain paving",               title: "Porcelain Paving",      blurb: "20mm outdoor porcelain in light and dark grey, 400x800mm.",         photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Light_Grey_Tiles.jpg?v=1780393246" },
+  { cat: "Granite and landscaping",        title: "Granite Paving",        blurb: "Silver, snow grey and yellow granite paving, cobbles and setts.",   photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Silver_Grey_Granite_Paving.png?v=1762181407" },
+  { cat: "Granite kerbs",                  title: "Granite Kerbs",         blurb: "Straight, radius and natural split kerb stone.",                    photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Natural_Split_Granite_Kerb.jpg?v=1737123194" },
+  { cat: "Granite steps",                  title: "Granite Steps",         blurb: "Solid flamed steps, bullnose steps, corners and risers.",           photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/GraniteStepsbullnose.jpg?v=1732896000" },
+  { cat: "Composite sheds and garden rooms", title: "Sheds & Garden Rooms", blurb: "Composite garden sheds and insulated garden rooms.",           photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/GARDEN_ROOM_4X3M.jpg?v=1780391602" },
+];
+
+function catSlug(name) {
+  return "cat-" + String(name).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
 /* The four pillars the range sorts into. Each maps to categories in range.js. */
 const PILLARS = [
   {
@@ -201,7 +225,21 @@ function renderProducts() {
   }
 
   function paint(filter) {
-    const shown = filter === "all" ? groups : groups.filter((g) => g.id === filter);
+    let shown;
+    if (filter === "all") {
+      shown = groups;
+    } else if (filter.indexOf("cat:") === 0) {
+      const name = filter.slice(4);
+      const meta = CATEGORIES.find((c) => c.cat === name);
+      shown = [{
+        id: catSlug(name),
+        title: meta ? meta.title : name,
+        blurb: meta ? meta.blurb : "",
+        items: products.filter((item) => item.category === name),
+      }];
+    } else {
+      shown = groups.filter((g) => g.id === filter);
+    }
     mount.innerHTML = shown.map((g) => `<section class="band" id="${esc(g.id)}" style="padding-top:0">
       <div class="band-head">
         <p class="eyebrow">${esc(g.items.length)} product${g.items.length === 1 ? "" : "s"}</p>
@@ -229,9 +267,40 @@ function renderProducts() {
   // land on the right section when arriving from a footer or card link
   const hash = location.hash.replace("#", "");
   if (hash) {
-    const btn = filterBar && filterBar.querySelector(`[data-filter="${CSS.escape(hash)}"]`);
-    if (btn) btn.click();
+    const cat = CATEGORIES.find((c) => catSlug(c.cat) === hash);
+    if (cat) {
+      // arrived from a category tile on the homepage: show just that category
+      const parent = pillarFor(cat.cat);
+      if (filterBar && parent) {
+        filterBar.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.filter === parent.id));
+      }
+      paint("cat:" + cat.cat);
+    } else {
+      const btn = filterBar && filterBar.querySelector(`[data-filter="${CSS.escape(hash)}"]`);
+      if (btn) btn.click();
+    }
   }
+}
+
+/* ---------- homepage: every category in the range ---------- */
+function renderRange() {
+  const mount = document.querySelector("[data-range-grid]");
+  if (!mount) return;
+  const products = allProducts();
+  mount.innerHTML = CATEGORIES.map((c) => {
+    const n = products.filter((item) => item.category === c.cat).length;
+    const media = c.local
+      ? `<picture><source srcset="${esc(c.photo)}.webp" type="image/webp"><img src="${esc(c.photo)}.jpg" alt="" loading="lazy" decoding="async"></picture>`
+      : `<img src="${esc(c.photo)}" alt="" loading="lazy" decoding="async">`;
+    return `<a class="range-tile" href="products.html#${esc(catSlug(c.cat))}">
+      ${media}
+      <span class="range-body">
+        <h3>${esc(c.title)}</h3>
+        <p>${esc(c.blurb)}</p>
+        <span class="range-count">${n} product${n === 1 ? "" : "s"}</span>
+      </span>
+    </a>`;
+  }).join("");
 }
 
 /* ---------- homepage category grid ---------- */
@@ -327,6 +396,7 @@ function wireContact() {
 document.addEventListener("DOMContentLoaded", () => {
   renderChrome();
   renderPillars();
+  renderRange();
   renderFeatured();
   renderProducts();
   wireContact();
