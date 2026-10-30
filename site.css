@@ -538,6 +538,16 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   animation: heroDrift 18s var(--ease) forwards;
 }
 @keyframes heroDrift { to { transform: scale(1); } }
+.hero-photo .hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo .hero-video { display: none; }
+}
 .hero-photo::after {
   content: "";
   position: absolute;
