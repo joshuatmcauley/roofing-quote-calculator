@@ -653,7 +653,7 @@ function calculate(quote, config) {
       const longestIn = availableStock.length ? Math.max(...availableStock.map(Number)) : 0;
       blocked = true;
       blockReason = anySize.special
-        ? `${trimNum(slope)} m is longer than the longest sheet sold (${trimNum(longestAll)} m). Split the slope into two runs.${shopPhone}`
+        ? `For slopes over ${trimNum(longestAll)} m, call ${company.phone || "us"} to speak to us about this roof.`
         : `${trimNum(slope)} m needs the ${trimNum(anySize.ordered)} m sheet, which is out of stock${longestIn ? ` (longest in stock is ${trimNum(longestIn)} m)` : ""}.${shopPhone}`;
       errors.push({ step: "measure", message: `${label}: ${blockReason}` });
     }

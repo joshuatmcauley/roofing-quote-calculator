@@ -1410,8 +1410,10 @@ function renderMeasureStep() {
       ${renderMeasureInput("monoC")}
     </div>${renderRoofDiagram("mono")}`;
   }
-  if (lastCalc.slopes.length) {
-    html += `<ul class="preview">${lastCalc.slopes.map((slope) => {
+  html += callNote();
+  const priced = lastCalc.slopes.filter((slope) => !slope.blocked);
+  if (priced.length) {
+    html += `<ul class="preview">${priced.map((slope) => {
       const sheets = slope.sheets == null ? "Choose a profile to count sheets" : `${slope.sheets} sheet${slope.sheets === 1 ? "" : "s"}`;
       const same = Math.abs(slope.ordered - slope.slope) < 0.001;
       const round = slope.blocked
@@ -1837,12 +1839,30 @@ function renderLines(lines) {
   return html;
 }
 
+/* A slope longer than any stock sheet is not priced online, so the total
+   points to the phone instead of showing a misleading £0. */
+function callForPrice() {
+  return (lastCalc.slopes || []).some((slope) => slope.blocked);
+}
+
+function totalShown(amount) {
+  return callForPrice() ? "Call for price" : money(amount);
+}
+
+function callNote() {
+  const reasons = [...new Set((lastCalc.slopes || []).filter((slope) => slope.blocked).map((slope) => slope.blockReason))];
+  if (!reasons.length) return "";
+  const phone = config.company.phone || "";
+  const tel = phone ? `<a href="tel:${esc(phone.replace(/[^\d+]/g, ""))}">${esc(phone)}</a>` : "";
+  return reasons.map((reason) => `<p class="warn call-note">${phone ? esc(reason).split(esc(phone)).join(tel) : esc(reason)}</p>`).join("");
+}
+
 function totalsHtml() {
   const totals = lastCalc.totals;
   return `<div class="totals">
     <div><span>Subtotal (ex. VAT)</span><strong>${money(totals.exVat)}</strong></div>
     <div><span>VAT (${trimNum(totals.vatPercent)}%)</span><strong>${money(totals.vat)}</strong></div>
-    <div class="total-row"><span>Total (inc. VAT)</span><strong>${money(totals.incVat)}</strong></div>
+    <div class="total-row"><span>Total (inc. VAT)</span><strong>${totalShown(totals.incVat)}</strong></div>
   </div>`;
 }
 
@@ -3099,7 +3119,7 @@ function renderStepNav() {
         ${navSwatches(step)}
       </button>`;
     }).join("")}
-    <div class="nav-total"><span>Total (inc. VAT)</span><strong>${money(lastCalc.totals.incVat)}</strong></div>
+    <div class="nav-total"><span>Total (inc. VAT)</span><strong>${totalShown(lastCalc.totals.incVat)}</strong></div>
     <button type="button" class="nav-clear" data-action="clear-basket">Clear basket</button>
     <button type="button" class="primary nav-save" data-action="open-save">Save quote</button>
     <button type="button" class="nav-reset" data-action="open-start">Start over</button>
@@ -3182,13 +3202,9 @@ function renderQuotePage() {
   const lede = roofPage
     ? "Choose the roof shape, then the sheet, the thickness, and the colour, then enter the size."
     : "Pick the board, the colour, then measure each wall.";
-  const otherLink = roofPage
-    ? `<a href="other.html">Wall cladding calculator</a>`
-    : `<a href="calculator.html">Roofing calculator</a>`;
   return `<section class="calc-intro">
       <h1>${esc(title)}</h1>
       <p>${esc(lede)}</p>
-      <p class="proto-links no-print">${otherLink}</p>
     </section>
     <div class="wrap no-print">${renderBanners()}</div>
     <div class="layout">
@@ -3197,7 +3213,7 @@ function renderQuotePage() {
     </div>
     <div class="wrap"><p class="foot no-print">${esc(config.copy.footer || "")}</p></div>
     <div class="mobile-total no-print">
-      <div><span>Total (inc. VAT)</span><strong>${money(lastCalc.totals.incVat)}</strong></div>
+      <div><span>Total (inc. VAT)</span><strong>${totalShown(lastCalc.totals.incVat)}</strong></div>
       <button type="button" data-action="clear-basket">Clear basket</button>
     </div>
     ${renderModal()}`;

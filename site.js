@@ -180,7 +180,6 @@ function renderChrome() {
           <h4>Tools</h4>
           <ul class="foot-links">
             <li><a href="calculator.html">Roofing quote calculator</a></li>
-            <li><a href="other.html">Wall cladding calculator</a></li>
             <li><a href="products.html">Full product range</a></li>
           </ul>
         </div>
