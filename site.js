@@ -223,12 +223,17 @@ function pillarFor(category) {
   return PILLARS.find((p) => p.cats.includes(category)) || null;
 }
 
-function productCard(product) {
+/* `hoverPhoto` adds the product's second photo, shown while the card is
+   hovered. Used on the products page, not the homepage strip. */
+function productCard(product, hoverPhoto) {
   const price = fromPrice(product);
   const stocked = inStock(product);
-  const img = product.image
+  let img = product.image
     ? `<img src="${esc(product.image)}" alt="${esc(product.name)}" loading="lazy" decoding="async">`
     : "";
+  if (img && hoverPhoto === true && product.image2) {
+    img += `<img class="prod-alt" src="${esc(product.image2)}&width=600" alt="" loading="lazy" decoding="async">`;
+  }
   const page = `product/${encodeURIComponent(product.id)}.html`;
   return `<article class="prod">
     <a class="prod-img" href="${page}" tabindex="-1" aria-hidden="true">${img}</a>
@@ -276,7 +281,7 @@ function renderProducts() {
         <h2>${esc(g.title)}</h2>
         <p class="lede">${esc(g.blurb)}</p>
       </div>
-      <div class="prod-grid">${g.items.map(productCard).join("")}</div>
+      <div class="prod-grid">${g.items.map((p) => productCard(p, true)).join("")}</div>
     </section>`).join("")
       || `<p class="empty">Nothing in this section yet. Give us a ring on ${esc(SITE.tel)}.</p>`;
     if (typeof setupReveals === "function") setupReveals();

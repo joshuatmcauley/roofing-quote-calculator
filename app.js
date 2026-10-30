@@ -316,7 +316,18 @@ function ensureConfig(data) {
   Object.keys(originalConfig.measureFields).forEach((key) => {
     next.measureFields[key] = { ...originalConfig.measureFields[key], ...(next.measureFields[key] || {}) };
   });
+  Object.keys(next.measureFields).forEach((key) => {
+    const field = next.measureFields[key];
+    const fresh = originalConfig.measureFields[key] || {};
+    if (/^[A-D] — (Eaves length|Sheet length|Span)/.test(String(field.label || ""))) field.label = fresh.label;
+    if (/Sheets are counted along|sets the price|Used to check your sheet length|same as side 1/.test(String(field.help || ""))) field.help = fresh.help;
+  });
+  if (/priced at the length you enter/.test(String(next.copy.measurementNote || ""))) next.copy.measurementNote = originalConfig.copy.measurementNote;
+  if (next.copy.sameSide === "Side 2 length matches side 1") next.copy.sameSide = originalConfig.copy.sameSide;
   next.steps = normaliseSteps(next.steps);
+  (next.steps || []).forEach((step) => {
+    if (/^Use metres\. Sheet quantity|^Screws and screw caps for your roof/.test(String(step.hint || ""))) step.hint = "";
+  });
   if (!Array.isArray(next.roofTypes)) next.roofTypes = [];
   next.roofTypes = next.roofTypes.filter((roof) => roof && roof.id !== "roof-apex-mono");
   if (!Array.isArray(next.profiles)) next.profiles = [];
@@ -607,12 +618,6 @@ function setUnits(next) {
   quote.units = next;
 }
 
-function unitNote() {
-  return useFeet()
-    ? `<p class="note unit-note">Measurements are in feet. The shop sells by the metre, so the quote itself stays in metres.</p>`
-    : "";
-}
-
 function unitToggle() {
   return `<div class="unit-toggle" role="group" aria-label="Measurement units">
     <span>Measure in</span>
@@ -633,7 +638,7 @@ function renderMeasureInput(key) {
   return `<label class="field${bad ? " has-error" : ""}${letter ? " has-letter" : ""}" for="m_${key}">
     <span>${letter ? `<i class="dim-letter${warm ? " is-warm" : ""}">${letter}</i>` : ""}${esc(unitLabel(field.label).replace(/^[A-D]\s*—\s*/, ""))}</span>
     <input id="m_${key}" data-action="measure" data-field="${key}" value="${esc(value)}" ${disabled ? "disabled" : ""} inputmode="decimal" autocomplete="off">
-    <small>${esc(unitLabel(field.help))}</small>
+    ${field.help ? `<small>${esc(unitLabel(field.help))}</small>` : ""}
     ${fieldMsg(key)}
   </label>`;
 }
@@ -644,7 +649,6 @@ function renderTypeStep() {
     <button type="button" class="choice${quote.roofTypeId === type.id ? " is-selected" : ""}" data-action="select-roof" data-id="${esc(type.id)}">
       ${roofArt(type)}
       <strong>${esc(type.name)}</strong>
-      <p>${esc(type.blurb || "")}</p>
     </button>`).join("")}</div>`;
 }
 
@@ -1284,7 +1288,7 @@ function renderRoofDiagram(mode) {
   const slope = val(apex ? mq.apexC : mq.monoC);
   const span = derivedSpan(apex, slope);
   if (!(length > 0) || !(span > 0)) {
-    return `<div class="scale-diagram"><h3>To scale</h3><p class="muted">Enter the eaves length and the span to draw this roof.</p></div>`;
+    return `<div class="scale-diagram"><h3>To scale</h3><p class="muted">Enter the width and length to draw this roof.</p></div>`;
   }
   const look = roofLook();
   const profile = look.profile;
@@ -1386,56 +1390,25 @@ function refreshRoofPreview() {
   }
   if (host) host.outerHTML = html;
 }
-/* Work out the sheet length (C) from the span and the height difference.
-   Pythagoras: the slope is the hypotenuse over the span and the rise. */
-function slopeHelper(mode) {
-  const apex = mode === "apex";
-  const open = ui.slopeHelp === mode;
-  const spanRaw = (quote.slopeSpan || {})[mode] || "";
-  const spanTyped = useFeet() ? metresFromFeet(Number(spanRaw)) : Number(spanRaw);
-  const span = Number.isFinite(spanTyped) ? spanTyped : 0;
-  const run = apex ? span / 2 : span;
-  const riseRaw = (quote.slopeRise || {})[mode] || "";
-  const rise = useFeet() ? metresFromFeet(Number(riseRaw)) : Number(riseRaw);
-  let answer = "";
-  if (open && run > 0 && Number.isFinite(rise) && rise > 0) {
-    const c = Math.sqrt(run * run + rise * rise);
-    answer = `<p class="ok">That makes <strong>${fmtLen(c)}</strong> from eave to ridge.
-      <button type="button" class="text-btn" data-action="use-slope" data-mode="${esc(mode)}" data-value="${svgNum(fromMetres(c))}">Use this for B</button></p>`;
-  }
-  return `<div class="slope-help">
-    <button type="button" class="text-btn" data-action="slope-help" data-mode="${esc(mode)}">
-      ${open ? "Hide" : "Not sure what B is? Work it out"}
-    </button>
-    ${open ? `<div class="slope-help-body">
-      <p class="muted">Measure flat on the ground from the bottom edge to under the top edge, then how much higher the top sits.</p>
-      <label class="field" for="span_${esc(mode)}"><span>${apex ? "Full width across both slopes" : "Flat width on the ground"} (${unitShort()})</span>
-        <input id="span_${esc(mode)}" data-action="slope-span" data-mode="${esc(mode)}" value="${esc(spanRaw)}" inputmode="decimal" autocomplete="off"></label>
-      <label class="field" for="rise_${esc(mode)}"><span>Height difference, bottom edge to top (${unitShort()})</span>
-        <input id="rise_${esc(mode)}" data-action="slope-rise" data-mode="${esc(mode)}" value="${esc(riseRaw)}" inputmode="decimal" autocomplete="off"></label>
-      ${answer}
-    </div>` : ""}
-  </div>`;
-}
 
 function renderMeasureStep() {
   const type = currentType();
   if (!type) return `<p class="muted">${esc(config.copy.needType)}</p>`;
-  let html = unitToggle() + unitNote() + `<p class="note">${esc(unitLabel(config.copy.measurementNote))} Stock lengths: ${esc((config.rules.stockLengthsM || []).map((len) => trimNum(useFeet() ? len * FT_PER_M : len)).join(", "))} ${unitShort()}.</p>`;
+  let html = unitToggle() + (config.copy.measurementNote ? `<p class="note">${esc(unitLabel(config.copy.measurementNote))}</p>` : "");
   if (type.includeApex) {
-    html += `<h3>Apex Roof Measurements</h3><div class="step-grid">
+    html += `<div class="step-grid">
       ${renderMeasureInput("apexA")}
       ${renderMeasureInput("apexC")}
       <div>${quote.apexSame ? "" : renderMeasureInput("apexD")}
         <label class="check" for="apex_same"><input id="apex_same" type="checkbox" data-action="apex-same" ${quote.apexSame ? "checked" : ""}><span>${esc(config.copy.sameSide)}</span></label>
       </div>
-    </div>${slopeHelper("apex")}${renderRoofDiagram("apex")}`;
+    </div>${renderRoofDiagram("apex")}`;
   }
   if (type.includeMono) {
-    html += `<h3>Single Slope Measurements</h3><div class="step-grid">
+    html += `<div class="step-grid">
       ${renderMeasureInput("monoA")}
       ${renderMeasureInput("monoC")}
-    </div>${slopeHelper("mono")}${renderRoofDiagram("mono")}`;
+    </div>${renderRoofDiagram("mono")}`;
   }
   if (lastCalc.slopes.length) {
     html += `<ul class="preview">${lastCalc.slopes.map((slope) => {
@@ -1580,6 +1553,20 @@ function sheetSwatchSvg(profile, colour, id) {
     preserveAspectRatio="xMidYMid slice">${body.join("")}</svg>`;
 }
 
+/* The colour step shows the same drawing as "Choose Your Sheet", painted in
+   the chosen colour, so tile effect looks like tiles and box profile like box
+   profile. The drawing's shading is laid over a flat colour cut to its shape. */
+function sheetArtChip(profile, colour) {
+  const src = safeSrc(profile && profile.image);
+  if (!src) return sheetSwatchSvg(profile, colour, colour && colour.id);
+  const surface = roofSurface(profile, colour);
+  const ownColour = (profile.colours || []).length < 2 || (surface === "bronze" && /bronze/i.test(src));
+  const tint = !ownColour && (surface === "metal" || surface === "bronze");
+  const light = tint && hexLuma(colour && colour.hex) > 0.8;
+  return `<span class="chip chip-sheet chip-art${tint ? " is-tinted" : ""}${light ? " is-light" : ""}" style="--src:url('${esc(src)}');--swatch:${safeHex(colour && colour.hex)}">
+    ${tint ? "<i></i>" : ""}<img src="${esc(src)}" alt=""></span>`;
+}
+
 function colourChip(colour) {
   const src = safeSrc(colour.image);
   if (src) return `<img class="chip" src="${esc(src)}" alt="">`;
@@ -1596,7 +1583,7 @@ function renderColourStep() {
   if (!profile.colours.length) return `<p class="muted">${esc(config.copy.emptyProducts)}</p>`;
   return `<div class="swatches roof-colours">${profile.colours.map((colour) => `
     <button type="button" class="swatch${quote.colourId === colour.id ? " is-selected" : ""}" data-action="select-colour" data-id="${esc(colour.id)}">
-      ${sheetSwatchSvg(profile, colour, colour.id)}
+      ${sheetArtChip(profile, colour)}
       <strong>${esc(colour.name)}</strong>
       <small>${esc(profile.name)}</small>
     </button>`).join("")}</div>`;
@@ -2500,7 +2487,7 @@ function renderBoundarySize(job, products, product) {
     .map((w) => `<p class="warn">${esc(w.message)}</p>`).join("");
   const note = job.note ? `<p class="muted">${esc(job.note)}</p>` : "";
   return `${stepMsg("size")}${note}<div class="choices">${cards}</div>
-    ${unitToggle()}${unitNote()}
+    ${unitToggle()}
     <div class="bnd-list">${rows}${add}</div>
     ${renderScaleDiagram()}${result}${warn}`;
 }
@@ -2635,7 +2622,7 @@ function renderSizeStep() {
     ? jobInput("jobWaste", `Extra waste % (blank uses ${trimNum(wasteDefault)})`, false)
     : "";
   const needsLength = ["wall", "run", "linear", "steps", "area", "grid"].includes(job.mode) || !["circles", "each"].includes(job.mode);
-  let fields = needsLength ? unitToggle() + unitNote() : "";
+  let fields = needsLength ? unitToggle() : "";
   if (job.mode === "wall") {
     fields += jobInput("jobLength", "Length of wall or fence to cover (metres)", false) + jobInput("jobHeight", "Height to cover (metres)", false) + waste;
   } else if (job.mode === "run" || job.mode === "linear") {

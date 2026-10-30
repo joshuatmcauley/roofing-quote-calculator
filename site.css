@@ -327,6 +327,17 @@ img { max-width: 100%; display: block; }
   transition: transform var(--calm) var(--ease);
 }
 .prod:hover .prod-img img { transform: scale(1.045); }
+.prod-img { position: relative; }
+.prod-img .prod-alt { display: none; }
+@media (hover: hover) {
+  .prod-img .prod-alt {
+    display: block;
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity var(--calm) var(--ease), transform var(--calm) var(--ease);
+  }
+  .prod:hover .prod-img .prod-alt { opacity: 1; }
+}
 .prod-body { padding: 18px 18px 20px; display: flex; flex-direction: column; flex: 1; }
 .prod-cat {
   font-size: 11.5px;
