@@ -544,6 +544,7 @@ function calculate(quote, config) {
   const availableStock = stock.filter((len) => !outLengths.some((o) => Math.abs(o - Number(len)) < 1e-9));
   const shopPhone = company.phone ? ` Call ${company.phone}.` : "";
   const overlap = setting(rules.flashingOverlapM, 0.15);
+  const endLap = setting(rules.endLapM, 0.15);
   const vergeRuns = setting(rules.vergeRunsPerSlope, 2);
   const fixingsPerM2 = setting(rules.fixingsPerM2, 4);
   const stitchersPerFlashing = setting(rules.stitchersPerFlashing, 10);
@@ -640,9 +641,23 @@ function calculate(quote, config) {
     const eaves = val(eavesRaw);
     const slope = val(slopeRaw);
     if (!(eaves > 0) || !(slope > 0)) return;
-    const rounded = profile && profile.cutToSize
+    let rounded = profile && profile.cutToSize
       ? { ordered: slope, special: false }
       : roundUpToStock(slope, availableStock);
+    // Longer than the longest sheet in stock: lay sheets end to end up the
+    // slope, overlapping endLap at each join, using as few sheets as possible.
+    let perRun = 1;
+    if (profile && !profile.cutToSize && ownStock && rounded.special && slope > 0 && availableStock.length) {
+      const longestIn = Math.max(...availableStock.map(Number));
+      for (let n = 2; n <= 50; n += 1) {
+        const need = (slope + (n - 1) * endLap) / n;
+        if (need <= longestIn + 1e-9) {
+          rounded = roundUpToStock(need, availableStock);
+          perRun = n;
+          break;
+        }
+      }
+    }
     // A sheet that cannot be bought (too long, or the only long-enough size is out
     // of stock) is blocked instead of being priced at a length that does not exist.
     let blocked = false;
@@ -661,7 +676,7 @@ function calculate(quote, config) {
     const lightSelected = profile && (profile.rooflights || []).some((item) => item.id === q.rooflightId);
     let rooflights = lightSelected ? Math.max(0, Math.round(Number((q.rooflightQty || {})[id]) || 0)) : 0;
     if (sheets != null) rooflights = Math.min(rooflights, sheets);
-    const metal = sheets == null ? null : sheets - rooflights;
+    const metal = sheets == null ? null : (sheets - rooflights) * perRun;
     slopes.push({
       id,
       label,
@@ -672,6 +687,7 @@ function calculate(quote, config) {
       blocked,
       blockReason,
       cutToSize: !!(profile && profile.cutToSize),
+      perRun,
       sheets,
       rooflights,
       metal,
@@ -749,7 +765,7 @@ function calculate(quote, config) {
           id: `sheet-${slope.id}`,
           section: "Sheets",
           name: `${profile.name}, ${finish.name}${colourName}`,
-          detail: `${slope.label}. ${slope.metal} metal sheet${slope.metal === 1 ? "" : "s"} at ${trimNum(slope.ordered)} m. Entered slope ${trimNum(slope.slope)} m. ${site(perM)} per metre.`,
+          detail: `${slope.label}. ${slope.metal} metal sheet${slope.metal === 1 ? "" : "s"} at ${trimNum(slope.ordered)} m${slope.perRun > 1 ? ` (${slope.perRun} end to end up each ${trimNum(slope.slope)} m run, ${trimNum(endLap * 1000)} mm overlap)` : ""}. Entered slope ${trimNum(slope.slope)} m. ${site(perM)} per metre.`,
           qty: slope.metal,
           qtyLabel: `${slope.metal} sheet${slope.metal === 1 ? "" : "s"}`,
           unitPrice: round4(rate),
