@@ -576,6 +576,57 @@ label.fld textarea { min-height: 136px; resize: vertical; }
 .hero-card h3 { color: #fff; font-size: 24px; margin-bottom: 10px; }
 .hero-card p { color: #ccd0d4; font-size: 15px; margin-bottom: 18px; }
 
+/* Phones. A landscape clip cropped into a tall narrow box only ever shows a
+   thin strip down the middle, so here the photo or clip runs the full width
+   as a band across the top and the wording sits underneath it. */
+@media (max-width: 700px) {
+  .hero-photo {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+  }
+  .hero-photo .hero-media {
+    position: relative;
+    inset: auto;
+    aspect-ratio: 16 / 9;
+  }
+  .hero-photo .hero-media picture,
+  .hero-photo .hero-media img,
+  .hero-photo .hero-video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  /* Shade only the band, so it fades into the dark panel below it. */
+  .hero-photo::after {
+    bottom: auto;
+    height: 56.25vw;
+    background: linear-gradient(to bottom, rgba(10, 12, 14, 0.1) 0%, rgba(10, 12, 14, 0.28) 62%, rgba(10, 12, 14, 0.72) 100%);
+  }
+  .hero-photo .shell { padding-block: 30px 40px; }
+  .hero-photo h1 { max-width: none; }
+  .hero-photo .hero-actions { gap: 10px; margin-top: 24px; }
+  .hero-photo .hero-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+    padding: 14px 10px;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+  .hero-photo .stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-top: 26px;
+    padding-top: 20px;
+  }
+  .hero-photo .stat b { font-size: 31px; }
+  .hero-photo .stat span { font-size: 11px; letter-spacing: 0.02em; }
+}
+
 .scroll-hint {
   position: absolute;
   left: 50%; bottom: 18px;
