@@ -54,7 +54,7 @@
     ".bc-wall{position:absolute;inset:-12%;display:grid;gap:10px;",
     "grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);grid-auto-flow:column;",
     "transform:rotate(-6deg);",
-    "animation:bcDrift 2.6s cubic-bezier(.16,.84,.28,1) forwards}",
+    "animation:bcDrift 3.6s cubic-bezier(.16,.84,.28,1) forwards}",
     ".bc-wall figure{margin:0;overflow:hidden;background:#1a1d21;opacity:0;",
     "animation:bcTile 900ms cubic-bezier(.16,.84,.28,1) forwards}",
     ".bc-wall img{width:100%;height:100%;object-fit:cover;display:block;",
@@ -157,12 +157,12 @@
     // a tap skips it
     splash.addEventListener("click", finish);
     // hold just long enough to read, then lift away
-    window.setTimeout(finish, 1650);
+    window.setTimeout(finish, 2650);
   }
 
   if (document.body) build();
   else document.addEventListener("DOMContentLoaded", build);
 
   // whatever happens, the page must never be stuck behind the splash
-  window.setTimeout(function () { finish(); window.setTimeout(cleanup, 700); }, 3200);
+  window.setTimeout(function () { finish(); window.setTimeout(cleanup, 700); }, 4400);
 })();
