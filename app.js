@@ -1412,17 +1412,12 @@ function renderMeasureStep() {
   }
   if (lastCalc.slopes.length) {
     html += `<ul class="preview">${lastCalc.slopes.map((slope) => {
-      const total = slope.metal != null ? slope.metal : slope.sheets;
-      const sheets = slope.sheets == null ? "Choose a profile to count sheets"
-        : slope.perRun > 1 ? `${slope.sheets} across × ${slope.perRun} up the slope = ${total} sheets`
-        : `${slope.sheets} sheet${slope.sheets === 1 ? "" : "s"}`;
+      const sheets = slope.sheets == null ? "Choose a profile to count sheets" : `${slope.sheets} sheet${slope.sheets === 1 ? "" : "s"}`;
       const same = Math.abs(slope.ordered - slope.slope) < 0.001;
       const round = slope.blocked
         ? slope.blockReason
         : slope.cutToSize
         ? `${fmtLen(slope.slope)} cut to size`
-        : slope.perRun > 1
-          ? `${fmtLen(slope.slope)} is longer than one sheet, so ${slope.perRun} × ${fmtLen(slope.ordered)} sheets overlap up the slope`
         : slope.special
           ? `${fmtLen(slope.slope)} is above your longest stock size`
           : same

@@ -80,7 +80,6 @@ const QUOTE_CONFIG = {
   rules: {
     stockLengthsM: [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8],
     flashingOverlapM: 0.15,
-    endLapM: 0.15, // overlap where two sheets meet end to end on a long slope
     vergeRunsPerSlope: 2,
     fixingsPerM2: 4,
     stitchersPerFlashing: 10,
