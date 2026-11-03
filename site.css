@@ -395,21 +395,24 @@ img { max-width: 100%; display: block; }
   transform: translateY(-3px);
 }
 .prod-img {
-  aspect-ratio: 4 / 3;
   background: #fff;
   overflow: hidden;
   border-bottom: 1px solid var(--line);
 }
-/* contain, not cover: show the whole photo. Cover cropped the sides off wide photos
-   (the shop's lifestyle shots) and the ends off long product shots. */
+/* The photo sets its own height, so nothing is cropped (cover cut the sides off wide
+   lifestyle photos) and there is no white band around it (a fixed 4:3 box left one).
+   Very tall photos are capped and centred. */
 .prod-img img {
-  width: 100%; height: 100%;
+  display: block;
+  width: 100%; height: auto;
+  max-height: 340px;
+  margin: 0 auto;
   object-fit: contain;
   transition: transform var(--calm) var(--ease);
 }
 .prod:hover .prod-img img { transform: scale(1.045); }
 .prod-img { position: relative; }
-.prod-img .prod-alt { display: none; }
+.prod-img .prod-alt { display: none; height: 100%; }
 @media (hover: hover) {
   .prod-img .prod-alt {
     display: block;
