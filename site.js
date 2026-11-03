@@ -68,8 +68,8 @@ const CATEGORIES = [
   {
     slug: "accessories", title: "Accessories",
     blurb: "Timber fix screws and screw caps in packs of 100, for fixing and finishing roofing sheets.",
-    cats: ["Accessories"], photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Gash_Point_Screw_60mm.jpg?v=1793703934", cdn: true,
-    wide: true,   // full-width banner under the nine, so a 3-column grid ends on a full row
+    cats: ["Accessories"],
+    home: false,   // listed in the Products menu and on the Products page, but no homepage tile
   },
 ];
 
@@ -398,12 +398,12 @@ function renderRange() {
   const mount = document.querySelector("[data-range-grid]");
   if (!mount) return;
   const products = allProducts();
-  mount.innerHTML = CATEGORIES.map((c) => {
+  mount.innerHTML = CATEGORIES.filter((c) => c.home !== false).map((c) => {
     const n = catItems(c, products).length;
     const media = c.cdn
       ? `<img src="${esc(c.photo)}" alt="" loading="lazy" decoding="async">`
       : `<picture><source srcset="${esc(c.photo)}.webp" type="image/webp"><img src="${esc(c.photo)}.jpg" alt="" loading="lazy" decoding="async"></picture>`;
-    return `<a class="range-tile${c.wide ? " wide" : ""}" href="products.html#${esc(c.slug)}">
+    return `<a class="range-tile" href="products.html#${esc(c.slug)}">
       ${media}
       <span class="range-body">
         <h3>${esc(c.title)}</h3>

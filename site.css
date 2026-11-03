@@ -799,20 +799,6 @@ label.fld textarea { min-height: 136px; resize: vertical; }
 }
 .range-tile:hover img { transform: scale(1.07); }
 .range-tile:hover::after { background: linear-gradient(to top, rgba(10,12,14,0.95) 10%, rgba(10,12,14,0.6) 62%, rgba(10,12,14,0.18) 100%); }
-/* Accessories is the tenth tile. On a 3-column grid (from 1014px) it spans the
-   whole row as a banner; below that the grid is 2 columns and ten tiles already
-   make five full rows. */
-@media (min-width: 1014px) {
-  .range-tile.wide { grid-column: 1 / -1; aspect-ratio: auto; height: 280px; }
-  .range-tile.wide img { object-position: 50% 58%; }
-  /* darken the left, where the text sits, so it stays readable over the bright screws */
-  .range-tile.wide::after {
-    background:
-      linear-gradient(90deg, rgba(10,12,14,0.94) 0%, rgba(10,12,14,0.74) 34%, rgba(10,12,14,0.12) 78%),
-      linear-gradient(to top, rgba(10,12,14,0.55) 0%, rgba(10,12,14,0) 55%);
-  }
-  .range-tile.wide .range-body { padding: 26px 30px; justify-content: center; max-width: 560px; }
-}
 .range-tile .range-body {
   position: relative;
   z-index: 2;
