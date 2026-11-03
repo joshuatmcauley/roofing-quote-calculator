@@ -64,7 +64,7 @@ const CATEGORIES = [
   {
     slug: "clear-roofing", title: "Clear Roofing",
     blurb: "Corrugated and box profile polycarbonate, tinted sheets and flat acrylic.",
-    cats: ["Clear roofing and flat sheets"], photo: "tile-poly",
+    cats: ["Clear roofing and flat sheets"], photo: "g3",
   },
   {
     slug: "v-mesh-fencing-gates", title: "V Mesh Fencing & Gates",
