@@ -406,7 +406,13 @@ input:disabled { background: #f4f6f8; color: var(--muted); }
   body.is-quote { padding-bottom: 12px; }
   :root { --chrome: 84px; }
 }
+.print-only { display: none; }
+.quote-head { margin: 0 0 14px; padding: 0 0 10px; border-bottom: 2px solid #222; }
+.quote-head strong { font-size: 1.15rem; }
+.quote-head p { margin: 2px 0; font-size: 13px; }
+
 @media print {
+  .print-only { display: block !important; }
   .no-print, .site-head, .top, .hero, .calc-intro, .howto, .step-nav, .mobile-total, .editor-page { display: none !important; }
   body, .summary, .step { background: white; }
   .layout { display: block; width: auto; }

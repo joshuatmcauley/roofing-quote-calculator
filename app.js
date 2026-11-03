@@ -2033,18 +2033,35 @@ function shopRoundingNote() {
   return bits.length ? `<p class="muted">${esc(bits.join(" "))}</p>` : "";
 }
 
+// Letterhead for the printed/PDF quote only. Without it the saved PDF carried
+// no business name, phone or email, so a customer emailing it in had nothing
+// identifying who it was from.
+function printLetterhead() {
+  const c = config.company || {};
+  const bits = [c.phone, c.email].filter(Boolean).map((v) => `<p>${esc(v)}</p>`).join("");
+  const ref = quote.ref ? `<p>Reference ${esc(quote.ref)}</p>` : "";
+  const who = quote.customer.name
+    ? `<p>Prepared for ${esc(quote.customer.name)}</p>`
+    : "";
+  return `<div class="print-only quote-head">
+    <strong>${esc(c.name || "Your quote")}</strong>
+    ${bits}${who}${ref}
+  </div>`;
+}
+
 function renderReviewStep() {
   const missing = ui.showErrors
     ? `<ul class="err">${allErrors().map((error) => `<li>${esc(error.message)}</li>`).join("")}</ul>`
     : "";
-  return `<p>${esc(config.copy.disclaimer)}</p>
+  return `${printLetterhead()}<p>${esc(config.copy.disclaimer)}</p>
     <p class="muted">${esc(config.copy.basketNote)}</p>
     ${missing}
     ${renderLines(lastCalc.lines)}
     ${totalsHtml()}
     <label class="field" for="notes"><span>Notes on the quote</span><textarea id="notes" data-action="notes">${esc(quote.notes)}</textarea></label>
-    ${shopRoundingNote()}<button type="button" class="primary" data-action="add-basket"${ui.shopBusy ? " disabled" : ""}>${ui.shopBusy ? "Adding…" : "Add all to basket"}</button>
-    <button type="button" class="ghost" data-action="open-email">Email quote</button>`;
+    ${shopRoundingNote()}<button type="button" class="primary no-print" data-action="add-basket"${ui.shopBusy ? " disabled" : ""}>${ui.shopBusy ? "Adding…" : "Add all to basket"}</button>
+    <button type="button" class="ghost no-print" data-action="print-quote">Download PDF</button>
+    <p class="muted no-print">${esc(quoteShareNote())}</p>`;
 }
 
 const ROOF_KINDS = ["type", "measure", "profile", "finish", "colour", "dripstop", "rooflight", "barge", "ridge", "abutment", "fixings", "extras"];
@@ -3166,10 +3183,10 @@ function renderSummary() {
     ${quote.notes.trim() ? `<p><strong>Notes</strong><br>${esc(quote.notes.trim())}</p>` : ""}
     <p class="muted">${esc(config.copy.disclaimer)}</p>
     <button type="button" class="primary no-print" data-action="add-basket"${ui.shopBusy ? " disabled" : ""}>${ui.shopBusy ? "Adding…" : "Add all to basket"}</button>
-    <button type="button" class="ghost no-print" data-action="print-quote">Print / Save PDF</button>
+    <button type="button" class="ghost no-print" data-action="print-quote">Download PDF</button>
     <button type="button" class="ghost no-print" data-action="copy-quote">Copy quote</button>
-    <button type="button" class="ghost no-print" data-action="open-email">Email quote</button>
     <button type="button" class="ghost no-print" data-action="export-excel">Export to Excel</button>
+    <p class="muted no-print">${esc(quoteShareNote())}</p>
   </aside>`;
 }
 
@@ -3239,21 +3256,6 @@ function renderModal() {
       ? `<p class="ok">Quote saved in this browser.</p><label class="field" for="saved-link"><span>Link</span><input id="saved-link" readonly value="${esc(ui.savedLink)}"></label><p class="muted">This link only reopens the quote on this computer and browser.</p>`
       : `<form data-action="save-quote">${customerFields()}<p class="err">${esc(ui.modalError)}</p><button type="submit" class="primary">Save quote</button></form>`;
     return `<div class="overlay no-print"><div class="modal" role="dialog" aria-modal="true"><h2>Save your quote</h2>${done}<button type="button" class="ghost" data-action="close-modal">Close</button></div></div>`;
-  }
-  if (ui.modal === "email") {
-    return `<div class="overlay no-print"><div class="modal" role="dialog" aria-modal="true">
-      <h2>Email your quote</h2>
-      <p class="muted">This opens your email app with the quote written out. It does not send email by itself.</p>
-      <form data-action="email-quote">
-        ${customerFields()}
-        <p class="err">${esc(ui.modalError)}</p>
-        <div class="row-actions">
-          <button type="submit" class="primary" data-target="customer">Email quote to customer</button>
-          <button type="submit" class="ghost" data-target="business">Email quote to business</button>
-        </div>
-      </form>
-      <button type="button" class="text-btn" data-action="close-modal">Close</button>
-    </div></div>`;
   }
   return "";
 }
@@ -3738,8 +3740,13 @@ function buildQuoteText() {
   return lines.join("\n");
 }
 
-function quoteSubject() {
-  return `${config.company.name || "Quote"} ${quote.ref || ""}`.trim();
+// Tells the customer what to do with the PDF. The site is static with no mail
+// server, so it must not imply that anything is sent on their behalf.
+function quoteShareNote() {
+  const to = String(config.company.email || "").trim();
+  return to
+    ? `Download the PDF to keep, or email it to ${to} to order.`
+    : "Download the PDF to keep, or send it over to order.";
 }
 
 function parseStock(text) {
@@ -4318,13 +4325,6 @@ function onClick(event) {
     render();
     return;
   }
-  if (action === "open-email") {
-    if (!requireReady()) return;
-    ui.modal = "email";
-    ui.modalError = "";
-    render();
-    return;
-  }
   if (action === "clear-basket") {
     const jobId = quote.jobId;
     quote = defaultQuote();
@@ -4686,37 +4686,6 @@ function onSubmit(event) {
     ui.modalError = "";
     render();
     return;
-  }
-  if (action === "email-quote") {
-    if (!lastCalc.quoteReady) {
-      ui.modal = null;
-      requireReady();
-      return;
-    }
-    const email = quote.customer.email.trim();
-    if (!quote.customer.name.trim() || !validEmail(email)) {
-      ui.modalError = "Enter the customer name and a valid email.";
-      render();
-      return;
-    }
-    const target = event.submitter && event.submitter.dataset.target;
-    const to = target === "business" ? String(config.company.email || "").trim() : email;
-    if (target === "business" && !validEmail(to)) {
-      ui.modalError = "Add a business email in the catalogue first.";
-      render();
-      return;
-    }
-    if (!quote.ref) quote.ref = makeRef();
-    const href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(quoteSubject())}&body=${encodeURIComponent(buildQuoteText())}`;
-    if (href.length > 1800) {
-      ui.modalError = "This quote is too long for an email link. Use Copy quote or Print instead.";
-      render();
-      return;
-    }
-    ui.modal = null;
-    ui.notice = "Your email app should open with the quote filled in.";
-    render();
-    window.location.href = href;
   }
 }
 
