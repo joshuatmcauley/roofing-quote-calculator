@@ -91,6 +91,7 @@ img { max-width: 100%; display: block; }
   gap: 10px;
   text-decoration: none;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 .brand-mark {
   display: inline-flex;
@@ -121,6 +122,7 @@ img { max-width: 100%; display: block; }
 .nav a {
   font-size: 15px;
   font-weight: 500;
+  white-space: nowrap;
   text-decoration: none;
   color: var(--ink-soft);
   position: relative;
@@ -481,7 +483,7 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   .hero-art { order: -1; }
   .foot-grid { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 760px) {
+@media (max-width: 1100px) {
   .nav {
     position: fixed;
     inset: 76px 0 auto;
@@ -497,6 +499,8 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   .nav a { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
   .nav a::after { display: none; }
   .burger { display: block; }
+}
+@media (max-width: 760px) {
   .field-row { grid-template-columns: 1fr; }
   .foot-grid { grid-template-columns: 1fr; }
 }
@@ -949,6 +953,19 @@ body.is-leaving { opacity: 0; transition: opacity 240ms var(--ease); }
 .brand .brand-logo { display: block; height: 24px; width: auto; }
 .foot-brand .brand-logo { display: block; height: 28px; width: auto; margin-bottom: 4px; }
 @media (max-width: 560px) { .brand .brand-logo { height: 19px; } }
+/* On phones the logo, "Downpatrick" and the menu button cannot sit in one row
+   (they need ~395px), so the tag stacks under the logo instead of pushing the
+   menu button off the edge. */
+@media (max-width: 480px) {
+  .brand { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .brand-sub { font-size: 10.5px; letter-spacing: 0.2em; line-height: 1; }
+  /* the shop script also puts a cart button in this row, so it holds
+     logo + cart + menu button; tighter gaps keep all three at full size */
+  .head-row { gap: 12px; }
+}
+@media (max-width: 360px) {
+  .brand .brand-logo { height: 17px; }
+}
 
 /* ---------- product cards link through ---------- */
 a.prod-img { display: block; }
