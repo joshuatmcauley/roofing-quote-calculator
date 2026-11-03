@@ -24,14 +24,14 @@ const CATEGORIES = [
     slug: "composite-decking", title: "Composite Decking",
     blurb: "Hollow woodgrain boards in teak, grey and dark grey, plus step boards and trims.",
     cats: ["Composite decking"], photo: "tile-decking",
-    card: { order: 1, scene: "home-cards/decking-scene", cut: "home-cards/decking-board", pos: "50% 72%",
+    card: { order: 1, scene: "home-cards/decking-scene", cut: "home-cards/decking-board", pos: "50% 42%",
             blurb: "Hollow woodgrain boards in teak, grey, dark grey and white, with step boards and trims to finish the job." },
   },
   {
     slug: "composite-wall-panel", title: "Composite Wall Panel",
     blurb: "Slatted and woodgrain cladding for walls and gables, plus rustic stone panels.",
     cats: ["Composite wall cladding", "Stone wall cladding"], photo: "tile-cladding",
-    card: { order: 3, scene: "home-cards/cladding-scene", cut: "home-cards/cladding-panel", pos: "50% 58%",
+    card: { order: 3, scene: "home-cards/cladding-scene", cut: "home-cards/cladding-panel", pos: "50% 40%",
             blurb: "Slatted and woodgrain cladding in teak, grey and black, plus rustic stone panels, for walls and gables." },
   },
   {
