@@ -38,7 +38,7 @@ const CATEGORIES = [
     slug: "composite-fencing", title: "Composite Fencing",
     blurb: "Slatted panels and tongue and groove boards that never need stained.",
     cats: ["Composite fencing"], photo: "tile-fencing",
-    card: { order: 2, scene: "home-cards/fencing-scene", cut: "home-cards/fencing-board", pos: "50% 38%",
+    card: { order: 2, scene: "home-cards/fencing-scene", cut: "home-cards/fencing-board", cutExt: "jpg", pos: "50% 22%",
             blurb: "Slatted panels and tongue and groove boards that never need stained." },
   },
   {
@@ -410,7 +410,7 @@ function renderFeatureCards() {
   mount.innerHTML = cards.map((c) => `<a class="feature-card" href="products.html#${esc(c.slug)}">
       <div class="fc-stage">
         <div class="fc-scene" style="--pos:${esc(c.card.pos || "50% 50%")}">${pic(c.card.scene, "")}</div>
-        <div class="fc-cut">${pic(c.card.cut, c.title, "png")}</div>
+        <div class="fc-cut">${pic(c.card.cut, c.title, c.card.cutExt || "png")}</div>
       </div>
       <div class="fc-body">
         <h3>${esc(c.title)}</h3>
