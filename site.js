@@ -9,6 +9,10 @@ const SITE = {
   telHref: "tel:+442844615148",
   town: "Downpatrick, County Down",
   shop: "https://shop.bcmckeown.net",
+  // range.js stores every price EX VAT (the calculator adds VAT on top). Product
+  // listings must show what the customer actually pays, so they add it back.
+  // Keep in step with company.vatPercent in config.js.
+  vatPercent: 20,
 };
 
 /* The nine sections the homepage leads with. `cats` lists the range.js
@@ -61,6 +65,12 @@ const CATEGORIES = [
     blurb: "Security mesh fencing kits from 4ft to 8ft, with matching gate kits and posts.",
     cats: ["V mesh fencing", "Gates"], photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/8ft_security_fencing.jpg?v=1745596199", cdn: true,
   },
+  {
+    slug: "accessories", title: "Accessories",
+    blurb: "Timber fix screws and screw caps in packs of 100, for fixing and finishing roofing sheets.",
+    cats: ["Accessories"], photo: "https://cdn.shopify.com/s/files/1/0877/3910/5611/files/Gash_Point_Screw_60mm.jpg?v=1793703934", cdn: true,
+    wide: true,   // full-width banner under the nine, so a 3-column grid ends on a full row
+  },
 ];
 
 function catItems(section, products) {
@@ -69,7 +79,9 @@ function catItems(section, products) {
 }
 
 
-/* The four pillars the range sorts into. Each maps to categories in range.js. */
+/* The pillars the range sorts into. Each maps to categories in range.js.
+   They drive the Products page filters and the footer links. Accessories has no
+   icon or tile photo, so renderPillars() below skips it. */
 const PILLARS = [
   {
     id: "roofing",
@@ -104,6 +116,12 @@ const PILLARS = [
     icon: "stone",
     photo: "cat-landscaping",
   },
+  {
+    id: "accessories",
+    title: "Accessories",
+    blurb: "Timber fix screws and screw caps for fixing and finishing roofing sheets.",
+    cats: ["Accessories"],
+  },
 ];
 
 const ICONS = {
@@ -121,6 +139,11 @@ function esc(value) {
   ));
 }
 
+/* Add VAT to an ex-VAT price, to the penny. 5.833333 -> 7, 66.67 -> 80. */
+function incVat(n) {
+  return Math.round(Number(n) * (100 + SITE.vatPercent)) / 100;
+}
+
 function money(n) {
   const v = Number(n);
   if (!Number.isFinite(v)) return "";
@@ -136,6 +159,23 @@ const NAV = [
   ["contact.html", "Contact"],
 ];
 
+/* The Products link opens a menu of product types. It is built from CATEGORIES,
+   so a new section appears here (and on the homepage) without editing the nav. */
+const CHEVRON = '<svg width="10" height="6" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 1l4 4 4-4"/></svg>';
+
+function navItemHtml(href, label, here) {
+  const current = href.toLowerCase() === here ? ' aria-current="page"' : "";
+  const link = `<a href="${href}"${current}>${esc(label)}</a>`;
+  if (href !== "products.html") return link;
+  return `<div class="nav-item" data-nav-item>${link}
+        <button class="sub-toggle" type="button" aria-label="Show product types" aria-expanded="false" aria-controls="subnav-products">${CHEVRON}</button>
+        <div class="subnav" id="subnav-products" role="group" aria-label="Product types">
+          <a class="sub-all" href="products.html">All products ${ARROW}</a>
+          <ul>${CATEGORIES.map((c) => `<li><a href="products.html#${esc(c.slug)}">${esc(c.title)}</a></li>`).join("")}</ul>
+        </div>
+      </div>`;
+}
+
 /* The real B&C McKeown wordmark, rebuilt as vector files from the shop's logo:
    logo.svg for light backgrounds, logo-light.svg (white lettering) for dark. */
 const BRAND_MARK = `<img class="brand-logo" src="logo.svg" alt="B&amp;C McKeown" width="230" height="24">`;
@@ -148,7 +188,7 @@ function renderChrome() {
     head.innerHTML = `<div class="shell head-row">
       <a class="brand" href="index.html" aria-label="B&amp;C McKeown, home">${BRAND_MARK}<span class="brand-sub">Downpatrick</span></a>
       <nav class="nav" data-nav>
-        ${NAV.map(([href, label]) => `<a href="${href}"${href.toLowerCase() === here ? ' aria-current="page"' : ""}>${esc(label)}</a>`).join("")}
+        ${NAV.map(([href, label]) => navItemHtml(href, label, here)).join("")}
         <a class="nav-tel" href="${SITE.telHref}">${esc(SITE.tel)}</a>
       </nav>
       <button class="burger" type="button" data-burger aria-label="Menu" aria-expanded="false"><i></i><i></i><i></i></button>
@@ -159,6 +199,26 @@ function renderChrome() {
       const open = nav.classList.toggle("open");
       burger.setAttribute("aria-expanded", open ? "true" : "false");
     });
+
+    // Product types menu. Hovering opens it on a mouse; the chevron button opens
+    // it by touch or keyboard, and Escape or a click elsewhere closes it.
+    const item = head.querySelector("[data-nav-item]");
+    if (item) {
+      const toggle = item.querySelector(".sub-toggle");
+      const setOpen = (open) => {
+        item.classList.toggle("open", open);
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+        toggle.setAttribute("aria-label", open ? "Hide product types" : "Show product types");
+      };
+      toggle.addEventListener("click", (event) => {
+        event.stopPropagation();
+        setOpen(!item.classList.contains("open"));
+      });
+      document.addEventListener("click", (event) => { if (!item.contains(event.target)) setOpen(false); });
+      item.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && item.classList.contains("open")) { setOpen(false); toggle.focus(); }
+      });
+    }
   }
 
   const foot = document.querySelector("[data-site-foot]");
@@ -225,7 +285,8 @@ function pillarFor(category) {
 /* `hoverPhoto` adds the product's second photo, shown while the card is
    hovered. Used on the products page, not the homepage strip. */
 function productCard(product, hoverPhoto) {
-  const price = fromPrice(product);
+  const exVat = fromPrice(product);
+  const price = exVat == null ? null : incVat(exVat);
   const stocked = inStock(product);
   let img = product.image
     ? `<img src="${esc(product.image)}" alt="${esc(product.name)}" loading="lazy" decoding="async">`
@@ -326,7 +387,7 @@ function renderRange() {
     const media = c.cdn
       ? `<img src="${esc(c.photo)}" alt="" loading="lazy" decoding="async">`
       : `<picture><source srcset="${esc(c.photo)}.webp" type="image/webp"><img src="${esc(c.photo)}.jpg" alt="" loading="lazy" decoding="async"></picture>`;
-    return `<a class="range-tile" href="products.html#${esc(c.slug)}">
+    return `<a class="range-tile${c.wide ? " wide" : ""}" href="products.html#${esc(c.slug)}">
       ${media}
       <span class="range-body">
         <h3>${esc(c.title)}</h3>
@@ -345,7 +406,7 @@ function renderPillars() {
   // photo tiles
   const photoMount = document.querySelector("[data-pillars-photo]");
   if (photoMount) {
-    photoMount.innerHTML = PILLARS.map((p) => `<a class="cat-photo" href="products.html#${esc(p.id)}">
+    photoMount.innerHTML = PILLARS.filter((p) => p.photo).map((p) => `<a class="cat-photo" href="products.html#${esc(p.id)}">
       <picture>
         <source srcset="${esc(p.photo)}.webp" type="image/webp">
         <img src="${esc(p.photo)}.jpg" alt="${esc(p.title)}" loading="lazy" decoding="async" width="900" height="700">
@@ -362,7 +423,7 @@ function renderPillars() {
   // plain icon tiles, used on inner pages
   const mount = document.querySelector("[data-pillars]");
   if (!mount) return;
-  mount.innerHTML = PILLARS.map((p) => `<a class="cat" href="products.html#${esc(p.id)}">
+  mount.innerHTML = PILLARS.filter((p) => p.icon).map((p) => `<a class="cat" href="products.html#${esc(p.id)}">
       <span class="cat-ico">${ICONS[p.icon] || ""}</span>
       <h3>${esc(p.title)}</h3>
       <p>${esc(p.blurb)}</p>

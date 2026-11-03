@@ -1949,13 +1949,18 @@ function shopPlan() {
   } else {
     plan.problems.push("This calculator isn't linked to the online shop yet.");
   }
-  // extras the shop doesn't sell online
+  // extras: one with a shopHandle is a live Shopify listing and goes in the basket
+  // like a sheet does. Anything without one is not sold online and is noted instead.
   (config.extras || []).forEach((product) => {
     const pick = quote.picks && quote.picks[product.id];
     const qty = pick ? Number(pick.qty) || 0 : 0;
     if (qty > 0) {
       const v = (product.variants || []).find((x) => x.id === pick.variantId) || product.variants[0];
-      plan.notSold.push(`${qty} × ${product.name} (${v ? v.name : ""})`);
+      if (product.shopHandle) {
+        plan.items.push({ handle: product.shopHandle, match: null, qty, attrs: [], label: product.name });
+      } else {
+        plan.notSold.push(`${qty} × ${product.name} (${v ? v.name : ""})`);
+      }
     }
   });
   return plan;
@@ -2010,7 +2015,7 @@ async function sendQuoteToShop() {
     const parts = [];
     if (added.length) parts.push(`Added to your basket.`);
     added.forEach((i) => { if (i.explain) parts.push(i.explain); });
-    if (plan.notSold.length) parts.push(`Screws and caps aren't sold online yet, so they're not in the basket. They're noted on your order; ring 02844 615148 to add them.`);
+    if (plan.notSold.length) parts.push(`Not sold online yet, so left out of the basket: ${plan.notSold.join("; ")}. They're noted on your order; ring 02844 615148 to add them.`);
     if (skipped.length) parts.push(`Not added: ${skipped.join("; ")}.`);
     ui.notice = parts.join(" ");
     if (lines.length) shop.openBasket();
@@ -2029,7 +2034,7 @@ function shopRoundingNote() {
   try { plan = shopPlan(); } catch (err) { return ""; }
   const bits = [];
   if (plan.roundsUp) bits.push("Cut-to-size sheets are sold online by the whole metre, so the basket rounds up to the next metre. Your exact cut list goes with the order.");
-  if (plan.notSold.length) bits.push("Screws and caps can't be bought online yet, so they won't go in the basket.");
+  if (plan.notSold.length) bits.push(`Not sold online yet, so left out of the basket: ${plan.notSold.join("; ")}.`);
   return bits.length ? `<p class="muted">${esc(bits.join(" "))}</p>` : "";
 }
 

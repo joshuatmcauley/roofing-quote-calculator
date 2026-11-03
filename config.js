@@ -44,7 +44,7 @@ const QUOTE_CONFIG = {
     ridgeNote: "The apex ridge follows the longer of the two side lengths. A single-slope roof uses a mono ridge along its length.",
     needProfile: "Select a profile above to see products for this step.",
     needType: "Select a roof type above to see which flashings apply.",
-    basketNote: "Nothing is sent to a shop. This builds the quote on this device so you can print it, save it, or email it.",
+    basketNote: "Nothing is ordered until you check out. This builds your quote on this device, so you can download it as a PDF, save it or copy it. Add all to basket puts the sheets, screws and caps in your online basket.",
     disclaimer: "Check quantities before you order. Prices include VAT but not delivery, and they are taken from the public prices on bcmckeown.net. Confirm the current price, stock and colour on the website or by phone before you buy.",
     emptyProducts: "Nothing here yet.",
   },
@@ -311,55 +311,54 @@ const QUOTE_CONFIG = {
     },
   ],
   fixings: [],
-  /* Roofing extras: screws and screw caps, all sold in packs of 100.
+  /* Roofing extras: screws and screw caps, all sold in packs of 100. These are
+     the live listings on shop.bcmckeown.net, and shopHandle is the Shopify
+     product each one goes to when a quote is added to the basket.
      Prices here are EX VAT, like every other price in this file; the calculator
      adds the VAT on top. Customers see them including VAT:
-       screws       £15.00 inc VAT  ->  12.5 here
+       45mm screws  £12.00 inc VAT  ->  10 here
+       60mm screws  £15.00 inc VAT  ->  12.5 here
        screw caps   £7.00  inc VAT  ->  5.833333 here
      A variant with price: null is not free. It goes on the quote as "price in
-     store" and is left out of the total. */
+     store" and is left out of the total. An extra with no shopHandle is not
+     sold online: it is noted on the order instead of going in the basket. */
   extras: [
     {
-      id: "extra-screw-55x38",
-      name: "Self-drilling screws, heavy steel, 5.5 × 38mm",
-      note: "Hex head with 16mm bonded washer, BZP finish. Pack of 100.",
-      image: "extras/screw-5-5x38.jpg",
+      id: "extra-screw-45mm",
+      name: "Timber fix gash point screws, 6.3 × 45mm",
+      note: "Self-drilling, hex head with 16mm bonded washer, BZP finish. Pack of 100.",
+      image: "extras/screw-45mm.jpg",
+      shopHandle: "60mm-timber-fix-hex-head-16mm-6-3mm-washer-gash-point-screw-pack-100-copy",
       profileIds: [],
       recommend: "fixings",
-      variants: [{ id: "screw-55x38-bag", name: "Pack of 100", price: 12.5, packSize: 100 }],
+      variants: [{ id: "screw-45mm-pack", name: "Pack of 100", price: 10, packSize: 100 }],
     },
     {
-      id: "extra-screw-63x60",
-      name: "Self-drilling screws, gash point, 6.3 × 60mm",
-      note: "Hex head with 16mm bonded washer, BZP finish. Pack of 100.",
-      image: "extras/screw-6-3x60.jpg",
+      id: "extra-screw-60mm",
+      name: "Timber fix gash point screws, 6.3 × 60mm",
+      note: "Self-drilling, hex head with 16mm bonded washer, BZP finish. Pack of 100.",
+      image: "extras/screw-60mm.jpg",
+      shopHandle: "60mm-timber-fix-hex-head-16mm-6-3mm-washer-gash-point-screw-pack-100",
       profileIds: [],
       recommend: "fixings",
-      variants: [{ id: "screw-63x60-bag", name: "Pack of 100", price: 12.5, packSize: 100 }],
-    },
-    {
-      id: "extra-screw-boxed",
-      name: "Self-drilling screws with bonded washer, boxed",
-      note: "Hex head, large bonded washer. Box of 100.",
-      image: "extras/screw-boxed.jpg",
-      profileIds: [],
-      recommend: "fixings",
-      variants: [{ id: "screw-boxed-box", name: "Box of 100", price: 12.5, packSize: 100 }],
+      variants: [{ id: "screw-60mm-pack", name: "Pack of 100", price: 12.5, packSize: 100 }],
     },
     {
       id: "extra-cap-black",
-      name: "Screw caps, black",
+      name: "Tek screw caps, black, 16mm",
       note: "Covers the screw head. Use one cap per screw. Pack of 100.",
-      image: "extras/cap-black.jpg",
+      image: "extras/cap-black-16mm.jpg",
+      shopHandle: "tek-screw-cap-100-pieces-black-16mm",
       profileIds: [],
       recommend: "fixings",
       variants: [{ id: "cap-black-pack", name: "Pack of 100", price: 5.833333, packSize: 100 }],
     },
     {
-      id: "extra-cap-dark-green",
-      name: "Screw caps, dark green",
+      id: "extra-cap-green",
+      name: "Tek screw caps, green, 16mm",
       note: "Covers the screw head. Use one cap per screw. Pack of 100.",
-      image: "extras/cap-dark-green.jpg",
+      image: "extras/cap-green-16mm.jpg",
+      shopHandle: "tek-screw-cap-100-pieces-green-16mm",
       profileIds: [],
       recommend: "fixings",
       variants: [{ id: "cap-green-pack", name: "Pack of 100", price: 5.833333, packSize: 100 }],

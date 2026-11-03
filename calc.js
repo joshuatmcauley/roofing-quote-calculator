@@ -838,7 +838,10 @@ function calculate(quote, config) {
     // A variant with no price (null or blank) is not free. It goes on the quote
     // as "price in store" and is left out of the total.
     const noPrice = variant.price == null || variant.price === "" || !Number.isFinite(Number(variant.price));
-    const unitPrice = noPrice ? 0 : round2(Number(variant.price));
+    // round4 like every other unit price in this file: a £7.00 cap pack is 5.833333
+    // ex VAT, and rounding that to 5.83 made the total drift below the shop's price
+    // (20 packs came to £139.92, not £140.00).
+    const unitPrice = noPrice ? 0 : round4(Number(variant.price));
     lines.push({
       id: product.id,
       section,

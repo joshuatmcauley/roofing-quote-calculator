@@ -141,13 +141,90 @@ img { max-width: 100%; display: block; }
 .nav a:hover::after, .nav a[aria-current="page"]::after { right: 0; }
 .nav a[aria-current="page"] { color: var(--ink); }
 
-.nav-tel {
+.nav a.nav-tel {
   font-family: Teko, sans-serif;
-  font-size: 23px;
+  font-size: 32px;
+  font-weight: 600;
+  line-height: 1;
   letter-spacing: 0.02em;
   text-decoration: none;
+  color: var(--ink);
 }
-.nav-tel::after { display: none; }
+.nav a.nav-tel::after { display: none; }
+
+/* ---------- products menu ---------- */
+.nav { align-self: stretch; }
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  align-self: stretch;     /* full header height, so the pointer never crosses a gap */
+}
+.sub-toggle {
+  display: grid;
+  place-items: center;
+  margin: 0 0 0 2px;
+  padding: 8px 6px;
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color var(--quick) var(--ease);
+}
+.sub-toggle:hover, .nav-item.open .sub-toggle { color: var(--ink); }
+.sub-toggle svg { transition: transform var(--quick) var(--ease); }
+.nav-item.open .sub-toggle svg { transform: rotate(180deg); }
+.subnav {
+  position: absolute;
+  top: 100%;
+  left: -22px;
+  z-index: 60;
+  width: 460px;
+  padding: 10px 14px 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 20px 44px rgba(16, 20, 24, 0.14);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity 180ms var(--ease), transform 180ms var(--ease), visibility 0s linear 180ms;
+}
+.nav-item.open .subnav {
+  opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
+}
+@media (hover: hover) and (min-width: 1201px) {
+  .nav-item:hover .subnav {
+    opacity: 1; visibility: visible; transform: none; transition-delay: 0s;
+  }
+  .nav-item:hover .sub-toggle { color: var(--ink); }
+  .nav-item:hover .sub-toggle svg { transform: rotate(180deg); }
+}
+.subnav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 10px;
+}
+.nav .subnav a {
+  display: block;
+  padding: 10px 12px;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+.nav .subnav a::after { display: none; }
+.nav .subnav a:hover { background: var(--wash); color: var(--ink); }
+.nav .subnav .sub-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+  color: var(--ink);
+}
 
 .burger {
   display: none;
@@ -483,7 +560,7 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   .hero-art { order: -1; }
   .foot-grid { grid-template-columns: 1fr 1fr; }
 }
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
   .nav {
     position: fixed;
     inset: 76px 0 auto;
@@ -498,7 +575,36 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   .nav.open { display: flex; }
   .nav a { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 17px; }
   .nav a::after { display: none; }
+  .nav a.nav-tel { font-size: 28px; padding: 16px 0; }
   .burger { display: block; }
+  /* with the product types expanded the menu is taller than a phone screen,
+     so it scrolls instead of pushing About, Contact and the phone number off it */
+  .nav {
+    align-self: auto;
+    max-height: calc(100vh - 76px);
+    max-height: calc(100dvh - 76px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .nav-item { display: block; align-self: auto; }
+  .nav-item > a { display: block; padding-right: 56px; }
+  .sub-toggle {
+    position: absolute; top: 0; right: 0;
+    width: 52px; height: 50px;
+    margin: 0; padding: 0;
+    border-left: 1px solid var(--line);
+  }
+  .subnav {
+    position: static; width: auto; padding: 0 0 8px 14px;
+    border: 0; box-shadow: none;
+    opacity: 1; visibility: visible; transform: none; transition: none;
+    display: none;
+  }
+  .nav-item.open .subnav { display: block; }
+  .subnav ul { grid-template-columns: 1fr; gap: 0; }
+  .nav .subnav a { padding: 12px 0; font-size: 16px; border-bottom: 1px solid var(--line); }
+  .nav .subnav a:hover { background: none; }
+  .nav .subnav .sub-all { margin: 0; padding: 12px 0; }
 }
 @media (max-width: 760px) {
   .field-row { grid-template-columns: 1fr; }
@@ -693,6 +799,20 @@ label.fld textarea { min-height: 136px; resize: vertical; }
 }
 .range-tile:hover img { transform: scale(1.07); }
 .range-tile:hover::after { background: linear-gradient(to top, rgba(10,12,14,0.95) 10%, rgba(10,12,14,0.6) 62%, rgba(10,12,14,0.18) 100%); }
+/* Accessories is the tenth tile. On a 3-column grid (from 1014px) it spans the
+   whole row as a banner; below that the grid is 2 columns and ten tiles already
+   make five full rows. */
+@media (min-width: 1014px) {
+  .range-tile.wide { grid-column: 1 / -1; aspect-ratio: auto; height: 280px; }
+  .range-tile.wide img { object-position: 50% 58%; }
+  /* darken the left, where the text sits, so it stays readable over the bright screws */
+  .range-tile.wide::after {
+    background:
+      linear-gradient(90deg, rgba(10,12,14,0.94) 0%, rgba(10,12,14,0.74) 34%, rgba(10,12,14,0.12) 78%),
+      linear-gradient(to top, rgba(10,12,14,0.55) 0%, rgba(10,12,14,0) 55%);
+  }
+  .range-tile.wide .range-body { padding: 26px 30px; justify-content: center; max-width: 560px; }
+}
 .range-tile .range-body {
   position: relative;
   z-index: 2;
