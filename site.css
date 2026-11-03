@@ -771,6 +771,80 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 16px;
 }
+/* ---------- featured sections (homepage cards) ----------
+   A light card: a scene photo across the top, the product (a transparent cut-out)
+   standing over it, then the name, a line of copy and a button. */
+.feature-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--wash);
+  border-radius: 18px;
+  overflow: hidden;
+  isolation: isolate;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ink);
+  transition: transform var(--calm) var(--ease), box-shadow var(--calm) var(--ease);
+}
+.feature-card:hover { transform: translateY(-5px); box-shadow: 0 22px 46px rgba(16, 20, 24, 0.13); }
+.fc-stage { position: relative; aspect-ratio: 1 / 0.92; }
+.fc-scene { position: absolute; inset: 0 0 auto 0; height: 38%; overflow: hidden; }
+.fc-scene img {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: var(--pos, 50% 50%);
+  transition: transform 700ms var(--ease);
+}
+.feature-card:hover .fc-scene img { transform: scale(1.05); }
+/* the cut-outs have different proportions, so each is centred in the same zone */
+.fc-cut {
+  position: absolute;
+  left: 8%; right: 8%; top: 11%; bottom: 2%;
+  transition: transform var(--calm) var(--ease);
+}
+.fc-cut picture { display: contents; }
+.fc-cut img {
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 14px rgba(20, 20, 20, 0.2));
+}
+.feature-card:hover .fc-cut { transform: scale(1.04); }
+.fc-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px clamp(18px, 2.4vw, 28px) clamp(26px, 3vw, 34px);
+}
+.fc-body h3 { font-size: clamp(26px, 2.5vw, 32px); line-height: 1.05; margin: 0 0 12px; white-space: nowrap; }
+.fc-body p { max-width: 34ch; margin: 0 0 22px; color: var(--ink-soft); font-size: 15.5px; line-height: 1.6; }
+.fc-btn {
+  margin-top: auto;
+  display: inline-block;
+  padding: 12px 30px;
+  border-radius: 999px;
+  background: #c3d3ad;
+  color: #1d330f;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background var(--quick) var(--ease), color var(--quick) var(--ease);
+}
+.feature-card:hover .fc-btn, .feature-card:focus-visible .fc-btn { background: #33561a; color: #fff; }
+@media (max-width: 900px) {
+  .feature-cards { grid-template-columns: 1fr; max-width: 520px; margin-left: auto; margin-right: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feature-card, .fc-cut, .fc-scene img { transition: none; }
+  .feature-card:hover { transform: none; }
+}
 .range-tile {
   position: relative;
   display: block;

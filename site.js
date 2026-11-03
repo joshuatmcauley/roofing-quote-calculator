@@ -24,16 +24,22 @@ const CATEGORIES = [
     slug: "composite-decking", title: "Composite Decking",
     blurb: "Hollow woodgrain boards in teak, grey and dark grey, plus step boards and trims.",
     cats: ["Composite decking"], photo: "tile-decking",
+    card: { order: 1, scene: "home-cards/decking-scene", cut: "home-cards/decking-board", pos: "50% 6%",
+            blurb: "Hollow woodgrain boards in teak, grey, dark grey and white, with step boards and trims to finish the job." },
   },
   {
     slug: "composite-wall-panel", title: "Composite Wall Panel",
     blurb: "Slatted and woodgrain cladding for walls and gables, plus rustic stone panels.",
     cats: ["Composite wall cladding", "Stone wall cladding"], photo: "tile-cladding",
+    card: { order: 3, scene: "home-cards/cladding-scene", cut: "home-cards/cladding-panel", pos: "50% 58%",
+            blurb: "Slatted and woodgrain cladding in teak, grey and black, plus rustic stone panels, for walls and gables." },
   },
   {
     slug: "composite-fencing", title: "Composite Fencing",
     blurb: "Slatted panels and tongue and groove boards that never need stained.",
     cats: ["Composite fencing"], photo: "tile-fencing",
+    card: { order: 2, scene: "home-cards/fencing-scene", cut: "home-cards/fencing-board", pos: "50% 38%",
+            blurb: "Slatted panels and tongue and groove boards that never need stained." },
   },
   {
     slug: "composite-garden-room", title: "Composite Garden Room",
@@ -393,12 +399,33 @@ function renderProducts() {
   }
 }
 
-/* ---------- homepage: the nine sections ---------- */
+/* ---------- homepage: the featured sections ----------
+   Sections with a `card` get a large card here (a scene photo, the product cut
+   out over it, a line of copy and a button). The rest stay as tiles below. */
+function renderFeatureCards() {
+  const mount = document.querySelector("[data-feature-cards]");
+  if (!mount) return;
+  const pic = (base, alt, ext = "jpg") => `<picture><source srcset="${esc(base)}.webp" type="image/webp"><img src="${esc(base)}.${ext}" alt="${esc(alt)}" loading="lazy" decoding="async"></picture>`;
+  const cards = CATEGORIES.filter((c) => c.home !== false && c.card).sort((a, b) => a.card.order - b.card.order);
+  mount.innerHTML = cards.map((c) => `<a class="feature-card" href="products.html#${esc(c.slug)}">
+      <div class="fc-stage">
+        <div class="fc-scene" style="--pos:${esc(c.card.pos || "50% 50%")}">${pic(c.card.scene, "")}</div>
+        <div class="fc-cut">${pic(c.card.cut, c.title, "png")}</div>
+      </div>
+      <div class="fc-body">
+        <h3>${esc(c.title)}</h3>
+        <p>${esc(c.card.blurb)}</p>
+        <span class="fc-btn">Shop now</span>
+      </div>
+    </a>`).join("");
+}
+
+/* ---------- homepage: the remaining sections, as tiles ---------- */
 function renderRange() {
   const mount = document.querySelector("[data-range-grid]");
   if (!mount) return;
   const products = allProducts();
-  mount.innerHTML = CATEGORIES.filter((c) => c.home !== false).map((c) => {
+  mount.innerHTML = CATEGORIES.filter((c) => c.home !== false && !c.card).map((c) => {
     const n = catItems(c, products).length;
     const media = c.cdn
       ? `<img src="${esc(c.photo)}" alt="" loading="lazy" decoding="async">`
@@ -507,6 +534,7 @@ function wireContact() {
 document.addEventListener("DOMContentLoaded", () => {
   renderChrome();
   renderPillars();
+  renderFeatureCards();
   renderRange();
   renderFeatured();
   renderProducts();
