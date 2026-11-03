@@ -1,0 +1,59 @@
+# Keeps the website in step with the Shopify store.
+#
+# Twice an hour (and whenever you press "Run workflow" on the Actions tab) this reads
+# the live Shopify catalogue and, ONLY if something changed, commits the update to
+# main. GitHub Pages then publishes it like any other commit.
+#
+# What it updates: range.js (listings, prices, stock, photos), product/*.html (one page
+# per product) and the calculator's screw and cap prices in config.js.
+# What it never touches: anything else. See tools/README.md.
+name: Sync from Shopify
+
+on:
+  schedule:
+    - cron: "11,41 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# one run at a time, so two syncs can never commit over each other
+concurrency:
+  group: sync-shopify
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Read the Shopify catalogue and update the site files
+        # pipefail, so that if the script refuses to run (Shopify down, or a partial
+        # answer) this step FAILS and GitHub emails you, instead of tee hiding the error
+        run: |
+          set -o pipefail
+          python3 tools/sync_shopify.py | tee sync-summary.txt
+
+      - name: Check the generated files before committing anything
+        run: |
+          node --check range.js
+          node --check config.js
+          node --check site.js
+          test "$(ls product/*.html | wc -l)" -ge 40
+
+      - name: Commit and push if anything changed
+        run: |
+          if [ -z "$(git status --porcelain -- range.js config.js product)" ]; then
+            echo "Shopify and the site already match. Nothing to commit."
+            exit 0
+          fi
+          git config user.name "Shopify sync"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add range.js config.js product
+          git commit -m "Sync from Shopify" -m "$(cat sync-summary.txt)"
+          git pull --rebase origin main
+          git push origin main

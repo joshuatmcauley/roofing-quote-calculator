@@ -873,6 +873,29 @@ label.fld textarea { min-height: 136px; resize: vertical; }
 }
 .range-tile:hover img { transform: scale(1.07); }
 .range-tile:hover::after { background: linear-gradient(to top, rgba(10,12,14,0.95) 10%, rgba(10,12,14,0.6) 62%, rgba(10,12,14,0.18) 100%); }
+/* "Shop now" on the tiles, the same pill as the feature cards. On the dark
+   photo it turns white when the tile is hovered or focused. */
+.range-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 2px;
+}
+.range-foot .range-count { margin: 0; }
+.tile-btn {
+  flex: none;
+  display: inline-block;
+  padding: 9px 22px;
+  border-radius: 999px;
+  background: #c3d3ad;
+  color: #1d330f;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background var(--quick) var(--ease);
+}
+.range-tile:hover .tile-btn, .range-tile:focus-visible .tile-btn { background: #fff; }
+@media (prefers-reduced-motion: reduce) { .tile-btn { transition: none; } }
 .range-tile .range-body {
   position: relative;
   z-index: 2;
@@ -912,6 +935,9 @@ label.fld textarea { min-height: 136px; resize: vertical; }
   .range-tile h3 { font-size: 18px; }
   .range-tile p { display: none; }
   .range-tile .range-body { padding: 15px 13px 13px; }
+  /* the two-column tiles are about 180px wide: stack the count over the button */
+  .range-foot { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .tile-btn { padding: 8px 18px; font-size: 13px; }
 }
 
 /* ---------- split with photo ---------- */

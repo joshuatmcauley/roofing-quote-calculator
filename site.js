@@ -337,6 +337,14 @@ function renderProducts() {
     items: products.filter((item) => p.cats.includes(item.category)),
   })).filter((g) => g.items.length);
 
+  // A product whose category no group lists (a new kind of product added on Shopify)
+  // still has to appear, so it goes in a catch-all group instead of vanishing.
+  const known = new Set(PILLARS.flatMap((p) => p.cats));
+  const unlisted = products.filter((item) => !known.has(item.category));
+  if (unlisted.length) {
+    groups.push({ id: "other", title: "More products", blurb: "Other products we stock.", cats: [], items: unlisted });
+  }
+
   if (filterBar) {
     filterBar.innerHTML = `<button class="chip on" data-filter="all" type="button">Everything (${products.length})</button>`
       + groups.map((g) => `<button class="chip" data-filter="${esc(g.id)}" type="button">${esc(g.title)} (${g.items.length})</button>`).join("");
@@ -435,7 +443,10 @@ function renderRange() {
       <span class="range-body">
         <h3>${esc(c.title)}</h3>
         <p>${esc(c.blurb)}</p>
-        <span class="range-count">${n} product${n === 1 ? "" : "s"}</span>
+        <span class="range-foot">
+          <span class="range-count">${n} product${n === 1 ? "" : "s"}</span>
+          <span class="tile-btn">Shop now</span>
+        </span>
       </span>
     </a>`;
   }).join("");
