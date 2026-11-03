@@ -24,7 +24,7 @@ const CATEGORIES = [
     slug: "composite-decking", title: "Composite Decking",
     blurb: "Hollow woodgrain boards in teak, grey and dark grey, plus step boards and trims.",
     cats: ["Composite decking"], photo: "tile-decking",
-    card: { order: 1, scene: "home-cards/decking-scene", cut: "home-cards/decking-board", pos: "50% 6%",
+    card: { order: 1, scene: "home-cards/decking-scene", cut: "home-cards/decking-board", pos: "50% 72%",
             blurb: "Hollow woodgrain boards in teak, grey, dark grey and white, with step boards and trims to finish the job." },
   },
   {
