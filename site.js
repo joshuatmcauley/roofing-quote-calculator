@@ -100,10 +100,18 @@ const PILLARS = [
     photo: "cat-decking",
   },
   {
-    id: "fencing",
-    title: "Fencing & Gates",
-    blurb: "Composite fence panels, V mesh systems, gates and posts for any boundary.",
-    cats: ["Composite fencing", "V mesh fencing", "Gates"],
+    id: "composite-fencing",
+    title: "Composite Fencing",
+    blurb: "Slatted panels and tongue and groove boards that never need stained.",
+    cats: ["Composite fencing"],
+    icon: "fence",
+    photo: "cat-fencing",
+  },
+  {
+    id: "v-mesh-fencing-gates",
+    title: "V Mesh Fencing & Gates",
+    blurb: "Security mesh fencing kits from 4ft to 8ft, with matching gate kits and posts.",
+    cats: ["V mesh fencing", "Gates"],
     icon: "fence",
     photo: "cat-fencing",
   },
@@ -123,6 +131,9 @@ const PILLARS = [
     cats: ["Accessories"],
   },
 ];
+
+/* Links made before a group was split. They show every group it became. */
+const LEGACY_GROUPS = { fencing: ["composite-fencing", "v-mesh-fencing-gates"] };
 
 const ICONS = {
   roof: '<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"><path d="M4 26 24 9l20 17"/><path d="M8 24v15h32V24"/><path d="M16 39V28h7v11"/></svg>',
@@ -332,6 +343,8 @@ function renderProducts() {
     } else if (filter.indexOf("sec:") === 0) {
       const sec = CATEGORIES.find((c) => c.slug === filter.slice(4));
       shown = sec ? [{ id: sec.slug, title: sec.title, blurb: sec.blurb, items: catItems(sec, products) }] : [];
+    } else if (LEGACY_GROUPS[filter]) {
+      shown = groups.filter((g) => LEGACY_GROUPS[filter].includes(g.id));
     } else {
       shown = groups.filter((g) => g.id === filter);
     }
@@ -370,6 +383,9 @@ function renderProducts() {
         filterBar.querySelectorAll(".chip").forEach((c) => c.classList.toggle("on", c.dataset.filter === parent.id));
       }
       paint("sec:" + sec.slug);
+    } else if (LEGACY_GROUPS[hash]) {
+      if (filterBar) filterBar.querySelectorAll(".chip").forEach((c) => c.classList.remove("on"));
+      paint(hash);
     } else {
       const btn = filterBar && filterBar.querySelector(`[data-filter="${CSS.escape(hash)}"]`);
       if (btn) btn.click();
