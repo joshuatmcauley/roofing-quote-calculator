@@ -2066,6 +2066,7 @@ function renderReviewStep() {
     <label class="field" for="notes"><span>Notes on the quote</span><textarea id="notes" data-action="notes">${esc(quote.notes)}</textarea></label>
     ${shopRoundingNote()}<button type="button" class="primary no-print" data-action="add-basket"${ui.shopBusy ? " disabled" : ""}>${ui.shopBusy ? "Adding…" : "Add all to basket"}</button>
     <button type="button" class="ghost no-print" data-action="print-quote">Download PDF</button>
+    ${emailButton()}
     <p class="muted no-print">${esc(quoteShareNote())}</p>`;
 }
 
@@ -3190,6 +3191,7 @@ function renderSummary() {
     <button type="button" class="primary no-print" data-action="add-basket"${ui.shopBusy ? " disabled" : ""}>${ui.shopBusy ? "Adding…" : "Add all to basket"}</button>
     <button type="button" class="ghost no-print" data-action="print-quote">Download PDF</button>
     <button type="button" class="ghost no-print" data-action="copy-quote">Copy quote</button>
+    ${emailButton()}
     <button type="button" class="ghost no-print" data-action="export-excel">Export to Excel</button>
     <p class="muted no-print">${esc(quoteShareNote())}</p>
   </aside>`;
@@ -3704,6 +3706,55 @@ function makeRef() {
 
 function validEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
+}
+
+function emailButton() {
+  const label = ui.emailBusy ? "Sending…" : "Email to bcmckeown";
+  return `<button type="button" class="ghost no-print" data-action="email-quote"${ui.emailBusy ? " disabled" : ""}>${label}</button>`;
+}
+
+// Sends the finished quote to /api/send-quote (functions/api/send-quote.js),
+// which emails it through Resend. The API key lives only on the server.
+async function emailQuote() {
+  if (ui.emailBusy) return;
+  if (!requireReady()) return;
+  if (!quote.ref) quote.ref = makeRef();
+  const result = calculate(quote, config);
+  const payload = {
+    headline: config.copy.headline || "Roofing quote",
+    ref: quote.ref,
+    date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
+    disclaimer: config.copy.disclaimer || "",
+    notes: quote.notes || "",
+    overview: result.overview,
+    customer: quote.customer,
+    totals: {
+      exVat: money(result.totals.exVat), vat: money(result.totals.vat),
+      incVat: money(result.totals.incVat), vatPercent: trimNum(result.totals.vatPercent),
+    },
+    lines: result.lines.map((line) => ({
+      name: line.name,
+      detail: line.detail || "",
+      qty: line.qtyLabel,
+      unit: line.onRequest ? "in store" : money(line.unitPrice),
+      total: line.onRequest ? "in store" : money(line.total),
+    })),
+  };
+  ui.emailBusy = true;
+  render();
+  try {
+    const res = await fetch("/api/send-quote", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    ui.notice = res.ok ? "Quote emailed to bcmckeown." : (data.error || "Could not send the email.");
+  } catch (err) {
+    ui.notice = "Could not send the email. Check your connection and try again.";
+  }
+  ui.emailBusy = false;
+  render();
 }
 
 function buildQuoteText() {
@@ -4310,6 +4361,10 @@ function onClick(event) {
   }
   if (action === "export-excel") {
     downloadExcel();
+    return;
+  }
+  if (action === "email-quote") {
+    emailQuote();
     return;
   }
   if (action === "copy-quote") {
