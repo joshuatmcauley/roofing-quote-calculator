@@ -536,7 +536,7 @@ function wireContact() {
     // No server behind this page yet, so hand the enquiry to the mail client.
     const subject = encodeURIComponent(`Website enquiry — ${data.get("topic") || "General"}`);
     const body = encodeURIComponent(lines.join("\n"));
-    window.location.href = `mailto:sales@bcmckeown.net?subject=${subject}&body=${body}`;
+    window.location.href = `mailto:michael@bcmckeownltd.com?subject=${subject}&body=${body}`;
     const note = form.querySelector("[data-sent]");
     if (note) note.hidden = false;
   });
