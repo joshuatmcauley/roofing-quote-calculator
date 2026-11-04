@@ -3708,6 +3708,28 @@ function validEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim());
 }
 
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const el = document.createElement("script");
+    el.src = src;
+    el.onload = resolve;
+    el.onerror = () => reject(new Error("Could not load " + src));
+    document.head.appendChild(el);
+  });
+}
+
+// The PDF libraries are only fetched when someone actually emails a quote.
+let pdfToolsPromise = null;
+function loadPdfTools() {
+  if (!pdfToolsPromise) {
+    pdfToolsPromise = loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js")
+      .then(() => loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"))
+      .then(() => loadScript("quote-pdf.js?v=1"))
+      .catch((err) => { pdfToolsPromise = null; throw err; });
+  }
+  return pdfToolsPromise;
+}
+
 function emailButton() {
   const label = ui.emailBusy ? "Sending…" : "Email to bcmckeown";
   return `<button type="button" class="ghost no-print" data-action="email-quote"${ui.emailBusy ? " disabled" : ""}>${label}</button>`;
@@ -3744,6 +3766,9 @@ async function emailQuote() {
   ui.emailBusy = true;
   render();
   try {
+    await loadPdfTools();
+    payload.pdf = await window.buildQuotePdf(payload);
+    payload.pdfName = `Quote-${String(quote.ref).replace(/[^A-Za-z0-9-]/g, "")}.pdf`;
     const res = await fetch("/api/send-quote", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -3752,7 +3777,7 @@ async function emailQuote() {
     const data = await res.json().catch(() => ({}));
     ui.notice = res.ok ? "Quote emailed to bcmckeown." : (data.error || "Could not send the email.");
   } catch (err) {
-    ui.notice = "Could not send the email. Check your connection and try again.";
+    ui.notice = "Could not build or send the email. Check your connection and try again.";
   }
   ui.emailBusy = false;
   render();
