@@ -3721,7 +3721,8 @@ async function emailQuote() {
   if (!quote.ref) quote.ref = makeRef();
   const result = calculate(quote, config);
   const payload = {
-    headline: config.copy.headline || "Roofing quote",
+    company: { name: config.company.name, phone: config.company.phone, email: config.company.email },
+    headline: "Roofing quote",
     ref: quote.ref,
     date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
     disclaimer: config.copy.disclaimer || "",
