@@ -55,6 +55,13 @@ body.home .site-head:not(.is-stuck) .burger i { background: #fff; }
 /* the dropdown keeps its own white panel, so put its text back to ink */
 body.home .site-head:not(.is-stuck) .subnav a { color: var(--ink-soft); }
 body.home .site-head { transition: background-color 300ms var(--ease), border-color 300ms var(--ease); }
+/* On phones the menu opens as a white panel. At the top of the page the header is
+   transparent with white links, which left the panel white-on-white (blank). */
+@media (max-width: 1200px) {
+  body.home .site-head:not(.is-stuck) .nav a { color: var(--ink); }
+  body.home .site-head:not(.is-stuck) .nav a.nav-tel { color: var(--ink); }
+  body.home .site-head:not(.is-stuck) .nav .sub-toggle { color: var(--ink); }
+}
 
 /* ---------- shared furniture ---------- */
 body.home .h-band { padding: var(--h-pad) 0; position: relative; }
