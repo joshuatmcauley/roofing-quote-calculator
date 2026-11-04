@@ -25,7 +25,7 @@ const QUOTE_CONFIG = {
   company: {
     name: "B&C McKeown LTD",
     phone: "02844 615148",
-    email: "sales@bcmckeown.net",
+    email: "michael@bcmckeownltd.com",
     logo: "",
     currencySymbol: "£",
     vatPercent: 20,

@@ -3,7 +3,7 @@
 //
 // Settings (Cloudflare dashboard > Pages project > Settings > Variables and Secrets):
 //   RESEND_API_KEY   (secret, required)
-//   QUOTE_TO_EMAIL   (required) who receives the quote, e.g. sales@bcmckeown.net
+//   QUOTE_TO_EMAIL   (required) who receives the quote, e.g. michael@bcmckeownltd.com
 //   QUOTE_FROM_EMAIL (optional) defaults to Resend's test sender "onboarding@resend.dev";
 //                    set e.g. "B&C McKeown Quotes <quotes@bcmckeown.net>" once the
 //                    domain is verified in Resend.
@@ -113,6 +113,11 @@ export async function onRequestPost({ request, env }) {
       text: renderText(q),
     }),
   });
-  if (!res.ok) return json({ error: "Could not send the email. Please try again." }, 502);
+  if (!res.ok) {
+    // Pass Resend's own reason back (e.g. "domain not verified") so a failure is diagnosable.
+    let why = "";
+    try { why = (await res.json()).message || ""; } catch {}
+    return json({ error: `Could not send the email.${why ? " Resend says: " + str(why, 300) : " Please try again."}` }, 502);
+  }
   return json({ ok: true });
 }
