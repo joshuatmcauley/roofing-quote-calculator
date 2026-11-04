@@ -2,6 +2,8 @@
   "name": "bcmckeown",
   "main": "worker.js",
   "compatibility_date": "2026-11-01",
+  // Who receives emailed quotes. RESEND_API_KEY is a secret set in the dashboard.
+  "vars": { "QUOTE_TO_EMAIL": "michael@bcmckeownltd.com" },
   "assets": {
     "directory": "./",
     // Only /api/* runs the Worker; every other request is served as a static file.
