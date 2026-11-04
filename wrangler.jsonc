@@ -1,0 +1,11 @@
+{
+  "name": "bcmckeown",
+  "main": "worker.js",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./",
+    // Only /api/* runs the Worker; every other request is served as a static file.
+    "run_worker_first": ["/api/*"],
+    "binding": "ASSETS"
+  }
+}
