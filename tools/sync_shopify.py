@@ -280,6 +280,34 @@ def related_cards(entry, entries):
     return "".join(cards)
 
 
+# Installation guides (PDFs in guides/) shown on the product pages they apply to.
+# This is hand-maintained: add a handle here to put a guide on that product. It is
+# generated into the page by render_page(), so a regenerated page keeps its guide.
+GUIDES = {
+    "antique-slatted-composite-fencing-1-8mx1-8m-6ftx6ft": ["composite-fence"],
+    "antique-slatted-composite-fencing-1-8mx1-8m-6ftx6ft-copy": ["composite-fence"],
+    "composite-fencing": ["composite-fence"],
+}
+GUIDE_FILES = {
+    "composite-fence": ("Composite fence installation guide",
+                        "Step by step: setting the posts, building each bay and finishing off.",
+                        "guides/BC-McKeown-Composite-Fence-Installation-Guide.pdf"),
+}
+
+
+def guide_html(handle):
+    out = ""
+    for key in GUIDES.get(handle, []):
+        title, blurb, href = GUIDE_FILES[key]
+        kb = round((ROOT / href).stat().st_size / 1024 / 1024, 1) if (ROOT / href).exists() else None
+        size = f" &middot; {kb} MB" if kb else ""
+        out += (f'<section class="pdp-guide"><a class="guide-card" href="{href}" target="_blank" rel="noopener">'
+                f'<span class="guide-icon" aria-hidden="true">PDF</span>'
+                f'<span class="guide-text"><strong>{esc(title)}</strong><span>{esc(blurb)}</span></span>'
+                f'<span class="guide-go">Download{size}</span></a></section>\n    ')
+    return out
+
+
 def render_page(p, entry, entries, yard_html):
     h, title = p["handle"], p["title"]
     t = esc(title)
@@ -383,7 +411,7 @@ def render_page(p, entry, entries, yard_html):
       </div>
     </section>
     <section class="pdp-desc"><h2>About this product</h2><div class="pdp-copy">{copy}</div></section>
-  </div>
+    {guide_html(h)}</div>
   {yard_html}<section class="band"><div class="shell"><div class="band-head"><p class="eyebrow">You might also need</p><h2>Related products</h2></div><div class="prod-grid">{related_cards(entry, entries)}</div></div></section>
 </main>
 <footer class="site-foot" data-site-foot></footer>

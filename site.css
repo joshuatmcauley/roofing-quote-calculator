@@ -1252,6 +1252,16 @@ a.prod-img { display: block; }
 .pdp-copy ul { margin: 0 0 1.2em; padding-left: 1.2em; }
 .pdp-copy li { margin: .3em 0; }
 .pdp-copy li p { margin: 0; }
+/* installation guide download card on product pages */
+.pdp-guide { max-width: 760px; padding: 0 0 clamp(32px, 4vw, 52px); }
+.guide-card { display: flex; align-items: center; gap: 16px; padding: 16px 18px; border: 1px solid var(--line); border-radius: 14px; background: #fff; color: var(--ink); text-decoration: none; transition: border-color .2s, box-shadow .2s, transform .2s; }
+.guide-card:hover { border-color: var(--green, #33561a); box-shadow: 0 8px 24px rgba(0,0,0,.07); transform: translateY(-2px); }
+.guide-icon { flex: none; display: grid; place-items: center; width: 48px; height: 56px; border-radius: 8px; background: #33561a; color: #fff; font: 600 13px/1 Outfit, sans-serif; letter-spacing: .06em; }
+.guide-text { display: flex; flex-direction: column; gap: 2px; flex: 1 1 0; min-width: 0; }
+.guide-text strong { font: 600 17px/1.25 Outfit, sans-serif; }
+.guide-text span { font-size: 14px; color: var(--ink-soft); }
+.guide-go { margin-left: auto; flex: none; font: 600 14px/1 Outfit, sans-serif; color: #33561a; white-space: nowrap; }
+@media (max-width: 560px) { .guide-card { flex-wrap: wrap; row-gap: 12px; } .guide-go { flex-basis: 100%; margin-left: 64px; } }
 .pdp-yard .gallery { grid-template-columns: repeat(4, 1fr); }
 .pdp-yard .gallery a { display: block; height: 100%; cursor: zoom-in; }
 
