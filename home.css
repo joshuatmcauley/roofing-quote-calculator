@@ -579,6 +579,14 @@ body.home .h-close .h-actions { justify-content: center; }
   body.home .range-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 920px) {
+  /* white text over a moving video: on small screens add an even dark veil so a bright
+     shot (white paving, grey sky) can never wash out the headline */
+  body.home .hero-photo::after {
+    background:
+      linear-gradient(rgba(8, 10, 8, 0.38), rgba(8, 10, 8, 0.38)),
+      linear-gradient(to top, rgba(8, 10, 8, 0.9) 0%, rgba(8, 10, 8, 0.5) 38%,
+                      rgba(8, 10, 8, 0.18) 68%, rgba(8, 10, 8, 0.55) 100%);
+  }
   body.home .hero-inner { grid-template-columns: 1fr; }
   body.home .hero-card { display: block; margin-top: 34px; max-width: 460px; }
   body.home .h-pair { grid-template-columns: 1fr; }

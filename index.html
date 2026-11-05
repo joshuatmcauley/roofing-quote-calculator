@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Teko:wght@500;600&display=swap">
   <link rel="stylesheet" href="site.css">
   <!-- homepage only; every rule inside is scoped to body.home -->
-  <link rel="stylesheet" href="home.css?v=menu1">
+  <link rel="stylesheet" href="home.css?v=hero2">
   <script src="intro.js"></script>
 </head>
 <body class="home">
@@ -31,9 +31,23 @@
            a profiled metal roof against blue sky 34186453, rain off a corrugated roof 38507914,
            clear roof sheeting on a steel frame 6194503, grey decking and slatted cladding 5977938.
            The photo above shows if the video can't play, and for anyone who has reduce motion switched on. -->
-      <video class="hero-video" autoplay muted loop playsinline preload="auto" poster="hero-loop.jpg?v=6" aria-hidden="true">
-        <source src="hero-loop.mp4?v=6" type="video/mp4">
-      </video>
+      <video class="hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true"></video>
+      <script>
+        /* Phones and narrow screens have a tall hero, so they get a portrait cut of the
+           loop (hero-loop-m.mp4) instead of a thin slice of the wide one. */
+        (function () {
+          var v = document.querySelector(".hero-video");
+          if (!v) return;
+          if (window.matchMedia("(max-width: 920px)").matches) {
+            v.poster = "hero-loop-m.jpg?v=1";
+            v.src = "hero-loop-m.mp4?v=1";
+          } else {
+            v.poster = "hero-loop.jpg?v=6";
+            v.src = "hero-loop.mp4?v=6";
+          }
+          if (v.play) { var r = v.play(); if (r && r.catch) r.catch(function () {}); }
+        })();
+      </script>
     </div>
     <div class="shell">
       <div class="hero-inner">
